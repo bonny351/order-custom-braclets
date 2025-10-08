@@ -1,18 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tactics & Treats – Paracord Preorder</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+<style>
+  body {
+    background: linear-gradient(to right, #8b0000 0%, #000 50%, #8b0000 100%);
+    background-attachment: fixed;
+  }
+  .paw-overlay {
+    background-image: url('your-logo.png');
+    background-repeat: repeat;
+    background-size: 100px;
+    opacity: 0.05;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  main, header, footer {
+    position: relative;
+    z-index: 10;
+  }
+</style>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { 
-    getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where 
+  import {
+    getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const firebaseConfig = {
-  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58", authDomain: "bracelets-and-color.firebaseapp.com", projectId: "bracelets-and-color", storageBucket: "bracelets-and-color.firebasestorage.app", messagingSenderId: "382292570673", appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10", measurementId: "G-BJPQN6S7YB"
+    apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+    authDomain: "bracelets-and-color.firebaseapp.com",
+    projectId: "bracelets-and-color",
+    storageBucket: "bracelets-and-color.firebasestorage.app",
+    messagingSenderId: "382292570673",
+    appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
+    measurementId: "G-BJPQN6S7YB"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -55,7 +86,6 @@
     const extrasCountInput = document.getElementById("extrasCount");
     const priceDisplay = document.getElementById("price");
 
-    // Populate sizes dynamically
     for (let i = 5; i <= 30; i++) {
       const opt = document.createElement("option");
       opt.value = i;
@@ -63,7 +93,6 @@
       sizeSelect.appendChild(opt);
     }
 
-    // Load color options from Firestore
     async function loadColors() {
       const colorsSnapshot = await getDocs(collection(db, "braceletColors"));
       const colorOptions = [];
@@ -171,54 +200,58 @@
   });
 </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
 
-<header class="w-full text-center mb-8">
-  <img src="your-logo.png" alt="Tactics & Treats Logo" class="mx-auto w-40 h-auto mb-4">
-  <h1 class="text-3xl font-bold text-red-700">Tactics & Treats</h1>
-  <p class="text-gray-700">Custom Paracord Bracelets & Dog Collars 🍪</p>
-</header>
+<body class="min-h-screen flex flex-col items-center py-10 relative">
+  <div class="paw-overlay"></div>
 
-<main class="bg-white shadow-md rounded-2xl p-8 w-full max-w-md">
-  <h2 class="text-2xl font-semibold mb-4 text-center">Preorder Your Bracelet or Dog Collar</h2>
-  <form id="orderForm" class="space-y-4">
-    <input id="name" type="text" placeholder="Your Name" class="w-full border p-2 rounded">
-    <input id="email" type="email" placeholder="Your Email" class="w-full border p-2 rounded" required>
+  <header class="w-full text-center mb-8">
+    <img src="your-logo.png" alt="Tactics & Treats Logo" class="mx-auto w-40 h-auto mb-4" />
+    <h1 class="text-3xl font-bold text-white drop-shadow-lg">Tactics & Treats</h1>
+    <p class="text-gray-200">Custom Paracord Bracelets & Dog Collars</p>
+  </header>
 
-    <select id="color1" class="w-full border p-2 rounded"></select>
-    <select id="color2" class="w-full border p-2 rounded"></select>
+  <main class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">
+      Preorder Your Bracelet or Dog Collar
+    </h2>
 
-    <select id="itemType" class="w-full border p-2 rounded">
-      <option value="">Choose Type</option>
-      <option value="Cobra">Cobra</option>
-      <option value="King Cobra">King Cobra</option>
-      <option value="Fishtail">Fishtail</option>
-      <option value="Solomon/Trilobite">Solomon/Trilobite</option>
-    </select>
+    <form id="orderForm" class="space-y-4">
+      <input id="name" type="text" placeholder="Your Name" class="w-full border p-2 rounded" />
+      <input id="email" type="email" placeholder="Your Email" class="w-full border p-2 rounded" required />
 
-    <select id="itemSize" class="w-full border p-2 rounded">
-      <option value="">Choose Size (inches)</option>
-      <!-- JS will populate sizes 5"–30" -->
-    </select>
-    <p class="text-gray-600 text-sm mt-1">*Measure your wrist and add 1 inch*</p>
+      <select id="color1" class="w-full border p-2 rounded"></select>
+      <select id="color2" class="w-full border p-2 rounded"></select>
 
-    <input id="extrasCount" type="number" min="0" placeholder="Number of Extras (optional)" class="w-full border p-2 rounded">
-    <textarea id="extrasDesc" rows="2" placeholder="Describe extras if any" class="w-full border p-2 rounded"></textarea>
+      <select id="itemType" class="w-full border p-2 rounded">
+        <option value="">Choose Type</option>
+        <option value="Cobra">Cobra</option>
+        <option value="King Cobra">King Cobra</option>
+        <option value="Fishtail">Fishtail</option>
+        <option value="Solomon/Trilobite">Solomon/Trilobite</option>
+      </select>
 
-    <textarea id="notes" rows="3" placeholder="Any extra notes or requests..." class="w-full border p-2 rounded"></textarea>
+      <select id="itemSize" class="w-full border p-2 rounded">
+        <option value="">Choose Size (inches)</option>
+      </select>
+      <p class="text-gray-600 text-sm mt-1">*Measure your wrist and add 1 inch*</p>
 
-    <p id="price" class="text-center font-bold mt-2">Price: $0.00</p>
+      <input id="extrasCount" type="number" min="0" placeholder="Number of Extras (optional)" class="w-full border p-2 rounded" />
+      <textarea id="extrasDesc" rows="2" placeholder="Describe extras if any" class="w-full border p-2 rounded"></textarea>
 
-    <button type="button" onclick="submitOrder()" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition">
-      Submit Preorder
-    </button>
-  </form>
-  <p id="status" class="text-center mt-3"></p>
-</main>
+      <textarea id="notes" rows="3" placeholder="Any extra notes or requests..." class="w-full border p-2 rounded"></textarea>
 
-<footer class="mt-8 text-gray-600 text-sm">
-  © 2025 Tactics & Treats. Handmade with ❤️.
-</footer>
+      <p id="price" class="text-center font-bold mt-2">Price: $0.00</p>
 
+      <button type="button" onclick="submitOrder()" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition">
+        Submit Preorder
+      </button>
+    </form>
+
+    <p id="status" class="text-center mt-3"></p>
+  </main>
+
+  <footer class="mt-8 text-gray-300 text-sm text-center">
+    © 2025 Tactics & Treats • Handmade with ❤️
+  </footer>
 </body>
 </html>
