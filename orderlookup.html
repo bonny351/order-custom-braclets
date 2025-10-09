@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Lookup - Tactics & Treats</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<style>
+body {
+  background: linear-gradient(to right, #8b0000 0%, #000 50%, #8b0000 100%);
+  background-attachment: fixed;
+  font-family: "Comic Sans MS", cursive, sans-serif;
+}
+.paw-overlay {
+  background-image: url('your-logo.png');
+  background-repeat: repeat;
+  background-size: 100px;
+  opacity: 0.05;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+main, header, footer { position: relative; z-index: 10; }
+button {
+  transition: all 0.3s ease;
+}
+button:hover {
+  transform: scale(1.05);
+}
+</style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center relative">
+<div class="paw-overlay"></div>
+
+<main class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md text-center space-y-6">
+  <img src="your-logo.png" alt="Logo" class="mx-auto w-24 h-auto mb-3 drop-shadow-lg">
+  <h1 class="text-3xl font-bold text-red-700">Order Lookup</h1>
+  <p class="text-gray-700">Enter your order number below to check or cancel your order.</p>
+
+  <div>
+    <input id="orderCode" type="text" placeholder="Enter Order Number (e.g. TT-2025-10-ABC123)" 
+      class="w-full border-2 border-red-700 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-red-600 text-center" />
+    <button id="lookupBtn" class="mt-4 bg-red-700 text-white px-6 py-2 rounded-lg hover:bg-red-800">
+      🔍 Lookup Order
+    </button>
+  </div>
+
+  <div id="orderResult" class="hidden text-left mt-6 bg-gray-100 p-4 rounded-lg shadow-inner border-l-4 border-red-700">
+    <p><strong>Name:</strong> <span id="resName"></span></p>
+    <p><strong>Email:</strong> <span id="resEmail"></span></p>
+    <p><strong>Type:</strong> <span id="resType"></span></p>
+    <p><strong>Colors:</strong> <span id="resColors"></span></p>
+    <p><strong>Size/Qty:</strong> <span id="resSizeQty"></span></p>
+    <p><strong>Price:</strong> $<span id="resPrice"></span></p>
+    <p><strong>Status:</strong> <span id="resStatus"></span></p>
+    <button id="cancelBtn" class="hidden mt-4 bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700">
+      ❌ Cancel Order
+    </button>
+  </div>
+
+  <p id="statusMsg" class="text-sm font-semibold"></p>
+
+  <a href="index.html" class="block text-red-700 font-bold mt-4 hover:text-red-900 transition">
+    ⬅️ Back to Preorder Page
+  </a>
+</main>
+
+<footer class="mt-8 text-gray-300 text-sm text-center">
+  © 2025 Tactics & Treats • Handmade with ❤️
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.firebasestorage.app",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const lookupBtn = document.getElementById("lookupBtn");
+const orderCodeInput = document.getElementById("orderCode");
+const orderResult = document.getElementById("orderResult");
+const cancelBtn = document.getElementById("cancelBtn");
+const statusMsg = document.getElementById("statusMsg");
+
+lookupBtn.addEventListener("click", async () => {
+  const code = orderCodeInput.value.trim().toUpperCase();
+  if (!code) return alert("Please enter your order number.");
+
+  statusMsg.textContent = "Searching...";
+  statusMsg.className = "text-gray-700 text-sm";
+
+  // Try both collections
+  let foundDoc = null, foundId = null, foundType = null;
+
+  for (const [col, label] of [["braceletOrders", "Bracelet"], ["cookieOrders", "Cookie"]]) {
+    const q = query(collection(db, col), where("orderNumber", "==", code));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      foundDoc = snap.docs[0].data();
+      foundId = snap.docs[0].id;
+      foundType = col;
+      break;
+    }
+  }
+
+  if (!foundDoc) {
+    statusMsg.textContent = "❌ No order found with that number.";
+    statusMsg.className = "text-red-600 font-semibold";
+    orderResult.classList.add("hidden");
+    return;
+  }
+
+  // Fill results
+  document.getElementById("resName").textContent = foundDoc.name || "N/A";
+  document.getElementById("resEmail").textContent = foundDoc.email || "N/A";
+  document.getElementById("resType").textContent = foundDoc.type || foundDoc.cookieType || "N/A";
+  document.getElementById("resColors").textContent = foundDoc.color1 
+    ? (foundDoc.color2 ? foundDoc.color1 + ", " + foundDoc.color2 : foundDoc.color1)
+    : "N/A";
+  document.getElementById("resSizeQty").textContent = foundDoc.size || foundDoc.quantity || "N/A";
+  document.getElementById("resPrice").textContent = (foundDoc.price || foundDoc.total || "0.00");
+  document.getElementById("resStatus").textContent = foundDoc.status || "Pending";
+
+  orderResult.classList.remove("hidden");
+
+  // Only allow cancel if pending
+  if ((foundDoc.status || "Pending") === "Pending") {
+    cancelBtn.classList.remove("hidden");
+    cancelBtn.onclick = async () => {
+      if (confirm("Are you sure you want to cancel this order?")) {
+        await updateDoc(doc(db, foundType, foundId), { status: "Cancelled" });
+        document.getElementById("resStatus").textContent = "Cancelled";
+        cancelBtn.classList.add("hidden");
+        statusMsg.textContent = "✅ Order cancelled successfully.";
+        statusMsg.className = "text-green-600 font-semibold";
+      }
+    };
+  } else {
+    cancelBtn.classList.add("hidden");
+  }
+
+  statusMsg.textContent = "✅ Order found!";
+  statusMsg.className = "text-green-600 font-semibold";
+});
+</script>
+</body>
+</html>
