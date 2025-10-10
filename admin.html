@@ -1,330 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bracelet Orders Admin</title>
-<script type="module">
-  // --- Firebase Setup ---
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getFirestore, collection, getDocs, addDoc, updateDoc, doc,
-    query, where, orderBy, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-    authDomain: "bracelets-and-color.firebaseapp.com",
-    projectId: "bracelets-and-color",
-    storageBucket: "bracelets-and-color.firebasestorage.app",
-    messagingSenderId: "382292570673",
-    appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
-    measurementId: "G-BJPQN6S7YB"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  let currentTab = "Pending";
-
-  // --- Normalize and Load Orders ---
-  async function loadOrders(statusFilter = "Pending") {
-    currentTab = statusFilter;
-    const tableBody = document.getElementById("ordersTableBody");
-    tableBody.innerHTML = "";
-
-    const q = query(collection(db, "braceletOrders"), orderBy("createdAt", "asc"));
-    const querySnapshot = await getDocs(q);
-
-    for (const docSnap of querySnapshot.docs) {
-      let data = docSnap.data();
-      const ref = doc(db, "braceletOrders", docSnap.id);
-
-      // --- Normalize missing fields ---
-      const defaultData = {
-        name: "No Name",
-        email: "No Email",
-        type: "Unknown",
-        color1: "None",
-        color2: "None",
-        size: "Unknown",
-        extrasCount: 0,
-        extrasDesc: "",
-        price: 0,
-        status: "Pending",
-        adminNotes: "",
-        createdAt: serverTimestamp()
-      };
-
-      let updated = false;
-      for (const key in defaultData) {
-        if (!(key in data)) {
-          data[key] = defaultData[key];
-          updated = true;
-        }
-      }
-
-      if (updated) {
-        await updateDoc(ref, data);
-      }
-
-      if (data.status !== statusFilter) continue;
-
-      const date = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : "No Date";
-
-      const row = document.createElement("tr");
-      row.classList.add("border-b");
-
-      row.innerHTML = `
-        <td><input type="checkbox" class="order-checkbox" data-id="${docSnap.id}"></td>
-        <td>${data.name}</td>
-        <td>${data.email}</td>
-        <td>${data.type}</td>
-        <td>
-          <span style="background:${data.color1};width:20px;height:20px;display:inline-block;border-radius:4px;margin-right:2px;"></span>
-          <span style="background:${data.color2};width:20px;height:20px;display:inline-block;border-radius:4px;margin-left:2px;"></span>
-        </td>
-        <td>${data.size}</td>
-        <td>${data.extrasCount}</td>
-        <td>${data.extrasDesc}</td>
-        <td>$${data.price?.toFixed(2)}</td>
-        <td>${date}</td>
-        <td>
-          <select onchange="updateStatus('${docSnap.id}', this.value)" class="border rounded px-2 py-1">
-            <option ${data.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option ${data.status === "Being Made" ? "selected" : ""}>Being Made</option>
-            <option ${data.status === "Completed" ? "selected" : ""}>Completed</option>
-          </select>
-        </td>
-        <td>
-          <textarea
-            class="border rounded w-48 p-1 text-sm resize-none"
-            rows="2"
-            placeholder="Admin notes..."
-            onblur="saveAdminNotes('${docSnap.id}', this.value)"
-          >${data.adminNotes}</textarea>
-        </td>
-      `;
-      tableBody.appendChild(row);
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Dashboard | Tactics & Treats</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: black;
+    color: white;
+    margin: 0;
+    padding: 0;
   }
 
-  // --- Update Status ---
-  window.updateStatus = async (id, newStatus) => {
-    const ref = doc(db, "braceletOrders", id);
-    await updateDoc(ref, { status: newStatus });
-    loadOrders(currentTab);
-  };
+  h1, h2 {
+    text-align: center;
+    color: red;
+    margin: 20px 0;
+  }
 
-  // --- Save Admin Notes ---
-  window.saveAdminNotes = async (id, noteText) => {
-    const ref = doc(db, "braceletOrders", id);
-    await updateDoc(ref, { adminNotes: noteText || "" });
-  };
+  table {
+    width: 95%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+  }
 
-  // --- Download CSV ---
-  window.downloadSelectedCSV = () => {
-    const checkboxes = document.querySelectorAll(".order-checkbox:checked");
-    if (checkboxes.length === 0) return alert("Select at least one order!");
+  th, td {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    text-align: center;
+  }
 
-    let csv = "Name,Email,Type,Color1,Color2,Size,ExtrasCount,ExtrasDesc,Price,Status,Date,AdminNotes\n";
-    checkboxes.forEach((box) => {
-      const row = box.closest("tr").children;
-      const colorCells = row[4].querySelectorAll("span");
-      const color1 = colorCells[0]?.style.background || "None";
-      const color2 = colorCells[1]?.style.background || "None";
+  th {
+    background: red;
+    color: white;
+  }
 
-      const rowData = [
-        row[1].innerText,
-        row[2].innerText,
-        row[3].innerText,
-        color1,
-        color2,
-        row[5].innerText,
-        row[6].innerText,
-        row[7].innerText,
-        row[8].innerText.replace("$", ""),
-        row[10].querySelector("select").value,
-        row[9].innerText,
-        row[11].querySelector("textarea").value.replace(/[\n\r]/g, " ")
-      ];
-      csv += rowData.join(",") + "\n";
+  tr:hover { background: #222; }
+
+  button {
+    background: red;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px;
+  }
+
+  button:hover { background: #ff4444; }
+
+  [contenteditable="true"] {
+    background: #222;
+    border-radius: 4px;
+    outline: none;
+  }
+
+  [contenteditable="true"]:focus {
+    background: #333;
+    box-shadow: 0 0 0 2px red;
+  }
+</style>
+</head>
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<!-- ORDERS -->
+<div class="section">
+  <h2>Orders</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Order #</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Product</th>
+        <th>Type</th>
+        <th>Qty</th>
+        <th>Total</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="ordersBody"></tbody>
+  </table>
+</div>
+
+<!-- PRODUCTS -->
+<div class="section">
+  <h2>Products</h2>
+  <div style="text-align:center;">
+    <button id="generateSKU">Generate All Missing SKUs</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name / Type</th>
+        <th>Size</th>
+        <th>Product Type</th>
+        <th>SKU</th>
+        <th>Supplier</th>
+        <th>Stock</th>
+        <th>Status</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody id="productBody"></tbody>
+  </table>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.appspot.com",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const ordersBody = document.getElementById("ordersBody");
+const productBody = document.getElementById("productBody");
+const generateSKU = document.getElementById("generateSKU");
+
+// 🧾 Load Orders
+async function loadOrders() {
+  const [cookieSnap, braceletSnap] = await Promise.all([
+    getDocs(collection(db, "cookieOrders")),
+    getDocs(collection(db, "braceletOrders"))
+  ]);
+
+  const all = [];
+  cookieSnap.forEach(d => all.push({ id: d.id, ...d.data(), type: "Cookie" }));
+  braceletSnap.forEach(d => all.push({ id: d.id, ...d.data(), type: "Bracelet" }));
+
+  ordersBody.innerHTML = "";
+  all.forEach(o => {
+    const price = o.totalPrice ? `$${o.totalPrice.toFixed(2)}` : "$0.00";
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${o.orderNumber || "-"}</td>
+      <td>${o.name || "-"}</td>
+      <td>${o.email || "-"}</td>
+      <td>${o.productName || o.type || "-"}</td>
+      <td>${o.type}</td>
+      <td>${o.quantity || 1}</td>
+      <td>${price}</td>
+      <td>${o.status || "Pending"}</td>
+    `;
+    ordersBody.appendChild(row);
+  });
+}
+
+// 📦 Load Products
+async function loadProducts() {
+  const [cookieSnap, braceletSnap] = await Promise.all([
+    getDocs(collection(db, "products_cookies")),
+    getDocs(collection(db, "products_bracelets"))
+  ]);
+
+  productBody.innerHTML = "";
+  const allProducts = [];
+
+  cookieSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_cookies", productType: "Cookie" }));
+  braceletSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_bracelets", productType: "Bracelet" }));
+
+  allProducts.forEach(p => {
+    // Display name
+    const isBracelet = p.collection === "products_bracelets";
+    const displayName = isBracelet
+      ? `${p.type || "Unnamed"}`
+      : (p.name || "Unnamed");
+    const displaySize = isBracelet ? (p.size || "-") : "-";
+
+    const stock = Number(p.stock ?? 0);
+    const basePrice = Number(p.price ?? 0);
+    const adjustedPrice = stock > 0 && stock <= 10 ? basePrice + 1 : basePrice;
+    const status =
+      stock <= 0 ? "Out of Stock" :
+      stock <= 10 ? "Low Stock" :
+      "In Stock";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td contenteditable="true" data-field="${isBracelet ? 'type' : 'name'}">${displayName}</td>
+      <td contenteditable="${isBracelet}" data-field="${isBracelet ? 'size' : ''}">${displaySize}</td>
+      <td>${p.productType}</td>
+      <td contenteditable="true" data-field="sku">${p.sku || "-"}</td>
+      <td contenteditable="true" data-field="supplier">${p.supplier || "-"}</td>
+      <td contenteditable="true" data-field="stock">${stock}</td>
+      <td>${status}</td>
+      <td contenteditable="true" data-field="price">$${adjustedPrice.toFixed(2)}</td>
+    `;
+
+    // 🔹 Inline edit saving
+    row.querySelectorAll("[contenteditable]").forEach(cell => {
+      if (!cell.dataset.field) return; // skip blank size for cookies
+      cell.addEventListener("blur", async e => {
+        const field = e.target.dataset.field;
+        let value = e.target.innerText.replace("$", "").trim();
+        if (["stock", "price"].includes(field)) value = Number(value);
+        await updateDoc(doc(db, p.collection, p.id), { [field]: value });
+        console.log(`✅ Updated ${field} for ${displayName}`);
+        loadProducts();
+      });
     });
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `orders_${currentTab}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    productBody.appendChild(row);
+  });
+}
 
-  window.downloadRecentCSV = async (limitCount = 10) => {
-    const q = query(collection(db, "braceletOrders"), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
-
-    let csv = "Name,Email,Type,Color1,Color2,Size,ExtrasCount,ExtrasDesc,Price,Status,Date,AdminNotes\n";
-    let count = 0;
-    for (const docSnap of querySnapshot.docs) {
-      if (count >= limitCount) break;
-      let data = docSnap.data();
-
-      // Normalize missing fields
-      const defaultData = {
-        name: "No Name", email: "No Email", type: "Unknown", color1: "None",
-        color2: "None", size: "Unknown", extrasCount: 0, extrasDesc: "",
-        price: 0, status: "Pending", adminNotes: "", createdAt: serverTimestamp()
-      };
-      let updated = false;
-      for (const key in defaultData) {
-        if (!(key in data)) {
-          data[key] = defaultData[key];
-          updated = true;
-        }
+// ⚙️ Generate SKUs
+generateSKU.addEventListener("click", async () => {
+  const collections = ["products_cookies", "products_bracelets"];
+  for (const col of collections) {
+    const snap = await getDocs(collection(db, col));
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (!data.sku) {
+        const prefix = col.includes("bracelet") ? "BR" : "CK";
+        const newSKU = `${prefix}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+        await updateDoc(doc(db, col, d.id), { sku: newSKU });
       }
-      if (updated) {
-        const ref = doc(db, "braceletOrders", docSnap.id);
-        await updateDoc(ref, data);
-      }
-
-      const date = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleString() : "No Date";
-
-      csv += `${data.name},${data.email},${data.type},${data.color1},${data.color2},${data.size},${data.extrasCount},${data.extrasDesc},${data.price || 0},${data.status},${date},"${data.adminNotes || ""}"\n`;
-      count++;
-    }
-
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `recent_orders.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // --- Create Test Order ---
-  window.createTestOrder = async () => {
-    try {
-      const fakeNames = ["Alex", "Jordan", "Taylor", "Morgan", "Casey"];
-      const fakeColors = ["Red", "Black", "Navy Blue", "Green", "Camo"];
-      const fakeTypes = ["Cobra", "King Cobra", "Fishtail", "Solomon / Trilobite"];
-      const fakeSizes = ["5\"", "6\"", "7\"", "8\"", "10\"", "12\"", "15\"", "20\""];
-
-      const name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
-      const color1 = fakeColors[Math.floor(Math.random() * fakeColors.length)];
-      const color2 = fakeColors[Math.floor(Math.random() * fakeColors.length)];
-      const type = fakeTypes[Math.floor(Math.random() * fakeTypes.length)];
-      const size = fakeSizes[Math.floor(Math.random() * fakeSizes.length)];
-      const extrasCount = Math.floor(Math.random() * 3);
-      const extrasDesc = extrasCount > 0 ? "Glow Buckle, Name Tag" : "";
-      const price = 5 + (Math.random() * 5) + extrasCount;
-
-      await addDoc(collection(db, "braceletOrders"), {
-        name: `${name} Test`,
-        email: `${name.toLowerCase()}@example.com`,
-        color1, color2, type, size, extrasCount, extrasDesc, price,
-        status: "Pending", adminNotes: "Test order created automatically.",
-        createdAt: serverTimestamp()
-      });
-
-      alert("✅ Test order created!");
-      loadOrders(currentTab);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create test order.");
-    }
-  };
-
-  // --- Colors Management ---
-  async function loadColors() {
-    const colorsSelect = document.getElementById("colorsSelect");
-    if (!colorsSelect) return;
-    colorsSelect.innerHTML = "";
-
-    const querySnapshot = await getDocs(collection(db, "braceletColors"));
-    for (const docSnap of querySnapshot.docs) {
-      let data = docSnap.data();
-      const ref = doc(db, "braceletColors", docSnap.id);
-      if (!data.name) {
-        data.name = "Unknown Color";
-        await updateDoc(ref, { name: data.name });
-      }
-
-      const option = document.createElement("option");
-      option.value = data.name;
-      option.textContent = data.name;
-      colorsSelect.appendChild(option);
     }
   }
+  alert("✅ All missing SKUs generated!");
+  loadProducts();
+});
 
-  window.addNewColor = async () => {
-    const colorName = document.getElementById("newColorInput").value.trim();
-    if (!colorName) return alert("Enter a color name first!");
-    
-    const q = query(collection(db, "braceletColors"), where("name", "==", colorName));
-    const existing = await getDocs(q);
-    if (!existing.empty) return alert("Color already exists!");
-
-    await addDoc(collection(db, "braceletColors"), { name: colorName, addedAt: serverTimestamp() });
-    document.getElementById("newColorInput").value = "";
-    loadColors();
-    alert(`✅ Color "${colorName}" added!`);
-  };
-
-  // --- On Load ---
-  window.onload = () => {
-    loadOrders("Pending");
-    loadColors();
-  };
+// Init
+loadOrders();
+loadProducts();
 </script>
-
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 text-gray-900">
-<header class="bg-black text-white p-4 flex flex-col md:flex-row justify-between items-center gap-2">
-  <div class="text-2xl font-bold">🛠 Bracelet Orders Admin</div>
-  <div class="flex gap-2 flex-wrap">
-    <button onclick="downloadSelectedCSV()" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Download Selected CSV</button>
-    <button onclick="downloadRecentCSV(10)" class="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600">Download 10 Most Recent</button>
-    <button onclick="createTestOrder()" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">🧪 Test Order</button>
-  </div>
-  <div class="mt-2 flex gap-2 items-center">
-    <input type="text" id="newColorInput" placeholder="Add new color" class="px-2 py-1 rounded text-black">
-    <button onclick="addNewColor()" class="bg-yellow-500 text-black px-3 py-1 rounded hover:bg-yellow-600">➕ Add Color</button>
-    <select id="colorsSelect" class="px-2 py-1 rounded text-black">
-      <option disabled selected>Select a color</option>
-    </select>
-  </div>
-</header>
-
-<main class="p-6">
-  <div class="flex gap-2 mb-4">
-    <button onclick="loadOrders('Pending')" class="bg-gray-800 text-white px-3 py-1 rounded">Pending</button>
-    <button onclick="loadOrders('Being Made')" class="bg-gray-600 text-white px-3 py-1 rounded">Being Made</button>
-    <button onclick="loadOrders('Completed')" class="bg-gray-400 text-white px-3 py-1 rounded">Completed</button>
-  </div>
-
-  <div class="overflow-x-auto">
-    <table class="w-full bg-white shadow rounded overflow-hidden text-sm">
-      <thead class="bg-gray-200">
-        <tr>
-          <th></th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Type</th>
-          <th>Colors</th>
-          <th>Size</th>
-          <th>Extras</th>
-          <th>Extras Desc</th>
-          <th>Price</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Admin Notes</th>
-        </tr>
-      </thead>
-      <tbody id="ordersTableBody"></tbody>
-    </table>
-  </div>
-</main>
 </body>
 </html>
