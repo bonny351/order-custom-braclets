@@ -23,25 +23,6 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     box-shadow: 0 0 10px #ff0040;
-    position: relative;
-  }
-
-  #logoutBtn {
-    position: absolute;
-    right: 25px;
-    top: 15px;
-    background: #111;
-    border: 1px solid #ff0040;
-    color: #ff0040;
-    border-radius: 6px;
-    padding: 5px 12px;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-
-  #logoutBtn:hover {
-    background: #ff0040;
-    color: white;
   }
 
   main {
@@ -181,15 +162,39 @@
     background: #ff0040;
     color: white;
   }
+
+  /* --- Admin Login Overlay --- */
+  #adminLogin {
+    position: fixed;
+    inset: 0;
+    background: black;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    font-family: 'Poppins', sans-serif;
+  }
+  #adminLogin input {
+    padding: 10px;
+    border: 1px solid #ff0040;
+    border-radius: 8px;
+    background: #111;
+    color: white;
+    width: 200px;
+    text-align: center;
+    margin: 10px 0;
+  }
+  #loginError {
+    color: #ff5555;
+    display: none;
+  }
 </style>
 </head>
 
 <body>
-  <header>
-    🛠️ Admin Dashboard | Tactics & Treats
-    <button id="logoutBtn">Logout</button>
-  </header>
-
+  <header>🛠️ Admin Dashboard | Tactics & Treats</header>
   <main>
     <h2>Orders</h2>
     <table>
@@ -264,56 +269,259 @@
     </div>
   </div>
 
-  <!-- ================= JAVASCRIPT ================= -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import {
-      getFirestore, collection, getDocs, updateDoc, doc, addDoc, deleteDoc
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  <!-- Admin Login Overlay -->
+  <div id="adminLogin">
+    <h2 style="color:#ff0040;">🔐 Admin Access</h2>
+    <input id="adminCodeInput" type="password" placeholder="Enter admin code">
+    <button id="adminLoginBtn">Unlock Dashboard</button>
+    <p id="loginError">❌ Invalid code</p>
+  </div>
 
-    // 🔥 Firebase Config
-    const firebaseConfig = {
+<!-- ================= JAVASCRIPT ================= -->
+<script type="module">
+/* ===== Admin Code Protection ===== */
+const ADMIN_CODE = "TACTICS2025"; // change this to your secret code
+const adminLogin = document.getElementById("adminLogin");
+const adminLoginBtn = document.getElementById("adminLoginBtn");
+const adminCodeInput = document.getElementById("adminCodeInput");
+const loginError = document.getElementById("loginError");
+
+function unlockAdmin() {
+  adminLogin.style.display = "none";
+  document.querySelector("main").style.filter = "none";
+  document.querySelector("main").style.pointerEvents = "auto";
+  loadOrders();
+  loadProducts();
+}
+
+adminLoginBtn.addEventListener("click", () => {
+  const input = adminCodeInput.value.trim();
+  if (input === ADMIN_CODE) {
+    unlockAdmin();
+  } else {
+    loginError.style.display = "block";
+    adminCodeInput.value = "";
+  }
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+  document.querySelector("main").style.filter = "blur(5px)";
+  document.querySelector("main").style.pointerEvents = "none";
+});
+
+/* Firebase imports */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+/* Firebase config */
+const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
   projectId: "bracelets-and-color",
-  storageBucket: "bracelets-and-color.firebasestorage.app",
+  storageBucket: "bracelets-and-color.appspot.com",
   messagingSenderId: "382292570673",
-  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
-  measurementId: "G-BJPQN6S7YB"
-    };
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    // 🚨 Auth Protection
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "signin.html";
-      } else {
-        console.log("✅ Logged in as:", user.email);
-        loadOrders();
-        loadProducts();
+/* ===== Utility ===== */
+function escapeHTML(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/* ===== Elements ===== */
+const ordersBody = document.getElementById("ordersBody");
+const productBody = document.getElementById("productBody");
+const modal = document.getElementById("productModal");
+const addProduct = document.getElementById("addProduct");
+const closeModalBtn = document.getElementById("closeModal");
+const saveBtn = document.getElementById("saveProduct");
+const generateSKU = document.getElementById("generateSKU");
+const productTypeSelect = document.getElementById("productType");
+const braceletOptions = document.getElementById("braceletOptions");
+const productNameInput = document.getElementById("productName");
+const productSizeInput = document.getElementById("productSize");
+const productPriceInput = document.getElementById("productPrice");
+const productStockInput = document.getElementById("productStock");
+const productSupplierInput = document.getElementById("productSupplier");
+
+/* ===== Orders ===== */
+async function loadOrders() {
+  try {
+    const [cookieSnap, braceletSnap] = await Promise.all([
+      getDocs(collection(db, "cookieOrders")),
+      getDocs(collection(db, "braceletOrders"))
+    ]);
+    const all = [];
+    cookieSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "cookieOrders", type: "Cookie" }));
+    braceletSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "braceletOrders", type: "Bracelet" }));
+
+    ordersBody.innerHTML = "";
+    all.forEach(o => {
+      const price = o.totalPrice ? `$${Number(o.totalPrice).toFixed(2)}` : "$0.00";
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${escapeHTML(o.orderNumber || "-")}</td>
+        <td contenteditable data-field="name">${escapeHTML(o.name || "-")}</td>
+        <td contenteditable data-field="email">${escapeHTML(o.email || "-")}</td>
+        <td>${escapeHTML(o.productName || o.type)}</td>
+        <td>${escapeHTML(o.type)}</td>
+        <td contenteditable data-field="quantity">${escapeHTML(o.quantity ?? 1)}</td>
+        <td contenteditable data-field="totalPrice">${escapeHTML(price)}</td>
+        <td>
+          <select data-field="status">
+            <option value="Pending" ${o.status==="Pending"?"selected":""}>Pending</option>
+            <option value="Processing" ${o.status==="Processing"?"selected":""}>Processing</option>
+            <option value="Completed" ${o.status==="Completed"?"selected":""}>Completed</option>
+            <option value="Cancelled" ${o.status==="Cancelled"?"selected":""}>Cancelled</option>
+          </select>
+        </td>
+      `;
+      row.querySelectorAll("[contenteditable]").forEach(cell => {
+        const field = cell.dataset.field;
+        cell.addEventListener("blur", async e => {
+          let value = e.target.innerText.replace("$","").trim();
+          if (["totalPrice","quantity"].includes(field)) value = Number(value);
+          await updateDoc(doc(db, o.collection, o.id), { [field]: value });
+        });
+      });
+      row.querySelector("select[data-field='status']").addEventListener("change", async e => {
+        await updateDoc(doc(db, o.collection, o.id), { status: e.target.value });
+      });
+      ordersBody.appendChild(row);
+    });
+  } catch (err) {
+    console.error("loadOrders error:", err);
+  }
+}
+
+/* ===== Products ===== */
+async function loadProducts() {
+  try {
+    const [cookieSnap, braceletSnap] = await Promise.all([
+      getDocs(collection(db, "products_cookies")),
+      getDocs(collection(db, "products_bracelets"))
+    ]);
+    productBody.innerHTML = "";
+
+    const allProducts = [];
+    cookieSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_cookies", productType: "Cookie" }));
+    braceletSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_bracelets", productType: "Bracelet" }));
+
+    allProducts.forEach(p => {
+      const stock = Number(p.stock ?? 0);
+      const basePrice = Number(p.price ?? 0);
+      const adjustedPrice = (stock > 0 && stock <= 10) ? basePrice + 1 : basePrice;
+      const status = stock <= 0 ? "Out of Stock" : stock <= 10 ? "Low Stock" : "In Stock";
+      const isBracelet = p.collection.includes("bracelet");
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td contenteditable data-field="${isBracelet ? 'type' : 'name'}">${escapeHTML(p.name || p.type || "Unnamed")}</td>
+        <td contenteditable="${isBracelet}" data-field="${isBracelet?'size':''}">${escapeHTML(isBracelet?p.size||'-':'-')}</td>
+        <td>${escapeHTML(p.productType)}</td>
+        <td contenteditable data-field="sku">${escapeHTML(p.sku || "-")}</td>
+        <td contenteditable data-field="supplier">${escapeHTML(p.supplier || "-")}</td>
+        <td contenteditable data-field="stock">${escapeHTML(stock)}</td>
+        <td>${escapeHTML(status)}</td>
+        <td contenteditable data-field="price">$${escapeHTML(adjustedPrice.toFixed(2))}</td>
+        <td><button class="delete-btn" data-id="${p.id}" data-col="${p.collection}">🗑️</button></td>
+      `;
+
+      row.querySelectorAll("[contenteditable]").forEach(cell => {
+        const field = cell.dataset.field;
+        if (!field) return;
+        cell.addEventListener("blur", async e => {
+          let value = e.target.innerText.replace("$","").trim();
+          if (["stock","price"].includes(field)) value = Number(value);
+          await updateDoc(doc(db, p.collection, p.id), { [field]: value });
+          loadProducts();
+        });
+      });
+      row.querySelector(".delete-btn").addEventListener("click", async () => {
+        if (confirm(`Delete "${p.name || p.type}"?`)) {
+          await deleteDoc(doc(db, p.collection, p.id));
+          loadProducts();
+        }
+      });
+      productBody.appendChild(row);
+    });
+  } catch (err) {
+    console.error("loadProducts error:", err);
+  }
+}
+
+/* ===== Modal ===== */
+function openModal() {
+  productTypeSelect.value = "cookie";
+  braceletOptions.style.display = "none";
+  productNameInput.value = "";
+  productSizeInput.value = "";
+  productPriceInput.value = "5.00";
+  productStockInput.value = "10";
+  productSupplierInput.value = "";
+  modal.classList.add("show");
+}
+function closeModal() { modal.classList.remove("show"); }
+addProduct.addEventListener("click", openModal);
+closeModalBtn.addEventListener("click", closeModal);
+modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+productTypeSelect.addEventListener("change", () => {
+  braceletOptions.style.display = productTypeSelect.value === "bracelet" ? "block" : "none";
+});
+
+saveBtn.addEventListener("click", async () => {
+  const type = productTypeSelect.value;
+  const name = productNameInput.value.trim();
+  const size = productSizeInput.value.trim();
+  const price = parseFloat(productPriceInput.value);
+  const stock = parseInt(productStockInput.value);
+  const supplier = productSupplierInput.value.trim() || "-";
+
+  if (!name || isNaN(price) || isNaN(stock)) return alert("Please fill all fields.");
+
+  const data = {
+    name: type === "cookie" ? name : undefined,
+    type: type === "bracelet" ? name : undefined,
+    size: type === "bracelet" ? size : undefined,
+    price,
+    stock,
+    supplier,
+    sku: Math.floor(Math.random() * 900000 + 100000).toString(),
+    productType: type === "cookie" ? "Cookie" : "Bracelet"
+  };
+
+  await addDoc(collection(db, type === "cookie" ? "products_cookies" : "products_bracelets"), data);
+  closeModal();
+  loadProducts();
+});
+
+/* ===== SKU Generator ===== */
+generateSKU.addEventListener("click", async () => {
+  const colNames = ["products_cookies","products_bracelets"];
+  for (const colName of colNames) {
+    const snap = await getDocs(collection(db, colName));
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (!data.sku) {
+        const newSKU = Math.floor(Math.random() * 900000 + 100000).toString();
+        await updateDoc(doc(db, colName, d.id), { sku: newSKU });
       }
-    });
-
-    // 🚪 Logout
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "signin.html";
-    });
-
-    /* ======== Your Existing Firestore Logic Below ======== */
-    // (keep your same JS from loadOrders(), loadProducts(), modal logic, etc.)
-
-    /* COPY EVERYTHING from your current <script> BELOW THIS POINT,
-       starting from: 
-       const ordersBody = document.getElementById("ordersBody");
-       ... all the way to loadOrders(); loadProducts();
-    */
-  </script>
+    }
+  }
+  alert("Missing SKUs generated!");
+  loadProducts();
+});
+</script>
 </body>
 </html>
