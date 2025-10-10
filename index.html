@@ -6,7 +6,6 @@
 <title>Tactics & Treats – Preorder</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 <style>
-  /* Background + logo overlay */
   body {
     background: linear-gradient(to right, #8b0000 0%, #000 50%, #8b0000 100%);
     background-attachment: fixed;
@@ -52,7 +51,7 @@
     </div>
 
     <!-- Cookies Tab -->
-    <div id="cookiesTab" class="">
+    <div id="cookiesTab">
       <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Cookie Preorder</h2>
       <form id="cookieForm" class="space-y-4">
         <input id="nameC" type="text" placeholder="Your Name" class="w-full border p-2 rounded" required />
@@ -62,13 +61,7 @@
         </select>
         <input id="cookieQty" type="number" min="1" placeholder="Quantity" class="w-full border p-2 rounded" required />
         <p id="cookiePrice" class="text-center font-bold mt-2">Total: $0.00</p>
-        <button type="submit" class="w-full bg-red-700 text-white py-2 rounded hover:bg-red-800 transition">Submit Order</button>
-
-        <!-- Find Order button -->
-        <a href="orderlookup.html"
-           class="block text-center w-full bg-gradient-to-r from-red-700 to-black text-white py-2 rounded hover:opacity-90 transition">
-          🔍 Find My Order
-        </a>
+        <button type="submit" id="cookieSubmit" class="w-full bg-red-700 text-white py-2 rounded hover:bg-red-800 transition">Submit Order</button>
       </form>
     </div>
 
@@ -78,33 +71,15 @@
       <form id="braceletForm" class="space-y-4">
         <input id="nameB" type="text" placeholder="Your Name" class="w-full border p-2 rounded" required />
         <input id="emailB" type="email" placeholder="Your Email" class="w-full border p-2 rounded" required />
-
         <select id="braceletType" class="w-full border p-2 rounded" required>
           <option>Loading types…</option>
         </select>
-
         <select id="braceletSize" class="w-full border p-2 rounded" required>
           <option>Loading sizes…</option>
         </select>
-
-        <select id="color1" class="w-full border p-2 rounded" required>
-          <option>Loading colors…</option>
-        </select>
-
-        <select id="color2" class="w-full border p-2 rounded">
-          <option value="">Accent color (optional)</option>
-        </select>
-
         <input id="extrasCount" type="number" min="0" placeholder="Extras (optional)" class="w-full border p-2 rounded" />
-
         <p id="braceletPrice" class="text-center font-bold mt-2">Price: $0.00</p>
-        <button type="submit" class="w-full bg-red-700 text-white py-2 rounded hover:bg-red-800 transition">Submit Order</button>
-
-        <!-- Find Order button -->
-        <a href="orderlookup.html"
-           class="block text-center w-full bg-gradient-to-r from-red-700 to-black text-white py-2 rounded hover:opacity-90 transition">
-          🔍 Find My Order
-        </a>
+        <button type="submit" id="braceletSubmit" class="w-full bg-red-700 text-white py-2 rounded hover:bg-red-800 transition">Submit Order</button>
       </form>
     </div>
 
@@ -115,7 +90,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -135,163 +110,164 @@ const cookiesTab = document.getElementById('cookiesTab');
 const braceletsTab = document.getElementById('braceletsTab');
 const statusEl = document.getElementById('status');
 
-// Cookie elements
+// toggle tabs
+tabCookiesBtn.onclick = () => { tabCookiesBtn.classList.add('active'); tabBraceletsBtn.classList.remove('active'); cookiesTab.classList.remove('hidden'); braceletsTab.classList.add('hidden'); statusEl.textContent = ''; };
+tabBraceletsBtn.onclick = () => { tabBraceletsBtn.classList.add('active'); tabCookiesBtn.classList.remove('active'); braceletsTab.classList.remove('hidden'); cookiesTab.classList.add('hidden'); statusEl.textContent = ''; };
+
+// Cookies logic
 const cookieType = document.getElementById('cookieType');
 const cookieQty = document.getElementById('cookieQty');
 const cookiePriceEl = document.getElementById('cookiePrice');
-let cookiePrices = {};
+const cookieSubmit = document.getElementById('cookieSubmit');
+let cookieData = {}; // name -> {price, stock, id}
 
-// Bracelet elements
-const braceletType = document.getElementById('braceletType');
-const braceletSize = document.getElementById('braceletSize');
-const color1 = document.getElementById('color1');
-const color2 = document.getElementById('color2');
-const extrasCount = document.getElementById('extrasCount');
-const braceletPriceEl = document.getElementById('braceletPrice');
-let braceletData = {};
-let allTypes = new Set();
-
-// Tabs
-tabCookiesBtn.onclick = () => { 
-  tabCookiesBtn.classList.add('active'); 
-  tabBraceletsBtn.classList.remove('active'); 
-  cookiesTab.classList.remove('hidden'); 
-  braceletsTab.classList.add('hidden'); 
-  statusEl.textContent = ''; 
-};
-tabBraceletsBtn.onclick = () => { 
-  tabBraceletsBtn.classList.add('active'); 
-  tabCookiesBtn.classList.remove('active'); 
-  braceletsTab.classList.remove('hidden'); 
-  cookiesTab.classList.add('hidden'); 
-  statusEl.textContent = ''; 
-};
-
-// load from Firestore
 async function loadCookies() {
   cookieType.innerHTML = '<option>Loading cookies…</option>';
   const snap = await getDocs(collection(db, "products_cookies"));
   cookieType.innerHTML = '<option value="">Select Cookie</option>';
   snap.forEach(d => {
-    const { name, price } = d.data();
-    cookiePrices[name] = price;
-    cookieType.appendChild(new Option(`${name} — $${Number(price).toFixed(2)}`, name));
+    const data = d.data();
+    cookieData[data.name] = { price: data.price, stock: data.stock, id: d.id };
+    const label = data.stock <= 0 ? `${data.name} (Out of Stock)` : `${data.name} — $${Number(data.price).toFixed(2)} (${data.stock} left)`;
+    const opt = new Option(label, data.name);
+    if (data.stock <= 0) opt.disabled = true;
+    cookieType.appendChild(opt);
   });
 }
 
-async function loadBracelets() {
-  const snap = await getDocs(collection(db, "products_bracelets"));
-  braceletData = {};
-  allTypes = new Set();
-  snap.forEach(d => {
-    const { size, type, price } = d.data();
-    const s = String(size);
-    if (!braceletData[s]) braceletData[s] = {};
-    braceletData[s][type] = price;
-    allTypes.add(type);
-  });
-
-  braceletType.innerHTML = '<option value="">Select Type</option>';
-  Array.from(allTypes).sort().forEach(t => braceletType.appendChild(new Option(t, t)));
-
-  const sizes = Object.keys(braceletData).map(Number).sort((a,b)=>a-b);
-  braceletSize.innerHTML = '<option value="">Select Size</option>';
-  sizes.forEach(s => braceletSize.appendChild(new Option(`${s}"`, String(s))));
-}
-
-// ✅ Fixed: load from "colors" collection
-async function loadColors() {
-  color1.innerHTML = '<option value="">Loading colors…</option>';
-  color2.innerHTML = '<option value="">Accent color (optional)</option>';
-  const snap = await getDocs(collection(db, "colors"));
-  color1.innerHTML = '<option value="">Select Primary Color</option>';
-  snap.forEach(d => {
-    const { name } = d.data();
-    color1.appendChild(new Option(name, name));
-    color2.appendChild(new Option(name, name));
-  });
-}
-
-// price calculation
-function updateCookieTotal() {
+function calcCookiePrice() {
   const type = cookieType.value;
   const qty = parseInt(cookieQty.value) || 0;
-  const unit = cookiePrices[type] || 0;
+  if (!type) return 0;
+  const { price, stock } = cookieData[type];
+  const unit = stock > 10 ? price : price + 1; // +$1 if low stock
   const total = unit * qty;
   cookiePriceEl.textContent = `Total: $${Number(total).toFixed(2)}`;
   return total;
 }
 
-function updateBraceletPrice() {
+cookieType.onchange = calcCookiePrice;
+cookieQty.oninput = calcCookiePrice;
+
+document.getElementById('cookieForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const type = cookieType.value;
+  const qty = parseInt(cookieQty.value);
+  if (!type || qty <= 0) return;
+
+  const product = cookieData[type];
+  if (product.stock <= 0) {
+    statusEl.textContent = "❌ Out of stock!";
+    return;
+  }
+  if (qty > product.stock) {
+    statusEl.textContent = `⚠️ Only ${product.stock} left in stock.`;
+    return;
+  }
+
+  const total = calcCookiePrice();
+
+  await addDoc(collection(db, "cookieOrders"), {
+    name: document.getElementById('nameC').value,
+    email: document.getElementById('emailC').value,
+    type,
+    quantity: qty,
+    totalPrice: total,
+    status: "Pending",
+    createdAt: new Date()
+  });
+
+  // subtract stock
+  const newStock = product.stock - qty;
+  await updateDoc(doc(db, "products_cookies", product.id), { stock: newStock });
+  cookieData[type].stock = newStock;
+
+  statusEl.textContent = "✅ Cookie order placed!";
+  e.target.reset();
+  cookiePriceEl.textContent = 'Total: $0.00';
+  await loadCookies(); // reload stock status
+};
+
+// bracelets logic (simplified version)
+const braceletType = document.getElementById('braceletType');
+const braceletSize = document.getElementById('braceletSize');
+const extrasCount = document.getElementById('extrasCount');
+const braceletPriceEl = document.getElementById('braceletPrice');
+let braceletData = {}; // type_size -> {price, stock, id}
+
+async function loadBracelets() {
+  const snap = await getDocs(collection(db, "products_bracelets"));
+  braceletData = {};
+  braceletType.innerHTML = '<option value="">Select Type</option>';
+  braceletSize.innerHTML = '<option value="">Select Size</option>';
+  const types = new Set();
+  const sizes = new Set();
+
+  snap.forEach(d => {
+    const data = d.data();
+    const key = `${data.type}_${data.size}`;
+    braceletData[key] = { price: data.price, stock: data.stock, id: d.id, type: data.type, size: data.size };
+    types.add(data.type);
+    sizes.add(data.size);
+  });
+
+  types.forEach(t => braceletType.appendChild(new Option(t, t)));
+  Array.from(sizes).sort((a,b)=>a-b).forEach(s => braceletSize.appendChild(new Option(`${s}"`, s)));
+}
+
+function calcBraceletPrice() {
   const type = braceletType.value;
   const size = braceletSize.value;
   const extras = parseInt(extrasCount.value) || 0;
-  const base = (braceletData[size] && braceletData[size][type]) || 0;
-  const total = base + extras * 1;
+  const key = `${type}_${size}`;
+  const item = braceletData[key];
+  if (!item) return 0;
+  const unit = item.stock > 10 ? item.price : item.price + 1;
+  const total = unit + extras;
   braceletPriceEl.textContent = `Price: $${Number(total).toFixed(2)}`;
   return total;
 }
 
-// event handlers
-cookieType.onchange = updateCookieTotal;
-cookieQty.oninput = updateCookieTotal;
-
-braceletType.onchange = () => {
-  const selType = braceletType.value;
-  const sizes = Object.keys(braceletData)
-    .filter(sz => (selType ? (braceletData[sz] && braceletData[sz][selType]) : true))
-    .map(Number).sort((a,b)=>a-b);
-
-  braceletSize.innerHTML = '<option value="">Select Size</option>';
-  sizes.forEach(s => braceletSize.appendChild(new Option(`${s}"`, String(s))));
-  updateBraceletPrice();
-};
-braceletSize.onchange = updateBraceletPrice;
-extrasCount.oninput = updateBraceletPrice;
-
-// submit handlers
-document.getElementById('cookieForm').onsubmit = async (e) => {
-  e.preventDefault();
-  const total = updateCookieTotal();
-  await addDoc(collection(db, "cookieOrders"), {
-    name: document.getElementById('nameC').value,
-    email: document.getElementById('emailC').value,
-    type: cookieType.value,
-    quantity: parseInt(cookieQty.value),
-    totalPrice: Number(total),
-    status: "Pending",
-    createdAt: new Date()
-  });
-  statusEl.textContent = "✅ Cookie order submitted!";
-  e.target.reset();
-  cookiePriceEl.textContent = 'Total: $0.00';
-};
+braceletType.onchange = calcBraceletPrice;
+braceletSize.onchange = calcBraceletPrice;
+extrasCount.oninput = calcBraceletPrice;
 
 document.getElementById('braceletForm').onsubmit = async (e) => {
   e.preventDefault();
-  const total = updateBraceletPrice();
+  const type = braceletType.value;
+  const size = braceletSize.value;
+  const key = `${type}_${size}`;
+  const item = braceletData[key];
+  if (!item) return;
+  if (item.stock <= 0) {
+    statusEl.textContent = "❌ Out of stock!";
+    return;
+  }
+  const total = calcBraceletPrice();
+
   await addDoc(collection(db, "braceletOrders"), {
     name: document.getElementById('nameB').value,
     email: document.getElementById('emailB').value,
-    type: braceletType.value,
-    size: Number(braceletSize.value),
-    color1: color1.value,
-    color2: color2.value || null,
+    type,
+    size,
     extras: parseInt(extrasCount.value) || 0,
-    totalPrice: Number(total),
+    totalPrice: total,
     status: "Pending",
     createdAt: new Date()
   });
-  statusEl.textContent = "✅ Bracelet order submitted!";
+
+  await updateDoc(doc(db, "products_bracelets", item.id), { stock: item.stock - 1 });
+  braceletData[key].stock--;
+  statusEl.textContent = "✅ Bracelet order placed!";
   e.target.reset();
-  braceletPriceEl.textContent = 'Price: $0.00';
+  braceletPriceEl.textContent = "Price: $0.00";
+  await loadBracelets();
 };
 
-// initialize
+// init
 document.addEventListener('DOMContentLoaded', async () => {
   await loadCookies();
   await loadBracelets();
-  await loadColors();
 });
 </script>
 </body>
