@@ -1,185 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tactics & Treats – Admin Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tactics & Treats — Admin Dashboard (Debug)</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    body {
-      background: linear-gradient(to right, #8b0000, #000);
-      color: #fff;
-      font-family: system-ui, sans-serif;
-      min-height: 100vh;
-    }
-    .card {
-      background: rgba(15, 15, 15, 0.9);
-      border-radius: 1rem;
-      padding: 1.5rem;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-    }
-    .title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      border-bottom: 2px solid #b22222;
-      padding-bottom: 0.5rem;
-    }
+    body{background:linear-gradient(90deg,#8b0000,#000);color:#fff;min-height:100vh}
+    .card{background:rgba(10,10,10,0.9);border-radius:0.75rem;padding:1rem;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    .muted{color:#cbd5e1}
+    #status{padding:.5rem 1rem;border-radius:.5rem}
+    pre#debug{white-space:pre-wrap;word-break:break-word;background:#111;padding:0.8rem;border-radius:.5rem;max-height:220px;overflow:auto}
   </style>
-
-  <script type="module">
-    // 🔥 Import Firebase from another folder (adjust path if needed)
-    import { db } from "../firebase/firebase-config.js";
-    import {
-      collection,
-      getDocs,
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-    // Load all data when page opens
-    window.onload = () => {
-      loadCookies();
-      loadBracelets();
-      loadOrders();
-    };
-
-    // ---- Load Cookies ----
-    async function loadCookies() {
-      const list = document.getElementById("cookiesList");
-      list.innerHTML = `<p class="text-gray-400">Loading cookies...</p>`;
-      try {
-        const snap = await getDocs(collection(db, "cookies"));
-        list.innerHTML = "";
-        if (snap.empty) {
-          list.innerHTML = `<p class="text-gray-400">No cookie products found.</p>`;
-          return;
-        }
-        snap.forEach((doc) => {
-          const d = doc.data();
-          const div = document.createElement("div");
-          div.className =
-            "p-4 bg-gray-900 rounded-lg shadow hover:shadow-lg transition-all";
-          div.innerHTML = `
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="font-semibold text-xl">${d.name || "Unnamed Cookie"}</h3>
-                <p class="text-sm text-gray-400">Supplier: ${d.supplier || "N/A"}</p>
-                <p class="text-sm text-gray-400">SKU: ${d.sku || "—"}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-lg font-bold">$${d.price ?? "0.00"}</p>
-                <p class="text-sm text-gray-300">${d.stockQty ?? 0} in stock</p>
-              </div>
-            </div>
-          `;
-          list.appendChild(div);
-        });
-      } catch (err) {
-        list.innerHTML = `<p class="text-red-400">Error loading cookies: ${err.message}</p>`;
-      }
-    }
-
-    // ---- Load Bracelets ----
-    async function loadBracelets() {
-      const list = document.getElementById("braceletList");
-      list.innerHTML = `<p class="text-gray-400">Loading bracelets...</p>`;
-      try {
-        const snap = await getDocs(collection(db, "bracelets"));
-        list.innerHTML = "";
-        if (snap.empty) {
-          list.innerHTML = `<p class="text-gray-400">No bracelets found.</p>`;
-          return;
-        }
-        snap.forEach((doc) => {
-          const d = doc.data();
-          const div = document.createElement("div");
-          div.className =
-            "p-4 bg-gray-900 rounded-lg shadow hover:shadow-lg transition-all";
-          div.innerHTML = `
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="font-semibold text-xl">${d.type || "Unnamed Bracelet"}</h3>
-                <p class="text-sm text-gray-400">Size: ${d.size || "?"}</p>
-                <p class="text-sm text-gray-400">Supplier: ${d.supplier || "N/A"}</p>
-                <p class="text-sm text-gray-400">SKU: ${d.sku || "—"}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-lg font-bold">$${d.price ?? "0.00"}</p>
-                <p class="text-sm text-gray-300">${d.stockQty ?? 0} in stock</p>
-              </div>
-            </div>
-          `;
-          list.appendChild(div);
-        });
-      } catch (err) {
-        list.innerHTML = `<p class="text-red-400">Error loading bracelets: ${err.message}</p>`;
-      }
-    }
-
-    // ---- Load Orders ----
-    async function loadOrders() {
-      const list = document.getElementById("orderList");
-      list.innerHTML = `<p class="text-gray-400">Loading orders...</p>`;
-      try {
-        const snap = await getDocs(collection(db, "orders"));
-        list.innerHTML = "";
-        if (snap.empty) {
-          list.innerHTML = `<p class="text-gray-400">No orders found.</p>`;
-          return;
-        }
-        snap.forEach((doc) => {
-          const d = doc.data();
-          const div = document.createElement("div");
-          div.className =
-            "p-4 bg-gray-900 rounded-lg shadow hover:shadow-lg transition-all";
-          div.innerHTML = `
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="font-semibold text-lg">Order #${d.orderNumber || doc.id}</h3>
-                <p class="text-sm text-gray-400">Email: ${d.email || "unknown"}</p>
-                <p class="text-sm text-gray-400">Items: ${d.items?.length ?? 1}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-lg font-bold">$${d.total ?? "0.00"}</p>
-                <p class="text-sm text-gray-300">${d.status || "Pending"}</p>
-              </div>
-            </div>
-          `;
-          list.appendChild(div);
-        });
-      } catch (err) {
-        list.innerHTML = `<p class="text-red-400">Error loading orders: ${err.message}</p>`;
-      }
-    }
-  </script>
 </head>
+<body class="p-6">
 
-<body class="p-6 space-y-8">
-
-  <header class="text-center mb-6">
-    <h1 class="text-4xl font-bold mb-2">🛠️ Tactics & Treats Admin Dashboard</h1>
-    <p class="text-gray-300 text-sm">Manage Cookies • Bracelets • Orders — all in one place</p>
+  <header class="mb-6 text-center">
+    <h1 class="text-3xl font-bold">🛠️ Tactics & Treats — Admin (Debug)</h1>
+    <p class="muted">Shows clear errors so you can fix the config or file hosting quickly.</p>
   </header>
 
-  <main class="max-w-5xl mx-auto space-y-10">
-    <!-- Cookies Section -->
-    <section class="card">
-      <h2 class="title">🍪 Cookies</h2>
-      <div id="cookiesList" class="space-y-2"></div>
-    </section>
+  <main class="max-w-4xl mx-auto space-y-6">
 
-    <!-- Bracelets Section -->
-    <section class="card">
-      <h2 class="title">💎 Bracelets</h2>
-      <div id="braceletList" class="space-y-2"></div>
-    </section>
+    <div class="card">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <strong>Status:</strong>
+          <div id="status" class="inline-block ml-3 muted">Starting…</div>
+        </div>
+        <div class="space-x-2">
+          <button id="openConsoleBtn" class="px-3 py-1 rounded bg-gray-700">Open Console (F12)</button>
+        </div>
+      </div>
 
-    <!-- Orders Section -->
-    <section class="card">
-      <h2 class="title">📦 Orders</h2>
-      <div id="orderList" class="space-y-2"></div>
-    </section>
+      <p class="muted text-sm mb-2">If you see a message about <code>file://</code> or "Failed to resolve module specifier", read the checklist below.</p>
+      <div>
+        <strong>Debug info:</strong>
+        <pre id="debug">Waiting...</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold">Collections (live)</h2>
+        <div class="space-x-2">
+          <button id="refreshCookies" class="px-3 py-1 rounded bg-red-700">Refresh Cookies</button>
+          <button id="refreshBracelets" class="px-3 py-1 rounded bg-red-700">Refresh Bracelets</button>
+          <button id="refreshOrders" class="px-3 py-1 rounded bg-red-700">Refresh Orders</button>
+        </div>
+      </div>
+
+      <section class="mb-4">
+        <h3 class="font-medium">🍪 Cookies</h3>
+        <div id="cookiesList" class="mt-2"></div>
+      </section>
+
+      <section class="mb-4">
+        <h3 class="font-medium">🧿 Bracelets</h3>
+        <div id="braceletList" class="mt-2"></div>
+      </section>
+
+      <section>
+        <h3 class="font-medium">📦 Orders</h3>
+        <div id="orderList" class="mt-2"></div>
+      </section>
+    </div>
+
+    <div class="card">
+      <h3 class="font-semibold mb-2">Quick Checklist / Common fixes</h3>
+      <ul class="muted list-disc ml-5">
+        <li>Are you opening this page with <code>file://</code>? ES modules require a server. Run <code>python -m http.server</code> or <code>npx http-server</code> or use VSCode Live Server.</li>
+        <li>Is the path to <code>firebase-config.js</code> correct? Edit <code>FIREBASE_CONFIG_PATH</code> at the top of the script.</li>
+        <li>Does <code>firebase-config.js</code> export <code>export const db = getFirestore(app);</code> (example below)?</li>
+        <li>Are your Firestore collections named exactly <strong>cookies</strong>, <strong>bracelets</strong>, and <strong>orders</strong>? (case-sensitive)</li>
+        <li>Check the browser console (F12 → Console) for full stack traces — copy/paste here if still stuck.</li>
+      </ul>
+    </div>
+
   </main>
 
+  <script type="module">
+    // ---------- CONFIG ----------
+    const FIREBASE_CONFIG_PATH = "../firebase/firebase-config.js"; // <<--- edit if needed
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    // ---------- UI refs ----------
+    const statusEl = document.getElementById("status");
+    const debugEl = document.getElementById("debug");
+    const cookiesList = document.getElementById("cookiesList");
+    const braceletList = document.getElementById("braceletList");
+    const orderList = document.getElementById("orderList");
+
+    function setStatus(msg, isError = false){
+      statusEl.textContent = msg;
+      statusEl.style.color = isError ? "#ffb4b4" : "#d1fae5";
+      console.log(msg);
+    }
+    function setDebug(msg){
+      debugEl.textContent = String(msg || "");
+      console.log(msg);
+    }
+
+    document.getElementById("openConsoleBtn").addEventListener("click", ()=> {
+      alert("Open DevTools: F12 (or right-click → Inspect) and check the Console tab. Then paste errors here if needed.");
+    });
+
+    // If running from file:// show warning and stop
+    if (location.protocol === "file:") {
+      setStatus("❌ Page loaded via file:// — start a local server (see checklist).", true);
+      setDebug("Detected file:// protocol — ES modules won't import external modules when loaded via the file system.\nRun in a local server (e.g. python -m http.server) and reload.");
+      throw new Error("Loaded via file://; aborting.");
+    }
+
+    // ---------- dynamic import of firebase-config.js ----------
+    let db;
+    (async () => {
+      setStatus("Loading firebase-config...");
+      try {
+        const mod = await import(FIREBASE_CONFIG_PATH);
+        db = mod.db;
+        if (!db) throw new Error('firebase-config.js did not export "db" (export const db = ...).');
+        setStatus("✅ Firebase config loaded.");
+        setDebug("Firebase config loaded from: " + FIREBASE_CONFIG_PATH);
+      } catch (err) {
+        setStatus("❌ Failed to load firebase-config.", true);
+        setDebug(err.stack || err.message || String(err));
+        // Stop here — we cannot call Firestore without db
+        return;
+      }
+
+      // wire refresh buttons
+      document.getElementById("refreshCookies").onclick = () => loadCollection("cookies", cookiesList);
+      document.getElementById("refreshBracelets").onclick = () => loadCollection("bracelets", braceletList);
+      document.getElementById("refreshOrders").onclick = () => loadCollection("orders", orderList);
+
+      // initial loads (catch errors individually)
+      await Promise.allSettled([
+        loadCollection("cookies", cookiesList),
+        loadCollection("bracelets", braceletList),
+        loadCollection("orders", orderList)
+      ]).then(results => {
+        setStatus("✅ Initial load finished. Check lists above and the debug box for details.");
+      });
+    })();
+
+    // ---------- loader helper ----------
+    async function loadCollection(name, containerEl){
+      containerEl.innerHTML = '<p class="muted">Loading...</p>';
+      try {
+        const snap = await getDocs(collection(db, name));
+        containerEl.innerHTML = "";
+        if (snap.empty) {
+          containerEl.innerHTML = `<p class="muted">No documents found in "${name}".</p>`;
+          return;
+        }
+        snap.forEach(doc => {
+          const data = doc.data();
+          // build field list (show everything)
+          let fields = "";
+          for (let k in data) {
+            fields += `<p class="text-sm"><span class="muted text-xs">${k}:</span> ${escapeHtml(String(data[k]))}</p>`;
+          }
+          const card = document.createElement("div");
+          card.className = "p-3 bg-gray-900 rounded mb-2";
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:600">${escapeHtml(data.name || data.type || "Item")}</div>
+                ${fields}
+                <div class="muted text-xs">Doc ID: ${doc.id}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:700">$${escapeHtml(String(data.price ?? ""))}</div>
+                <div class="muted text-xs">${escapeHtml(String(data.stockQty ?? data.stock ?? ""))} in stock</div>
+              </div>
+            </div>
+          `;
+          containerEl.appendChild(card);
+        });
+      } catch (err) {
+        containerEl.innerHTML = `<p style="color:salmon">Error reading "${name}": ${escapeHtml(err.message || err)}</p>`;
+        setDebug((debugEl.textContent || "") + `\nError loading ${name}: ${err.stack || err.message || err}`);
+        console.error(err);
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s||"").replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    }
+  </script>
 </body>
 </html>
