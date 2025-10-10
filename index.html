@@ -1,193 +1,292 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tactics & Treats — Admin Dashboard (Debug)</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    body{background:linear-gradient(90deg,#8b0000,#000);color:#fff;min-height:100vh}
-    .card{background:rgba(10,10,10,0.9);border-radius:0.75rem;padding:1rem;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
-    .muted{color:#cbd5e1}
-    #status{padding:.5rem 1rem;border-radius:.5rem}
-    pre#debug{white-space:pre-wrap;word-break:break-word;background:#111;padding:0.8rem;border-radius:.5rem;max-height:220px;overflow:auto}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tactics & Treats – Preorder</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
+<style>
+body {
+  background: linear-gradient(to right, #8b0000 0%, #000 50%, #8b0000 100%);
+  background-attachment: fixed;
+}
+.paw-overlay {
+  background-image: url('your-logo.png');
+  background-repeat: repeat;
+  background-size: 100px;
+  opacity: 0.05;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+main, header, footer { position: relative; z-index: 10; }
+.tab-btn {
+  cursor: pointer;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 10px 10px 0 0;
+  background: #800000;
+  color: white;
+  margin-right: 5px;
+  transition: 0.3s;
+}
+.tab-btn.active { background: #ff0000; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
 </head>
-<body class="p-6">
 
-  <header class="mb-6 text-center">
-    <h1 class="text-3xl font-bold">🛠️ Tactics & Treats — Admin (Debug)</h1>
-    <p class="muted">Shows clear errors so you can fix the config or file hosting quickly.</p>
-  </header>
+<body class="min-h-screen flex flex-col items-center py-10 relative">
+<div class="paw-overlay"></div>
 
-  <main class="max-w-4xl mx-auto space-y-6">
+<header class="w-full text-center mb-8">
+  <img src="your-logo.png" alt="Tactics & Treats Logo" class="mx-auto w-40 h-auto mb-4" />
+  <h1 class="text-3xl font-bold text-white drop-shadow-lg">Tactics & Treats</h1>
+  <p class="text-gray-200">Preorder Cookies & Bracelets</p>
+</header>
 
-    <div class="card">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <strong>Status:</strong>
-          <div id="status" class="inline-block ml-3 muted">Starting…</div>
-        </div>
-        <div class="space-x-2">
-          <button id="openConsoleBtn" class="px-3 py-1 rounded bg-gray-700">Open Console (F12)</button>
-        </div>
-      </div>
+<main class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
 
-      <p class="muted text-sm mb-2">If you see a message about <code>file://</code> or "Failed to resolve module specifier", read the checklist below.</p>
-      <div>
-        <strong>Debug info:</strong>
-        <pre id="debug">Waiting...</pre>
-      </div>
-    </div>
+  <!-- Tabs -->
+  <div class="flex justify-center mb-6">
+    <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
+    <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
+  </div>
 
-    <div class="card">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-xl font-semibold">Collections (live)</h2>
-        <div class="space-x-2">
-          <button id="refreshCookies" class="px-3 py-1 rounded bg-red-700">Refresh Cookies</button>
-          <button id="refreshBracelets" class="px-3 py-1 rounded bg-red-700">Refresh Bracelets</button>
-          <button id="refreshOrders" class="px-3 py-1 rounded bg-red-700">Refresh Orders</button>
-        </div>
-      </div>
+  <!-- COOKIE FORM -->
+  <div id="cookiesTab" class="tab-content active">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Cookie Preorder</h2>
+    <form id="cookieForm" class="space-y-4">
+      <input id="nameC" type="text" placeholder="Your Name" class="w-full border p-2 rounded" required />
+      <input id="emailC" type="email" placeholder="Your Email" class="w-full border p-2 rounded" required />
+      <select id="cookieType" class="w-full border p-2 rounded"><option value="">Select Cookie</option></select>
+      <input id="cookieQty" type="number" min="1" placeholder="Quantity" class="w-full border p-2 rounded" required />
+      <textarea id="cookieNotes" rows="2" placeholder="Notes (optional)" class="w-full border p-2 rounded"></textarea>
+      <p id="cookiePrice" class="text-center font-bold mt-2">Total: $0.00</p>
+      <button type="button" onclick="submitCookieOrder()" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition">Submit Cookie Order</button>
+    </form>
+  </div>
 
-      <section class="mb-4">
-        <h3 class="font-medium">🍪 Cookies</h3>
-        <div id="cookiesList" class="mt-2"></div>
-      </section>
+  <!-- BRACELET FORM -->
+  <div id="braceletsTab" class="tab-content">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Bracelet Preorder</h2>
+    <form id="braceletForm" class="space-y-4">
+      <input id="nameB" type="text" placeholder="Your Name" class="w-full border p-2 rounded" required />
+      <input id="emailB" type="email" placeholder="Your Email" class="w-full border p-2 rounded" required />
+      <select id="color1" class="w-full border p-2 rounded"></select>
+      <select id="color2" class="w-full border p-2 rounded"></select>
+      <select id="itemType" class="w-full border p-2 rounded">
+        <option value="">Choose Type</option>
+        <option value="Cobra">Cobra</option>
+        <option value="King Cobra">King Cobra</option>
+        <option value="Fishtail">Fishtail</option>
+        <option value="Solomon/Trilobite">Solomon/Trilobite</option>
+      </select>
+      <select id="itemSize" class="w-full border p-2 rounded"><option value="">Choose Size (inches)</option></select>
+      <input id="extrasCount" type="number" min="0" placeholder="Number of Extras (optional)" class="w-full border p-2 rounded" />
+      <textarea id="extrasDesc" rows="2" placeholder="Describe extras if any" class="w-full border p-2 rounded"></textarea>
+      <textarea id="braceletNotes" rows="2" placeholder="Notes (optional)" class="w-full border p-2 rounded"></textarea>
+      <p id="braceletPrice" class="text-center font-bold mt-2">Price: $0.00</p>
+      <button type="button" onclick="submitBraceletOrder()" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition">Submit Bracelet Order</button>
+    </form>
+  </div>
 
-      <section class="mb-4">
-        <h3 class="font-medium">🧿 Bracelets</h3>
-        <div id="braceletList" class="mt-2"></div>
-      </section>
+  <p id="status" class="text-center mt-3"></p>
+</main>
 
-      <section>
-        <h3 class="font-medium">📦 Orders</h3>
-        <div id="orderList" class="mt-2"></div>
-      </section>
-    </div>
+<footer class="mt-8 text-gray-300 text-sm text-center">
+  © 2025 Tactics & Treats • Handmade with ❤️
+</footer>
 
-    <div class="card">
-      <h3 class="font-semibold mb-2">Quick Checklist / Common fixes</h3>
-      <ul class="muted list-disc ml-5">
-        <li>Are you opening this page with <code>file://</code>? ES modules require a server. Run <code>python -m http.server</code> or <code>npx http-server</code> or use VSCode Live Server.</li>
-        <li>Is the path to <code>firebase-config.js</code> correct? Edit <code>FIREBASE_CONFIG_PATH</code> at the top of the script.</li>
-        <li>Does <code>firebase-config.js</code> export <code>export const db = getFirestore(app);</code> (example below)?</li>
-        <li>Are your Firestore collections named exactly <strong>cookies</strong>, <strong>bracelets</strong>, and <strong>orders</strong>? (case-sensitive)</li>
-        <li>Check the browser console (F12 → Console) for full stack traces — copy/paste here if still stuck.</li>
-      </ul>
-    </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  </main>
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.firebasestorage.app",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
+  measurementId: "G-BJPQN6S7YB"
+};
 
-  <script type="module">
-    // ---------- CONFIG ----------
-    const FIREBASE_CONFIG_PATH = "../firebase/firebase-config.js"; // <<--- edit if needed
-    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    // ---------- UI refs ----------
-    const statusEl = document.getElementById("status");
-    const debugEl = document.getElementById("debug");
-    const cookiesList = document.getElementById("cookiesList");
-    const braceletList = document.getElementById("braceletList");
-    const orderList = document.getElementById("orderList");
+// ===== COOKIE SETUP =====
+const cookiePrices = {
+  "Chocolate Chip": 1.00, "Seasonal Cookie": 1.50,
+  "White Chocolate": 1.00, "Frosted Cookies": 0.50,
+  "Snickerdoodle": 1.00, "Oatmeal Raisin": 1.00,
+  "M&M Cookie": 1.50
+};
 
-    function setStatus(msg, isError = false){
-      statusEl.textContent = msg;
-      statusEl.style.color = isError ? "#ffb4b4" : "#d1fae5";
-      console.log(msg);
+window.addEventListener("DOMContentLoaded", async () => {
+  const cookieSelect = document.getElementById("cookieType");
+  const cookieQty = document.getElementById("cookieQty");
+  const cookiePrice = document.getElementById("cookiePrice");
+  const status = document.getElementById("status");
+
+  Object.keys(cookiePrices).forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name; opt.textContent = name;
+    cookieSelect.appendChild(opt);
+  });
+
+  cookieSelect.addEventListener("change", updateCookiePrice);
+  cookieQty.addEventListener("input", updateCookiePrice);
+
+  function updateCookiePrice() {
+    const type = cookieSelect.value;
+    const qty = parseInt(cookieQty.value) || 0;
+    cookiePrice.textContent = `Total: $${((cookiePrices[type] || 0) * qty).toFixed(2)}`;
+  }
+
+  window.submitCookieOrder = async () => {
+    const name = document.getElementById("nameC").value.trim();
+    const email = document.getElementById("emailC").value.trim();
+    const type = cookieSelect.value;
+    const qty = parseInt(cookieQty.value) || 0;
+    const notes = document.getElementById("cookieNotes").value.trim();
+
+    if (!name || !email || !type || qty <= 0) {
+      status.textContent = "⚠️ Fill all cookie fields!";
+      status.className = "text-red-600 mt-2";
+      return;
     }
-    function setDebug(msg){
-      debugEl.textContent = String(msg || "");
-      console.log(msg);
-    }
 
-    document.getElementById("openConsoleBtn").addEventListener("click", ()=> {
-      alert("Open DevTools: F12 (or right-click → Inspect) and check the Console tab. Then paste errors here if needed.");
-    });
-
-    // If running from file:// show warning and stop
-    if (location.protocol === "file:") {
-      setStatus("❌ Page loaded via file:// — start a local server (see checklist).", true);
-      setDebug("Detected file:// protocol — ES modules won't import external modules when loaded via the file system.\nRun in a local server (e.g. python -m http.server) and reload.");
-      throw new Error("Loaded via file://; aborting.");
-    }
-
-    // ---------- dynamic import of firebase-config.js ----------
-    let db;
-    (async () => {
-      setStatus("Loading firebase-config...");
-      try {
-        const mod = await import(FIREBASE_CONFIG_PATH);
-        db = mod.db;
-        if (!db) throw new Error('firebase-config.js did not export "db" (export const db = ...).');
-        setStatus("✅ Firebase config loaded.");
-        setDebug("Firebase config loaded from: " + FIREBASE_CONFIG_PATH);
-      } catch (err) {
-        setStatus("❌ Failed to load firebase-config.", true);
-        setDebug(err.stack || err.message || String(err));
-        // Stop here — we cannot call Firestore without db
-        return;
-      }
-
-      // wire refresh buttons
-      document.getElementById("refreshCookies").onclick = () => loadCollection("cookies", cookiesList);
-      document.getElementById("refreshBracelets").onclick = () => loadCollection("bracelets", braceletList);
-      document.getElementById("refreshOrders").onclick = () => loadCollection("orders", orderList);
-
-      // initial loads (catch errors individually)
-      await Promise.allSettled([
-        loadCollection("cookies", cookiesList),
-        loadCollection("bracelets", braceletList),
-        loadCollection("orders", orderList)
-      ]).then(results => {
-        setStatus("✅ Initial load finished. Check lists above and the debug box for details.");
+    try {
+      await addDoc(collection(db, "cookieOrders"), {
+        name, email, type, quantity: qty,
+        totalPrice: cookiePrices[type]*qty, notes,
+        createdAt: serverTimestamp()
       });
-    })();
+      status.textContent = `✅ Cookie order submitted! $${(cookiePrices[type]*qty).toFixed(2)}`;
+      status.className = "text-green-600 mt-2";
+      document.getElementById("cookieForm").reset();
+      cookiePrice.textContent = "Total: $0.00";
+    } catch(e) {
+      console.error(e);
+      status.textContent = "❌ Error submitting cookie order";
+      status.className = "text-red-600 mt-2";
+    }
+  }
 
-    // ---------- loader helper ----------
-    async function loadCollection(name, containerEl){
-      containerEl.innerHTML = '<p class="muted">Loading...</p>';
-      try {
-        const snap = await getDocs(collection(db, name));
-        containerEl.innerHTML = "";
-        if (snap.empty) {
-          containerEl.innerHTML = `<p class="muted">No documents found in "${name}".</p>`;
-          return;
-        }
-        snap.forEach(doc => {
-          const data = doc.data();
-          // build field list (show everything)
-          let fields = "";
-          for (let k in data) {
-            fields += `<p class="text-sm"><span class="muted text-xs">${k}:</span> ${escapeHtml(String(data[k]))}</p>`;
-          }
-          const card = document.createElement("div");
-          card.className = "p-3 bg-gray-900 rounded mb-2";
-          card.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <div style="font-weight:600">${escapeHtml(data.name || data.type || "Item")}</div>
-                ${fields}
-                <div class="muted text-xs">Doc ID: ${doc.id}</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-weight:700">$${escapeHtml(String(data.price ?? ""))}</div>
-                <div class="muted text-xs">${escapeHtml(String(data.stockQty ?? data.stock ?? ""))} in stock</div>
-              </div>
-            </div>
-          `;
-          containerEl.appendChild(card);
-        });
-      } catch (err) {
-        containerEl.innerHTML = `<p style="color:salmon">Error reading "${name}": ${escapeHtml(err.message || err)}</p>`;
-        setDebug((debugEl.textContent || "") + `\nError loading ${name}: ${err.stack || err.message || err}`);
-        console.error(err);
-      }
+  // ===== BRACELET SETUP =====
+  const pricing = {
+    "5": { "Cobra": 4.00, "King Cobra": 5.25, "Fishtail": 3.75, "Solomon/Trilobite": 4.25 },
+    "6": { "Cobra": 4.75, "King Cobra": 6.25, "Fishtail": 4.50, "Solomon/Trilobite": 5.00 },
+    "7": { "Cobra": 5.50, "King Cobra": 7.25, "Fishtail": 5.25, "Solomon/Trilobite": 6.00 },
+    // ... add other sizes if needed
+  };
+
+  const color1Select = document.getElementById("color1");
+  const color2Select = document.getElementById("color2");
+  const typeSelect = document.getElementById("itemType");
+  const sizeSelect = document.getElementById("itemSize");
+  const extrasCountInput = document.getElementById("extrasCount");
+  const braceletPrice = document.getElementById("braceletPrice");
+
+  // Populate sizes
+  for (let i = 5; i <= 30; i++) {
+    const opt = document.createElement("option");
+    opt.value = i; opt.textContent = `${i}"`; sizeSelect.appendChild(opt);
+  }
+
+  async function loadColors() {
+    const snapshot = await getDocs(collection(db, "braceletColors"));
+    const colors = snapshot.docs.map(doc => doc.data().name);
+    [color1Select, color2Select].forEach(sel => {
+      sel.innerHTML = '<option value="">Choose Color</option>';
+      colors.forEach(c => sel.appendChild(new Option(c,c)));
+    });
+  }
+
+  await loadColors();
+
+  function updateBraceletPrice() {
+    const type = typeSelect.value;
+    const size = sizeSelect.value;
+    const extras = parseInt(extrasCountInput.value) || 0;
+    if(type && size && pricing[size] && pricing[size][type]!=null){
+      braceletPrice.textContent = `Price: $${(pricing[size][type]+extras).toFixed(2)}`;
+    } else braceletPrice.textContent = "Price: $0.00";
+  }
+
+  typeSelect.addEventListener("change", updateBraceletPrice);
+  sizeSelect.addEventListener("change", updateBraceletPrice);
+  extrasCountInput.addEventListener("input", updateBraceletPrice);
+
+  async function saveColorIfNew(name){
+    if(!name) return;
+    const q = query(collection(db,"braceletColors"), where("name","==",name));
+    const existing = await getDocs(q);
+    if(existing.empty) await addDoc(collection(db,"braceletColors"),{name, addedAt: serverTimestamp()});
+  }
+
+  window.submitBraceletOrder = async () => {
+    const name = document.getElementById("nameB").value.trim();
+    const email = document.getElementById("emailB").value.trim();
+    const color1 = color1Select.value.trim();
+    const color2 = color2Select.value.trim();
+    const size = sizeSelect.value;
+    const type = typeSelect.value;
+    const extras = parseInt(extrasCountInput.value)||0;
+    const extrasDesc = document.getElementById("extrasDesc").value.trim();
+    const notes = document.getElementById("braceletNotes").value.trim();
+    const statusEl = document.getElementById("status");
+
+    if(!email || !color1 || !type || !size){
+      statusEl.textContent = "⚠️ Fill all bracelet fields!";
+      statusEl.className="text-red-600 mt-2"; return;
+    }
+    if(extras>0 && !extrasDesc){
+      statusEl.textContent="⚠️ Describe your extras!"; statusEl.className="text-red-600 mt-2"; return;
     }
 
-    function escapeHtml(s){
-      return String(s||"").replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    const total = pricing[size][type]+extras;
+    try {
+      await saveColorIfNew(color1);
+      if(color2) await saveColorIfNew(color2);
+
+      await addDoc(collection(db,"braceletOrders"),{
+        name,email,color1,color2,type,size,extrasCount:extras,extrasDesc,notes,price:total,
+        createdAt:serverTimestamp()
+      });
+      statusEl.textContent=`✅ Bracelet order submitted! $${total.toFixed(2)}`;
+      statusEl.className="text-green-600 mt-2";
+      document.getElementById("braceletForm").reset();
+      braceletPrice.textContent="Price: $0.00";
+      await loadColors();
+    } catch(e){
+      console.error(e);
+      statusEl.textContent="❌ Error submitting bracelet order";
+      statusEl.className="text-red-600 mt-2";
     }
-  </script>
+  };
+});
+
+// ===== TAB TOGGLE =====
+const tabCookies = document.getElementById("tabCookies");
+const tabBracelets = document.getElementById("tabBracelets");
+const cookiesTab = document.getElementById("cookiesTab");
+const braceletsTab = document.getElementById("braceletsTab");
+
+tabCookies.addEventListener("click", ()=>{
+  tabCookies.classList.add("active"); tabBracelets.classList.remove("active");
+  cookiesTab.classList.add("active"); braceletsTab.classList.remove("active");
+});
+tabBracelets.addEventListener("click", ()=>{
+  tabBracelets.classList.add("active"); tabCookies.classList.remove("active");
+  braceletsTab.classList.add("active"); cookiesTab.classList.remove("active");
+});
+</script>
 </body>
 </html>
