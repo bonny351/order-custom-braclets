@@ -106,7 +106,8 @@
 <div class="section">
   <h2>Products</h2>
   <div style="text-align:center;">
-    <button id="generateSKU">Generate All Missing SKUs</button>
+    <button id="addProduct">➕ Add Product</button>
+    <button id="generateSKU">🔢 Generate All Missing SKUs</button>
   </div>
 
   <table>
@@ -120,6 +121,7 @@
         <th>Stock</th>
         <th>Status</th>
         <th>Price</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody id="productBody"></tbody>
@@ -128,7 +130,9 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { 
+  getFirestore, collection, getDocs, updateDoc, doc, addDoc, deleteDoc 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -138,12 +142,14 @@ const firebaseConfig = {
   messagingSenderId: "382292570673",
   appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const ordersBody = document.getElementById("ordersBody");
 const productBody = document.getElementById("productBody");
 const generateSKU = document.getElementById("generateSKU");
+const addProduct = document.getElementById("addProduct");
 
 // 🧾 Load Orders
 async function loadOrders() {
@@ -178,21 +184,18 @@ async function loadOrders() {
       </td>
     `;
 
-    // 🔹 Save edits on blur or change
     row.querySelectorAll("[contenteditable]").forEach(cell => {
       const field = cell.dataset.field;
       cell.addEventListener("blur", async e => {
         let value = e.target.innerText.replace("$", "").trim();
         if (["totalPrice", "quantity"].includes(field)) value = Number(value);
         await updateDoc(doc(db, o.collection, o.id), { [field]: value });
-        console.log(`✅ Updated ${field} for order ${o.orderNumber}`);
       });
     });
 
     row.querySelector("select[data-field='status']").addEventListener("change", async e => {
       const newStatus = e.target.value;
       await updateDoc(doc(db, o.collection, o.id), { status: newStatus });
-      console.log(`✅ Updated status for order ${o.orderNumber}`);
     });
 
     ordersBody.appendChild(row);
@@ -231,9 +234,9 @@ async function loadProducts() {
       <td contenteditable="true" data-field="stock">${stock}</td>
       <td>${status}</td>
       <td contenteditable="true" data-field="price">$${adjustedPrice.toFixed(2)}</td>
+      <td><button class="delete-btn" data-id="${p.id}" data-col="${p.collection}">🗑️</button></td>
     `;
 
-    // 🔹 Inline save on blur
     row.querySelectorAll("[contenteditable]").forEach(cell => {
       const field = cell.dataset.field;
       if (!field) return;
@@ -241,16 +244,46 @@ async function loadProducts() {
         let value = e.target.innerText.replace("$", "").trim();
         if (["stock", "price"].includes(field)) value = Number(value);
         await updateDoc(doc(db, p.collection, p.id), { [field]: value });
-        console.log(`✅ Updated ${field} for ${displayName}`);
         loadProducts();
       });
+    });
+
+    // 🗑️ Delete button
+    row.querySelector(".delete-btn").addEventListener("click", async () => {
+      if (confirm(`Delete "${displayName}"?`)) {
+        await deleteDoc(doc(db, p.collection, p.id));
+        loadProducts();
+      }
     });
 
     productBody.appendChild(row);
   });
 }
 
-// ⚙️ Generate SKUs
+// ➕ Add Product
+addProduct.addEventListener("click", async () => {
+  const type = prompt("Enter product type: cookie or bracelet").toLowerCase();
+  if (type !== "cookie" && type !== "bracelet") return alert("Invalid type");
+
+  const name = prompt("Enter product name/type:");
+  const price = Number(prompt("Enter product price:", "5"));
+  const stock = Number(prompt("Enter stock amount:", "10"));
+  const supplier = prompt("Enter supplier name:", "-");
+
+  const data = {
+    name: type === "cookie" ? name : undefined,
+    type: type === "bracelet" ? name : undefined,
+    price, stock, supplier,
+    size: type === "bracelet" ? "-" : undefined,
+    sku: `${type === "bracelet" ? "BR" : "CK"}-${Math.random().toString(36).substring(2,7).toUpperCase()}`
+  };
+
+  await addDoc(collection(db, type === "cookie" ? "products_cookies" : "products_bracelets"), data);
+  alert("✅ Product added!");
+  loadProducts();
+});
+
+// 🔢 Generate SKUs
 generateSKU.addEventListener("click", async () => {
   const collections = ["products_cookies", "products_bracelets"];
   for (const col of collections) {
