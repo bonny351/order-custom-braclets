@@ -6,314 +6,78 @@
 <title>Admin Dashboard | Tactics & Treats</title>
 
 <style>
-  body {
-    font-family: 'Poppins', sans-serif;
-    background: #000;
-    color: white;
-    margin: 0;
-    padding: 0;
-  }
-
-  header {
-    background: linear-gradient(90deg, #ff0040, #ff6600);
-    padding: 15px 25px;
-    text-align: center;
-    font-size: 1.5em;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    box-shadow: 0 0 10px #ff0040;
-  }
-
-  main {
-    padding: 25px;
-  }
-
-  h2 {
-    border-left: 5px solid #ff0040;
-    padding-left: 10px;
-    font-size: 1.3em;
-    margin-bottom: 10px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #111;
-    margin-bottom: 30px;
-    box-shadow: 0 0 10px #ff0040;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  th, td {
-    border: 1px solid #222;
-    padding: 10px;
-    text-align: center;
-    color: white;
-  }
-
-  th {
-    background: #111;
-    color: #ff0040;
-    font-weight: 600;
-  }
-
-  tr:nth-child(even) {
-    background: #0a0a0a;
-  }
-
-  tr:hover {
-    background: #111;
-    box-shadow: inset 0 0 5px #ff0040;
-  }
-
-  button {
-    background: #ff0040;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 15px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: 0.2s;
-  }
-
-  button:hover {
-    background: #ff3366;
-    transform: scale(1.05);
-  }
-
-  #generateSKU {
-    margin-bottom: 10px;
-    background: #222;
-    color: #ff0040;
-    border: 1px solid #ff0040;
-  }
-
-  #generateSKU:hover {
-    background: #ff0040;
-    color: #fff;
-  }
-
-  /* --- Modal --- */
-  #productModal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(6px);
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-
-  #productModal.show {
-    display: flex;
-    animation: fadeIn 0.25s ease-in-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .modal-content {
-    background: #111;
-    padding: 20px;
-    border-radius: 12px;
-    width: 400px;
-    box-shadow: 0 0 20px #ff0040;
-  }
-
-  .modal-content h3 {
-    text-align: center;
-    color: #ff0040;
-    margin-top: 0;
-  }
-
-  .modal-content label {
-    display: block;
-    margin-top: 10px;
-  }
-
-  .modal-content input, .modal-content select {
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #333;
-    background: #0a0a0a;
-    color: white;
-  }
-
-  .modal-buttons {
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .delete-btn {
-    background: #333;
-    color: #ff0040;
-    border: 1px solid #ff0040;
-  }
-
-  .delete-btn:hover {
-    background: #ff0040;
-    color: white;
-  }
-
-  /* --- Admin Login Overlay --- */
-  #adminLogin {
-    position: fixed;
-    inset: 0;
-    background: black;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    font-family: 'Poppins', sans-serif;
-  }
-  #adminLogin input {
-    padding: 10px;
-    border: 1px solid #ff0040;
-    border-radius: 8px;
-    background: #111;
-    color: white;
-    width: 200px;
-    text-align: center;
-    margin: 10px 0;
-  }
-  #loginError {
-    color: #ff5555;
-    display: none;
-  }
+  body {font-family:'Poppins',sans-serif;background:black;color:white;margin:0;padding:0;}
+  header {background:linear-gradient(90deg,#ff0040,#ff6600);padding:15px;text-align:center;font-size:1.4em;font-weight:600;}
+  h2 {border-left:5px solid #ff0040;padding-left:10px;}
+  table {width:100%;border-collapse:collapse;background:#111;margin-top:10px;}
+  th,td {border:1px solid #222;padding:8px;text-align:center;}
+  th {background:#111;color:#ff0040;}
+  tr:nth-child(even){background:#0a0a0a;}
+  button {background:#ff0040;color:white;border:none;border-radius:8px;padding:8px 15px;margin:5px;cursor:pointer;}
+  button:hover{background:#ff3366;transform:scale(1.05);}
+  #adminOverlay {position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:2000;}
+  #adminOverlay input{padding:10px;font-size:1.1em;border:1px solid #ff0040;border-radius:8px;background:#111;color:white;text-align:center;}
+  #adminOverlay button{margin-top:10px;background:#ff0040;padding:8px 18px;border-radius:8px;font-weight:600;}
+  #productModal {display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(5px);justify-content:center;align-items:center;z-index:1000;}
+  #productModal.show{display:flex;}
+  .modal-content{background:#111;padding:20px;border-radius:12px;width:350px;box-shadow:0 0 20px #ff0040;}
+  .modal-content input,.modal-content select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #333;background:#0a0a0a;color:white;}
+  .modal-buttons{display:flex;justify-content:space-between;margin-top:10px;}
 </style>
 </head>
 
 <body>
-  <header>🛠️ Admin Dashboard | Tactics & Treats</header>
-  <main>
-    <h2>Orders</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Order #</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Product</th>
-          <th>Type</th>
-          <th>Qty</th>
-          <th>Total</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="ordersBody"></tbody>
-    </table>
+<div id="adminOverlay">
+  <h2>Enter Admin Code</h2>
+  <input type="password" id="adminCodeInput" placeholder="Enter code" />
+  <button id="submitCode">Access Dashboard</button>
+  <p id="codeError" style="color:#ff0040;display:none;">❌ Incorrect Code</p>
+</div>
 
-    <h2>Products</h2>
-    <button id="generateSKU">🔢 Generate Missing SKUs</button>
-    <button id="addProduct">➕ Add Product</button>
+<header>🛠️ Admin Dashboard | Tactics & Treats</header>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Name / Type</th>
-          <th>Size</th>
-          <th>Category</th>
-          <th>SKU</th>
-          <th>Supplier</th>
-          <th>Stock</th>
-          <th>Status</th>
-          <th>Price</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="productBody"></tbody>
-    </table>
-  </main>
+<main style="display:none;" id="adminMain">
+  <h2>Products</h2>
+  <button id="addProduct">➕ Add Product</button>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>Type</th><th>Size</th><th>Price</th><th>Stock</th><th>Supplier</th>
+      </tr>
+    </thead>
+    <tbody id="productBody"></tbody>
+  </table>
+</main>
 
-  <!-- Modal -->
-  <div id="productModal">
-    <div class="modal-content">
-      <h3>Add Product</h3>
-      <label>Product Type</label>
-      <select id="productType">
-        <option value="cookie">Cookie</option>
-        <option value="bracelet">Bracelet</option>
-      </select>
-
-      <label>Product Name</label>
-      <input id="productName" type="text" placeholder="Product name">
-
-      <div id="braceletOptions" style="display:none;">
-        <label>Bracelet Size</label>
-        <input id="productSize" type="text" placeholder="e.g. Small, Medium, Large">
-      </div>
-
-      <label>Price</label>
-      <input id="productPrice" type="number" value="5.00" step="0.01">
-
-      <label>Stock</label>
-      <input id="productStock" type="number" value="10" min="0">
-
-      <label>Supplier</label>
-      <input id="productSupplier" type="text" placeholder="Supplier name">
-
-      <div class="modal-buttons">
-        <button id="saveProduct">💾 Save</button>
-        <button id="closeModal">❌ Cancel</button>
-      </div>
+<div id="productModal">
+  <div class="modal-content">
+    <h3>Add Product</h3>
+    <label>Product Type</label>
+    <select id="productType">
+      <option value="cookie">Cookie</option>
+      <option value="bracelet">Bracelet</option>
+    </select>
+    <label>Name</label>
+    <input id="productName" type="text" placeholder="Product name">
+    <label>Size (Bracelet only)</label>
+    <input id="productSize" type="text" placeholder="e.g. Small, Medium">
+    <label>Price</label>
+    <input id="productPrice" type="number" step="0.01" value="5.00">
+    <label>Stock</label>
+    <input id="productStock" type="number" value="10">
+    <label>Supplier</label>
+    <input id="productSupplier" type="text" placeholder="Supplier name">
+    <div class="modal-buttons">
+      <button id="saveProduct">💾 Save</button>
+      <button id="closeModal">❌ Cancel</button>
     </div>
   </div>
+</div>
 
-  <!-- Admin Login Overlay -->
-  <div id="adminLogin">
-    <h2 style="color:#ff0040;">🔐 Admin Access</h2>
-    <input id="adminCodeInput" type="password" placeholder="Enter admin code">
-    <button id="adminLoginBtn">Unlock Dashboard</button>
-    <p id="loginError">❌ Invalid code</p>
-  </div>
-
-<!-- ================= JAVASCRIPT ================= -->
 <script type="module">
-/* ===== Admin Code Protection ===== */
-const ADMIN_CODE = "20903"; // change this to your secret code
-const adminLogin = document.getElementById("adminLogin");
-const adminLoginBtn = document.getElementById("adminLoginBtn");
-const adminCodeInput = document.getElementById("adminCodeInput");
-const loginError = document.getElementById("loginError");
-
-function unlockAdmin() {
-  adminLogin.style.display = "none";
-  document.querySelector("main").style.filter = "none";
-  document.querySelector("main").style.pointerEvents = "auto";
-  loadOrders();
-  loadProducts();
-}
-
-adminLoginBtn.addEventListener("click", () => {
-  const input = adminCodeInput.value.trim();
-  if (input === ADMIN_CODE) {
-    unlockAdmin();
-  } else {
-    loginError.style.display = "block";
-    adminCodeInput.value = "";
-  }
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-  document.querySelector("main").style.filter = "blur(5px)";
-  document.querySelector("main").style.pointerEvents = "none";
-});
-
-/* Firebase imports */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -326,202 +90,93 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ===== Utility ===== */
-function escapeHTML(str) {
-  if (str == null) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+// ==== ADMIN CODE LOGIN ====
+const ADMIN_CODE = "20903";
+const overlay = document.getElementById("adminOverlay");
+const adminMain = document.getElementById("adminMain");
+const submitCode = document.getElementById("submitCode");
+const adminCodeInput = document.getElementById("adminCodeInput");
+const codeError = document.getElementById("codeError");
 
-/* ===== Elements ===== */
-const ordersBody = document.getElementById("ordersBody");
-const productBody = document.getElementById("productBody");
-const modal = document.getElementById("productModal");
-const addProduct = document.getElementById("addProduct");
-const closeModalBtn = document.getElementById("closeModal");
-const saveBtn = document.getElementById("saveProduct");
-const generateSKU = document.getElementById("generateSKU");
-const productTypeSelect = document.getElementById("productType");
-const braceletOptions = document.getElementById("braceletOptions");
-const productNameInput = document.getElementById("productName");
-const productSizeInput = document.getElementById("productSize");
-const productPriceInput = document.getElementById("productPrice");
-const productStockInput = document.getElementById("productStock");
-const productSupplierInput = document.getElementById("productSupplier");
-
-/* ===== Orders ===== */
-async function loadOrders() {
-  try {
-    const [cookieSnap, braceletSnap] = await Promise.all([
-      getDocs(collection(db, "cookieOrders")),
-      getDocs(collection(db, "braceletOrders"))
-    ]);
-    const all = [];
-    cookieSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "cookieOrders", type: "Cookie" }));
-    braceletSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "braceletOrders", type: "Bracelet" }));
-
-    ordersBody.innerHTML = "";
-    all.forEach(o => {
-      const price = o.totalPrice ? `$${Number(o.totalPrice).toFixed(2)}` : "$0.00";
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${escapeHTML(o.orderNumber || "-")}</td>
-        <td contenteditable data-field="name">${escapeHTML(o.name || "-")}</td>
-        <td contenteditable data-field="email">${escapeHTML(o.email || "-")}</td>
-        <td>${escapeHTML(o.productName || o.type)}</td>
-        <td>${escapeHTML(o.type)}</td>
-        <td contenteditable data-field="quantity">${escapeHTML(o.quantity ?? 1)}</td>
-        <td contenteditable data-field="totalPrice">${escapeHTML(price)}</td>
-        <td>
-          <select data-field="status">
-            <option value="Pending" ${o.status==="Pending"?"selected":""}>Pending</option>
-            <option value="Processing" ${o.status==="Processing"?"selected":""}>Processing</option>
-            <option value="Completed" ${o.status==="Completed"?"selected":""}>Completed</option>
-            <option value="Cancelled" ${o.status==="Cancelled"?"selected":""}>Cancelled</option>
-          </select>
-        </td>
-      `;
-      row.querySelectorAll("[contenteditable]").forEach(cell => {
-        const field = cell.dataset.field;
-        cell.addEventListener("blur", async e => {
-          let value = e.target.innerText.replace("$","").trim();
-          if (["totalPrice","quantity"].includes(field)) value = Number(value);
-          await updateDoc(doc(db, o.collection, o.id), { [field]: value });
-        });
-      });
-      row.querySelector("select[data-field='status']").addEventListener("change", async e => {
-        await updateDoc(doc(db, o.collection, o.id), { status: e.target.value });
-      });
-      ordersBody.appendChild(row);
-    });
-  } catch (err) {
-    console.error("loadOrders error:", err);
+submitCode.addEventListener("click", () => {
+  if (adminCodeInput.value === ADMIN_CODE) {
+    overlay.style.display = "none";
+    adminMain.style.display = "block";
+    loadProducts();
+  } else {
+    codeError.style.display = "block";
+    adminCodeInput.value = "";
   }
-}
+});
 
-/* ===== Products ===== */
+// ==== LOAD PRODUCTS ====
 async function loadProducts() {
+  const productBody = document.getElementById("productBody");
+  productBody.innerHTML = "";
+
+  const cookieSnap = await getDocs(collection(db, "cookies"));
+  const braceletSnap = await getDocs(collection(db, "bracelets"));
+
+  cookieSnap.forEach(docSnap => {
+    const p = docSnap.data();
+    productBody.innerHTML += `<tr>
+      <td>${p.name || "Unnamed"}</td>
+      <td>Cookie</td>
+      <td>-</td>
+      <td>$${p.price || 0}</td>
+      <td>${p.stock || 0}</td>
+      <td>${p.supplier || "-"}</td>
+    </tr>`;
+  });
+
+  braceletSnap.forEach(docSnap => {
+    const p = docSnap.data();
+    productBody.innerHTML += `<tr>
+      <td>${p.name || "Unnamed"}</td>
+      <td>Bracelet</td>
+      <td>${p.size || "-"}</td>
+      <td>$${p.price || 0}</td>
+      <td>${p.stock || 0}</td>
+      <td>${p.supplier || "-"}</td>
+    </tr>`;
+  });
+}
+
+// ==== ADD PRODUCT ====
+const addProductBtn = document.getElementById("addProduct");
+const productModal = document.getElementById("productModal");
+const saveProductBtn = document.getElementById("saveProduct");
+const closeModalBtn = document.getElementById("closeModal");
+
+addProductBtn.onclick = () => productModal.classList.add("show");
+closeModalBtn.onclick = () => productModal.classList.remove("show");
+
+saveProductBtn.onclick = async () => {
+  const type = document.getElementById("productType").value;
+  const name = document.getElementById("productName").value.trim();
+  const size = document.getElementById("productSize").value.trim();
+  const price = parseFloat(document.getElementById("productPrice").value);
+  const stock = parseInt(document.getElementById("productStock").value);
+  const supplier = document.getElementById("productSupplier").value.trim();
+
+  if (!name) {
+    alert("Enter a product name.");
+    return;
+  }
+
+  const productData = { name, price, stock, supplier };
+  if (type === "bracelet") productData.size = size;
+
   try {
-    const [cookieSnap, braceletSnap] = await Promise.all([
-      getDocs(collection(db, "products_cookies")),
-      getDocs(collection(db, "products_bracelets"))
-    ]);
-    productBody.innerHTML = "";
-
-    const allProducts = [];
-    cookieSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_cookies", productType: "Cookie" }));
-    braceletSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_bracelets", productType: "Bracelet" }));
-
-    allProducts.forEach(p => {
-      const stock = Number(p.stock ?? 0);
-      const basePrice = Number(p.price ?? 0);
-      const adjustedPrice = (stock > 0 && stock <= 10) ? basePrice + 1 : basePrice;
-      const status = stock <= 0 ? "Out of Stock" : stock <= 10 ? "Low Stock" : "In Stock";
-      const isBracelet = p.collection.includes("bracelet");
-
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td contenteditable data-field="${isBracelet ? 'type' : 'name'}">${escapeHTML(p.name || p.type || "Unnamed")}</td>
-        <td contenteditable="${isBracelet}" data-field="${isBracelet?'size':''}">${escapeHTML(isBracelet?p.size||'-':'-')}</td>
-        <td>${escapeHTML(p.productType)}</td>
-        <td contenteditable data-field="sku">${escapeHTML(p.sku || "-")}</td>
-        <td contenteditable data-field="supplier">${escapeHTML(p.supplier || "-")}</td>
-        <td contenteditable data-field="stock">${escapeHTML(stock)}</td>
-        <td>${escapeHTML(status)}</td>
-        <td contenteditable data-field="price">$${escapeHTML(adjustedPrice.toFixed(2))}</td>
-        <td><button class="delete-btn" data-id="${p.id}" data-col="${p.collection}">🗑️</button></td>
-      `;
-
-      row.querySelectorAll("[contenteditable]").forEach(cell => {
-        const field = cell.dataset.field;
-        if (!field) return;
-        cell.addEventListener("blur", async e => {
-          let value = e.target.innerText.replace("$","").trim();
-          if (["stock","price"].includes(field)) value = Number(value);
-          await updateDoc(doc(db, p.collection, p.id), { [field]: value });
-          loadProducts();
-        });
-      });
-      row.querySelector(".delete-btn").addEventListener("click", async () => {
-        if (confirm(`Delete "${p.name || p.type}"?`)) {
-          await deleteDoc(doc(db, p.collection, p.id));
-          loadProducts();
-        }
-      });
-      productBody.appendChild(row);
-    });
+    await addDoc(collection(db, type === "cookie" ? "cookies" : "bracelets"), productData);
+    alert("✅ Product added!");
+    productModal.classList.remove("show");
+    loadProducts();
   } catch (err) {
-    console.error("loadProducts error:", err);
+    alert("❌ Error adding product: " + err.message);
   }
-}
-
-/* ===== Modal ===== */
-function openModal() {
-  productTypeSelect.value = "cookie";
-  braceletOptions.style.display = "none";
-  productNameInput.value = "";
-  productSizeInput.value = "";
-  productPriceInput.value = "5.00";
-  productStockInput.value = "10";
-  productSupplierInput.value = "";
-  modal.classList.add("show");
-}
-function closeModal() { modal.classList.remove("show"); }
-addProduct.addEventListener("click", openModal);
-closeModalBtn.addEventListener("click", closeModal);
-modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
-
-productTypeSelect.addEventListener("change", () => {
-  braceletOptions.style.display = productTypeSelect.value === "bracelet" ? "block" : "none";
-});
-
-saveBtn.addEventListener("click", async () => {
-  const type = productTypeSelect.value;
-  const name = productNameInput.value.trim();
-  const size = productSizeInput.value.trim();
-  const price = parseFloat(productPriceInput.value);
-  const stock = parseInt(productStockInput.value);
-  const supplier = productSupplierInput.value.trim() || "-";
-
-  if (!name || isNaN(price) || isNaN(stock)) return alert("Please fill all fields.");
-
-  const data = {
-    name: type === "cookie" ? name : undefined,
-    type: type === "bracelet" ? name : undefined,
-    size: type === "bracelet" ? size : undefined,
-    price,
-    stock,
-    supplier,
-    sku: Math.floor(Math.random() * 900000 + 100000).toString(),
-    productType: type === "cookie" ? "Cookie" : "Bracelet"
-  };
-
-  await addDoc(collection(db, type === "cookie" ? "products_cookies" : "products_bracelets"), data);
-  closeModal();
-  loadProducts();
-});
-
-/* ===== SKU Generator ===== */
-generateSKU.addEventListener("click", async () => {
-  const colNames = ["products_cookies","products_bracelets"];
-  for (const colName of colNames) {
-    const snap = await getDocs(collection(db, colName));
-    for (const d of snap.docs) {
-      const data = d.data();
-      if (!data.sku) {
-        const newSKU = Math.floor(Math.random() * 900000 + 100000).toString();
-        await updateDoc(doc(db, colName, d.id), { sku: newSKU });
-      }
-    }
-  }
-  alert("Missing SKUs generated!");
-  loadProducts();
-});
+};
 </script>
 </body>
 </html>
+
