@@ -4,80 +4,132 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Admin Dashboard | Tactics & Treats</title>
-
 <style>
-  body {font-family:'Poppins',sans-serif;background:black;color:white;margin:0;padding:0;}
-  header {background:linear-gradient(90deg,#ff0040,#ff6600);padding:15px;text-align:center;font-size:1.4em;font-weight:600;}
-  h2 {border-left:5px solid #ff0040;padding-left:10px;}
-  table {width:100%;border-collapse:collapse;background:#111;margin-top:10px;}
-  th,td {border:1px solid #222;padding:8px;text-align:center;}
-  th {background:#111;color:#ff0040;}
-  tr:nth-child(even){background:#0a0a0a;}
-  button {background:#ff0040;color:white;border:none;border-radius:8px;padding:8px 15px;margin:5px;cursor:pointer;}
-  button:hover{background:#ff3366;transform:scale(1.05);}
-  #adminOverlay {position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:2000;}
-  #adminOverlay input{padding:10px;font-size:1.1em;border:1px solid #ff0040;border-radius:8px;background:#111;color:white;text-align:center;}
-  #adminOverlay button{margin-top:10px;background:#ff0040;padding:8px 18px;border-radius:8px;font-weight:600;}
-  #productModal {display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(5px);justify-content:center;align-items:center;z-index:1000;}
-  #productModal.show{display:flex;}
-  .modal-content{background:#111;padding:20px;border-radius:12px;width:350px;box-shadow:0 0 20px #ff0040;}
-  .modal-content input,.modal-content select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #333;background:#0a0a0a;color:white;}
-  .modal-buttons{display:flex;justify-content:space-between;margin-top:10px;}
+  /* --- Basic layout & theme --- */
+  body { font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:#000; color:#fff; margin:0; }
+  header { background: linear-gradient(90deg,#ff0040,#ff6600); padding:16px 20px; text-align:center; font-weight:700; letter-spacing:1px; box-shadow:0 0 10px #ff0040; }
+  main { padding:20px; max-width:1200px; margin:0 auto; }
+  h1,h2 { color:#ff2b2b; margin:0 0 12px 0; }
+  h2 { font-size:1.15rem; border-left:5px solid #ff0040; padding-left:10px; margin-top:18px; }
+
+  /* --- Tables --- */
+  table { width:100%; border-collapse:collapse; background:#111; margin-top:12px; border-radius:10px; overflow:hidden; box-shadow:0 0 10px #ff0040; }
+  thead th { background:#111; color:#ff0040; padding:10px; text-align:center; font-weight:700; }
+  tbody td { padding:10px; text-align:center; border-top:1px solid #222; color:#ddd; }
+  tr:nth-child(even) td { background:#0a0a0a; }
+
+  /* --- Buttons & controls --- */
+  .controls { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center; }
+  button { background:#ff0040; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; font-weight:600; transition:transform .12s ease,background .12s ease; }
+  button:hover { transform:scale(1.03); background:#ff3366; }
+  .muted { background:#222; color:#ff0040; border:1px solid #ff0040; }
+  .danger { background:#333; color:#ffb2b2; border:1px solid #aa0000; }
+
+  /* --- Modal --- */
+  #productModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; z-index:1200; }
+  #productModal.show { display:flex; }
+  .modal { background:#111; padding:18px; border-radius:12px; width:380px; box-shadow:0 0 20px #ff0040; }
+  .modal label { display:block; margin-top:8px; font-size:0.9rem; color:#ccc; }
+  .modal input, .modal select { width:100%; padding:8px; margin-top:6px; border-radius:8px; border:1px solid #333; background:#0a0a0a; color:#fff; }
+
+  /* --- Admin overlay --- */
+  #adminOverlay { position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+  #adminOverlay input { padding:10px; width:260px; border-radius:8px; border:1px solid #ff0040; background:#111; color:#fff; text-align:center; }
+  #adminOverlay button { width:140px; }
+
+  /* --- small helpers --- */
+  .small { font-size:0.9rem; color:#ccc; }
+  .inline-input { width:120px; padding:6px; border-radius:6px; border:1px solid #333; background:#0a0a0a; color:#fff; }
+  .editable { background:transparent; border:none; color:inherit; width:100%; }
 </style>
 </head>
-
 <body>
+
+<header><h1>🛠️ Admin Dashboard — Tactics & Treats</h1></header>
+
+<!-- Admin Code Overlay -->
 <div id="adminOverlay">
-  <h2>Enter Admin Code</h2>
-  <input type="password" id="adminCodeInput" placeholder="Enter code" />
-  <button id="submitCode">Access Dashboard</button>
-  <p id="codeError" style="color:#ff0040;display:none;">❌ Incorrect Code</p>
+  <h2 style="color:#ff0040;">Admin Access</h2>
+  <input id="adminCodeInput" type="password" placeholder="Enter admin code" />
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button id="adminUnlockBtn">Unlock</button>
+    <button id="adminCancelBtn" class="muted">Cancel</button>
+  </div>
+  <p id="adminError" class="small" style="display:none;color:#ff6666;">Incorrect code</p>
 </div>
 
-<header>🛠️ Admin Dashboard | Tactics & Treats</header>
-
-<main style="display:none;" id="adminMain">
-  <h2>Products</h2>
-  <button id="addProduct">➕ Add Product</button>
-  <table>
+<main id="adminMain" style="display:none;">
+  <!-- ORDERS -->
+  <h2>Orders</h2>
+  <div class="controls">
+    <span class="small">Orders from <strong>cookie_orders</strong> &amp; <strong>bracelet_orders</strong></span>
+    <button id="refreshOrders" class="muted">Refresh Orders</button>
+  </div>
+  <table id="ordersTable" aria-label="Orders table">
     <thead>
       <tr>
-        <th>Name</th><th>Type</th><th>Size</th><th>Price</th><th>Stock</th><th>Supplier</th>
+        <th>Order #</th><th>Name</th><th>Email</th><th>Product</th><th>Type</th><th>Qty</th><th>Total</th><th>Status</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="ordersBody"></tbody>
+  </table>
+
+  <!-- PRODUCTS -->
+  <h2>Products</h2>
+  <div class="controls">
+    <span class="small">Products from <strong>Products_Cookies</strong> &amp; <strong>Products_Bracelets</strong></span>
+    <button id="generateSKU">🔢 Generate Missing SKUs</button>
+    <button id="addProductBtn">➕ Add Product</button>
+    <button id="refreshProducts" class="muted">Refresh Products</button>
+  </div>
+
+  <table id="productsTable" aria-label="Products table">
+    <thead>
+      <tr>
+        <th>Name / Type</th><th>Size</th><th>Category</th><th>SKU</th><th>Supplier</th><th>Stock</th><th>Status</th><th>Price</th><th>Actions</th>
       </tr>
     </thead>
     <tbody id="productBody"></tbody>
   </table>
 </main>
 
-<div id="productModal">
-  <div class="modal-content">
-    <h3>Add Product</h3>
+<!-- Add/Edit Product Modal -->
+<div id="productModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle" style="color:#ff2b2b;margin:0 0 6px 0;">Add Product</h3>
+
     <label>Product Type</label>
-    <select id="productType">
-      <option value="cookie">Cookie</option>
-      <option value="bracelet">Bracelet</option>
-    </select>
-    <label>Name</label>
-    <input id="productName" type="text" placeholder="Product name">
-    <label>Size (Bracelet only)</label>
-    <input id="productSize" type="text" placeholder="e.g. Small, Medium">
+    <select id="productType"><option value="cookie">Cookie</option><option value="bracelet">Bracelet</option></select>
+
+    <label>Product Name</label>
+    <input id="productName" type="text" placeholder="Name" />
+
+    <div id="braceletBlock" style="display:none;">
+      <label>Size</label>
+      <input id="productSize" type="text" placeholder="Small / Medium / Large" />
+    </div>
+
     <label>Price</label>
-    <input id="productPrice" type="number" step="0.01" value="5.00">
+    <input id="productPrice" type="number" step="0.01" value="5.00" />
+
     <label>Stock</label>
-    <input id="productStock" type="number" value="10">
+    <input id="productStock" type="number" value="10" />
+
     <label>Supplier</label>
-    <input id="productSupplier" type="text" placeholder="Supplier name">
-    <div class="modal-buttons">
-      <button id="saveProduct">💾 Save</button>
-      <button id="closeModal">❌ Cancel</button>
+    <input id="productSupplier" type="text" placeholder="Supplier name" />
+
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+      <button id="saveProductBtn">💾 Save</button>
+      <button id="cancelProductBtn" class="muted">Cancel</button>
     </div>
   </div>
 </div>
 
+<!-- Firebase + App logic -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
+/* ================= CONFIGURATION ================= */
+const ADMIN_CODE = "20903"; // <--- your admin code
+// Firebase config: update if needed
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -87,96 +139,314 @@ const firebaseConfig = {
   appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 
+/* ================= FIREBASE IMPORTS ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ==== ADMIN CODE LOGIN ====
-const ADMIN_CODE = "20903";
-const overlay = document.getElementById("adminOverlay");
-const adminMain = document.getElementById("adminMain");
-const submitCode = document.getElementById("submitCode");
-const adminCodeInput = document.getElementById("adminCodeInput");
-const codeError = document.getElementById("codeError");
+/* ================= ELEMENTS ================= */
+const overlay = document.getElementById('adminOverlay');
+const adminUnlockBtn = document.getElementById('adminUnlockBtn');
+const adminCancelBtn = document.getElementById('adminCancelBtn');
+const adminCodeInput = document.getElementById('adminCodeInput');
+const adminError = document.getElementById('adminError');
+const adminMain = document.getElementById('adminMain');
 
-submitCode.addEventListener("click", () => {
+const ordersBody = document.getElementById('ordersBody');
+const refreshOrdersBtn = document.getElementById('refreshOrders');
+
+const productBody = document.getElementById('productBody');
+const addProductBtn = document.getElementById('addProductBtn');
+const productModal = document.getElementById('productModal');
+const cancelProductBtn = document.getElementById('cancelProductBtn');
+const saveProductBtn = document.getElementById('saveProductBtn');
+const productType = document.getElementById('productType');
+const braceletBlock = document.getElementById('braceletBlock');
+const productName = document.getElementById('productName');
+const productSize = document.getElementById('productSize');
+const productPrice = document.getElementById('productPrice');
+const productStock = document.getElementById('productStock');
+const productSupplier = document.getElementById('productSupplier');
+const generateSKUbtn = document.getElementById('generateSKU');
+const refreshProductsBtn = document.getElementById('refreshProducts');
+
+/* ================= HELPERS ================= */
+function escapeHTML(s){ if (s==null) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+function showOverlayError(msg){ adminError.textContent = msg; adminError.style.display = 'block'; }
+
+/* ================= ADMIN OVERLAY HANDLING ================= */
+adminUnlockBtn.addEventListener('click', () => {
   if (adminCodeInput.value === ADMIN_CODE) {
-    overlay.style.display = "none";
-    adminMain.style.display = "block";
+    overlay.style.display = 'none';
+    adminMain.style.display = 'block';
+    loadOrders();
     loadProducts();
   } else {
-    codeError.style.display = "block";
-    adminCodeInput.value = "";
+    showOverlayError('Incorrect code');
+    adminCodeInput.value = '';
+  }
+});
+adminCancelBtn.addEventListener('click', () => { adminCodeInput.value = ''; });
+
+adminCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') adminUnlockBtn.click(); });
+
+/* ================= ORDERS ================= */
+async function loadOrders(){
+  ordersBody.innerHTML = '<tr><td colspan="9">Loading orders...</td></tr>';
+  try {
+    const [cookieSnap, braceletSnap] = await Promise.all([
+      getDocs(collection(db, 'cookie_orders')),
+      getDocs(collection(db, 'bracelet_orders'))
+    ]);
+    const all = [];
+    cookieSnap.forEach(d => all.push({ id:d.id, collection:'cookie_orders', ...d.data(), type:'Cookie' }));
+    braceletSnap.forEach(d => all.push({ id:d.id, collection:'bracelet_orders', ...d.data(), type:'Bracelet' }));
+
+    if (all.length === 0) {
+      ordersBody.innerHTML = '<tr><td colspan="9">No orders found.</td></tr>';
+      return;
+    }
+
+    // sort descending if createdAt present
+    all.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+
+    ordersBody.innerHTML = '';
+    all.forEach(o => {
+      const quantity = o.quantity ?? o.qty ?? 1;
+      const total = o.totalPrice ?? o.total ?? 0;
+      const status = o.status ?? 'Pending';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHTML(o.orderNumber||o.id)}</td>
+        <td contenteditable data-field="name" class="editable">${escapeHTML(o.name||'-')}</td>
+        <td contenteditable data-field="email" class="editable">${escapeHTML(o.email||'-')}</td>
+        <td>${escapeHTML(o.productName || o.product || '-')}</td>
+        <td>${escapeHTML(o.type || o.productType || o.type || o.type)}</td>
+        <td contenteditable data-field="quantity" class="editable">${escapeHTML(quantity)}</td>
+        <td contenteditable data-field="totalPrice" class="editable">$${Number(total).toFixed(2)}</td>
+        <td>
+          <select data-field="status">
+            <option ${status==='Pending'?'selected':''}>Pending</option>
+            <option ${status==='Processing'?'selected':''}>Processing</option>
+            <option ${status==='Completed'?'selected':''}>Completed</option>
+            <option ${status==='Cancelled'?'selected':''}>Cancelled</option>
+          </select>
+        </td>
+        <td><button class="muted" data-id="${o.id}" data-col="${o.collection}">Save</button></td>
+      `;
+      // blur save handlers
+      tr.querySelectorAll('[contenteditable]').forEach(cell => {
+        cell.addEventListener('blur', async (e) => {
+          const field = cell.dataset.field;
+          let value = e.target.innerText.replace('$','').trim();
+          if (['quantity','totalPrice'].includes(field)) value = Number(value) || 0;
+          await updateDoc(doc(db, o.collection, o.id), { [field]: value });
+        });
+      });
+      const select = tr.querySelector('select[data-field="status"]');
+      select.addEventListener('change', async (e) => {
+        await updateDoc(doc(db, o.collection, o.id), { status: e.target.value });
+      });
+      tr.querySelector('button').addEventListener('click', async () => {
+        const name = tr.querySelector('[data-field="name"]').innerText.trim();
+        const email = tr.querySelector('[data-field="email"]').innerText.trim();
+        let quantityVal = Number(tr.querySelector('[data-field="quantity"]').innerText.replace('$','').trim()) || 1;
+        let totalVal = Number(tr.querySelector('[data-field="totalPrice"]').innerText.replace('$','').trim()) || 0;
+        const statusVal = select.value;
+        await updateDoc(doc(db, o.collection, o.id), { name, email, quantity: quantityVal, totalPrice: totalVal, status: statusVal });
+        alert('Order saved');
+        loadOrders();
+      });
+
+      ordersBody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error('loadOrders error', err);
+    ordersBody.innerHTML = '<tr><td colspan="9" style="color:#ff6666;">Error loading orders.</td></tr>';
+  }
+}
+refreshOrdersBtn.addEventListener('click', loadOrders);
+
+/* ================= PRODUCTS ================= */
+async function loadProducts(){
+  productBody.innerHTML = '<tr><td colspan="9">Loading products...</td></tr>';
+  try {
+    const [cookieSnap, braceletSnap] = await Promise.all([
+      getDocs(collection(db, 'Products_Cookies')),
+      getDocs(collection(db, 'Products_Bracelets'))
+    ]);
+
+    const all = [];
+    cookieSnap.forEach(d => all.push({ id:d.id, collection:'Products_Cookies', productType:'Cookie', ...d.data() }));
+    braceletSnap.forEach(d => all.push({ id:d.id, collection:'Products_Bracelets', productType:'Bracelet', ...d.data() }));
+
+    if (all.length === 0) {
+      productBody.innerHTML = '<tr><td colspan="9">No products found.</td></tr>';
+      return;
+    }
+
+    productBody.innerHTML = '';
+    all.forEach(p => {
+      const stock = Number(p.stock ?? 0);
+      const basePrice = Number(p.price ?? 0);
+      const adjustedPrice = (stock > 0 && stock <= 10) ? (basePrice + 1) : basePrice;
+      const status = stock <= 0 ? 'Out of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
+      const isBracelet = p.collection.includes('Bracelet') || p.productType === 'Bracelet';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td contenteditable data-field="name" class="editable">${escapeHTML(p.name || p.type || 'Unnamed')}</td>
+        <td contenteditable data-field="size" class="editable">${escapeHTML(isBracelet ? (p.size || '-') : '-')}</td>
+        <td>${escapeHTML(p.productType || (isBracelet ? 'Bracelet' : 'Cookie'))}</td>
+        <td contenteditable data-field="sku" class="editable">${escapeHTML(p.sku || '-')}</td>
+        <td contenteditable data-field="supplier" class="editable">${escapeHTML(p.supplier || '-')}</td>
+        <td contenteditable data-field="stock" class="editable">${escapeHTML(stock)}</td>
+        <td>${escapeHTML(status)}</td>
+        <td contenteditable data-field="price" class="editable">$${escapeHTML(adjustedPrice.toFixed(2))}</td>
+        <td>
+          <button class="muted save-product" data-id="${p.id}" data-col="${p.collection}">Save</button>
+          <button class="danger delete-product" data-id="${p.id}" data-col="${p.collection}">Delete</button>
+        </td>
+      `;
+
+      // inline save on blur
+      tr.querySelectorAll('[contenteditable]').forEach(cell => {
+        cell.addEventListener('blur', async (e) => {
+          const field = cell.dataset.field;
+          if (!field) return;
+          let value = cell.innerText.replace('$','').trim();
+          if (['stock','price'].includes(field)) value = Number(value) || 0;
+          await updateDoc(doc(db, p.collection, p.id), { [field]: value });
+          loadProducts();
+        });
+      });
+
+      // save button
+      tr.querySelector('.save-product').addEventListener('click', async (ev) => {
+        const id = ev.target.dataset.id;
+        const col = ev.target.dataset.col;
+        const row = ev.target.closest('tr');
+        const name = row.querySelector('[data-field="name"]').innerText.trim();
+        const size = row.querySelector('[data-field="size"]')?.innerText.trim();
+        const sku = row.querySelector('[data-field="sku"]').innerText.trim();
+        const supplier = row.querySelector('[data-field="supplier"]').innerText.trim();
+        const stockVal = Number(row.querySelector('[data-field="stock"]').innerText.replace('$','').trim()) || 0;
+        let priceVal = row.querySelector('[data-field="price"]').innerText.replace('$','').trim();
+        priceVal = Number(priceVal) || 0;
+        await updateDoc(doc(db, col, id), { name, size, sku, supplier, stock:stockVal, price: priceVal });
+        alert('Product saved');
+        loadProducts();
+      });
+
+      // delete button
+      tr.querySelector('.delete-product').addEventListener('click', async (ev) => {
+        const id = ev.target.dataset.id;
+        const col = ev.target.dataset.col;
+        if (!confirm('Delete this product?')) return;
+        await deleteDoc(doc(db, col, id));
+        loadProducts();
+      });
+
+      productBody.appendChild(tr);
+    });
+
+  } catch (err) {
+    console.error('loadProducts error', err);
+    productBody.innerHTML = '<tr><td colspan="9" style="color:#ff6666;">Error loading products.</td></tr>';
+  }
+}
+
+/* ================= ADD / EDIT PRODUCT MODAL HANDLING ================= */
+function openProductModal(edit = null){
+  productModal.classList.add('show');
+  productType.value = 'cookie';
+  braceletBlock.style.display = 'none';
+  productName.value = '';
+  productSize.value = '';
+  productPrice.value = '5.00';
+  productStock.value = '10';
+  productSupplier.value = '';
+  document.getElementById('modalTitle').textContent = edit ? 'Edit Product' : 'Add Product';
+}
+function closeProductModal(){ productModal.classList.remove('show'); }
+
+addProductBtn.addEventListener('click', ()=> openProductModal());
+cancelProductBtn.addEventListener('click', ()=> closeProductModal());
+productType.addEventListener('change', ()=> {
+  braceletBlock.style.display = productType.value === 'bracelet' ? 'block' : 'none';
+});
+
+// Save new product
+saveProductBtn.addEventListener('click', async () => {
+  const type = productType.value; // 'cookie' or 'bracelet'
+  const name = productName.value.trim();
+  const size = productSize.value.trim();
+  const price = Number(productPrice.value) || 0;
+  const stock = Number(productStock.value) || 0;
+  const supplier = productSupplier.value.trim() || '-';
+
+  if (!name) return alert('Please provide a product name.');
+
+  const data = {
+    name: type === 'cookie' ? name : undefined,
+    type: type === 'bracelet' ? name : undefined,
+    size: type === 'bracelet' ? (size || '-') : undefined,
+    price, stock, supplier,
+    sku: (Math.random().toString(36).substring(2,8)).toUpperCase(),
+    productType: type === 'bracelet' ? 'Bracelet' : 'Cookie'
+  };
+
+  const col = type === 'cookie' ? 'Products_Cookies' : 'Products_Bracelets';
+  try {
+    await addDoc(collection(db, col), data);
+    alert('Product added');
+    closeProductModal();
+    loadProducts();
+  } catch (err) {
+    console.error('add product error', err);
+    alert('Error adding product: ' + (err.message||err));
   }
 });
 
-// ==== LOAD PRODUCTS ====
-async function loadProducts() {
-  const productBody = document.getElementById("productBody");
-  productBody.innerHTML = "";
-
-  const cookieSnap = await getDocs(collection(db, "cookies"));
-  const braceletSnap = await getDocs(collection(db, "bracelets"));
-
-  cookieSnap.forEach(docSnap => {
-    const p = docSnap.data();
-    productBody.innerHTML += `<tr>
-      <td>${p.name || "Unnamed"}</td>
-      <td>Cookie</td>
-      <td>-</td>
-      <td>$${p.price || 0}</td>
-      <td>${p.stock || 0}</td>
-      <td>${p.supplier || "-"}</td>
-    </tr>`;
-  });
-
-  braceletSnap.forEach(docSnap => {
-    const p = docSnap.data();
-    productBody.innerHTML += `<tr>
-      <td>${p.name || "Unnamed"}</td>
-      <td>Bracelet</td>
-      <td>${p.size || "-"}</td>
-      <td>$${p.price || 0}</td>
-      <td>${p.stock || 0}</td>
-      <td>${p.supplier || "-"}</td>
-    </tr>`;
-  });
-}
-
-// ==== ADD PRODUCT ====
-const addProductBtn = document.getElementById("addProduct");
-const productModal = document.getElementById("productModal");
-const saveProductBtn = document.getElementById("saveProduct");
-const closeModalBtn = document.getElementById("closeModal");
-
-addProductBtn.onclick = () => productModal.classList.add("show");
-closeModalBtn.onclick = () => productModal.classList.remove("show");
-
-saveProductBtn.onclick = async () => {
-  const type = document.getElementById("productType").value;
-  const name = document.getElementById("productName").value.trim();
-  const size = document.getElementById("productSize").value.trim();
-  const price = parseFloat(document.getElementById("productPrice").value);
-  const stock = parseInt(document.getElementById("productStock").value);
-  const supplier = document.getElementById("productSupplier").value.trim();
-
-  if (!name) {
-    alert("Enter a product name.");
-    return;
-  }
-
-  const productData = { name, price, stock, supplier };
-  if (type === "bracelet") productData.size = size;
-
+/* ================= SKU GENERATOR ================= */
+generateSKUbtn.addEventListener('click', async () => {
+  generateSKUbtn.disabled = true;
   try {
-    await addDoc(collection(db, type === "cookie" ? "cookies" : "bracelets"), productData);
-    alert("✅ Product added!");
-    productModal.classList.remove("show");
+    const colNames = ['Products_Cookies','Products_Bracelets'];
+    for (const c of colNames){
+      const snap = await getDocs(collection(db, c));
+      for (const d of snap.docs){
+        const data = d.data();
+        if (!data.sku){
+          const newSKU = Math.floor(Math.random()*900000 + 100000).toString();
+          await updateDoc(doc(db, c, d.id), { sku: newSKU });
+        }
+      }
+    }
+    alert('Missing SKUs generated');
     loadProducts();
   } catch (err) {
-    alert("❌ Error adding product: " + err.message);
-  }
-};
+    console.error('generateSKU error', err);
+    alert('Error generating SKUs');
+  } finally { generateSKUbtn.disabled = false; }
+});
+
+/* ================= REFRESH BUTTONS ================= */
+refreshProductsBtn.addEventListener('click', loadProducts);
+
+/* Load data if overlay somehow already hidden */
+if (overlay.style.display === 'none') { loadOrders(); loadProducts(); }
+
 </script>
 </body>
 </html>
-
