@@ -63,6 +63,19 @@
     background: #333;
     box-shadow: 0 0 0 2px red;
   }
+
+  select {
+    background: #222;
+    color: white;
+    border: 1px solid red;
+    border-radius: 5px;
+    padding: 5px;
+  }
+
+  select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px red;
+  }
 </style>
 </head>
 <body>
@@ -140,8 +153,8 @@ async function loadOrders() {
   ]);
 
   const all = [];
-  cookieSnap.forEach(d => all.push({ id: d.id, ...d.data(), type: "Cookie" }));
-  braceletSnap.forEach(d => all.push({ id: d.id, ...d.data(), type: "Bracelet" }));
+  cookieSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "cookieOrders", type: "Cookie" }));
+  braceletSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "braceletOrders", type: "Bracelet" }));
 
   ordersBody.innerHTML = "";
   all.forEach(o => {
@@ -149,14 +162,39 @@ async function loadOrders() {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${o.orderNumber || "-"}</td>
-      <td>${o.name || "-"}</td>
-      <td>${o.email || "-"}</td>
-      <td>${o.productName || o.type || "-"}</td>
+      <td contenteditable="true" data-field="name">${o.name || "-"}</td>
+      <td contenteditable="true" data-field="email">${o.email || "-"}</td>
+      <td contenteditable="true" data-field="productName">${o.productName || o.type || "-"}</td>
       <td>${o.type}</td>
-      <td>${o.quantity || 1}</td>
-      <td>${price}</td>
-      <td>${o.status || "Pending"}</td>
+      <td contenteditable="true" data-field="quantity">${o.quantity || 1}</td>
+      <td contenteditable="true" data-field="totalPrice">${price}</td>
+      <td>
+        <select data-field="status">
+          <option value="Pending" ${o.status === "Pending" ? "selected" : ""}>Pending</option>
+          <option value="Processing" ${o.status === "Processing" ? "selected" : ""}>Processing</option>
+          <option value="Completed" ${o.status === "Completed" ? "selected" : ""}>Completed</option>
+          <option value="Cancelled" ${o.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+        </select>
+      </td>
     `;
+
+    // 🔹 Save edits on blur or change
+    row.querySelectorAll("[contenteditable]").forEach(cell => {
+      const field = cell.dataset.field;
+      cell.addEventListener("blur", async e => {
+        let value = e.target.innerText.replace("$", "").trim();
+        if (["totalPrice", "quantity"].includes(field)) value = Number(value);
+        await updateDoc(doc(db, o.collection, o.id), { [field]: value });
+        console.log(`✅ Updated ${field} for order ${o.orderNumber}`);
+      });
+    });
+
+    row.querySelector("select[data-field='status']").addEventListener("change", async e => {
+      const newStatus = e.target.value;
+      await updateDoc(doc(db, o.collection, o.id), { status: newStatus });
+      console.log(`✅ Updated status for order ${o.orderNumber}`);
+    });
+
     ordersBody.appendChild(row);
   });
 }
@@ -175,20 +213,13 @@ async function loadProducts() {
   braceletSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_bracelets", productType: "Bracelet" }));
 
   allProducts.forEach(p => {
-    // Display name
     const isBracelet = p.collection === "products_bracelets";
-    const displayName = isBracelet
-      ? `${p.type || "Unnamed"}`
-      : (p.name || "Unnamed");
+    const displayName = isBracelet ? (p.type || "Unnamed") : (p.name || "Unnamed");
     const displaySize = isBracelet ? (p.size || "-") : "-";
-
     const stock = Number(p.stock ?? 0);
     const basePrice = Number(p.price ?? 0);
     const adjustedPrice = stock > 0 && stock <= 10 ? basePrice + 1 : basePrice;
-    const status =
-      stock <= 0 ? "Out of Stock" :
-      stock <= 10 ? "Low Stock" :
-      "In Stock";
+    const status = stock <= 0 ? "Out of Stock" : stock <= 10 ? "Low Stock" : "In Stock";
 
     const row = document.createElement("tr");
     row.innerHTML = `
@@ -202,11 +233,11 @@ async function loadProducts() {
       <td contenteditable="true" data-field="price">$${adjustedPrice.toFixed(2)}</td>
     `;
 
-    // 🔹 Inline edit saving
+    // 🔹 Inline save on blur
     row.querySelectorAll("[contenteditable]").forEach(cell => {
-      if (!cell.dataset.field) return; // skip blank size for cookies
+      const field = cell.dataset.field;
+      if (!field) return;
       cell.addEventListener("blur", async e => {
-        const field = e.target.dataset.field;
         let value = e.target.innerText.replace("$", "").trim();
         if (["stock", "price"].includes(field)) value = Number(value);
         await updateDoc(doc(db, p.collection, p.id), { [field]: value });
