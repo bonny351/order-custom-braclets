@@ -1,108 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Admin Dashboard | Tactics & Treats</title>
 <style>
   body {
     font-family: 'Poppins', sans-serif;
-    background:black;
-    color:white;
-    margin:0;
-    padding:0;
+    background: black;
+    color: white;
+    margin: 0;
+    padding: 0;
   }
-  h1,h2 {
-    text-align:center;
-    color:red;
-    margin:20px 0;
+
+  h1, h2 {
+    text-align: center;
+    color: red;
+    margin: 20px 0;
   }
 
   table {
-    width:95%;
-    margin:20px auto;
-    border-collapse:collapse;
-    background:#111;
-    border-radius:10px;
-    overflow:hidden;
+    width: 95%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
   }
-  th,td {
-    padding:10px;
-    border-bottom:1px solid #333;
-    text-align:center;
-  }
-  th { background:red; color:white; }
-  tr:hover { background:#222; }
-  button {
-    background:red;
-    border:none;
-    color:white;
-    padding:10px 15px;
-    border-radius:8px;
-    cursor:pointer;
-    margin:10px;
-    transition:background .2s;
-  }
-  button:hover { background:#ff4444; }
-  [contenteditable="true"] { background:#222; border-radius:4px; outline:none; }
-  [contenteditable="true"]:focus { background:#333; box-shadow:0 0 0 2px red; }
-  select { background:#222; color:white; border:1px solid red; border-radius:5px; padding:5px; }
-  select:focus { outline:none; box-shadow:0 0 0 2px red; }
 
-  /* modal */
+  th, td {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    text-align: center;
+  }
+
+  th {
+    background: red;
+    color: white;
+  }
+
+  tr:hover { background: #222; }
+
+  button {
+    background: red;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px;
+  }
+
+  button:hover { background: #ff4444; }
+
+  [contenteditable="true"] {
+    background: #222;
+    border-radius: 4px;
+    outline: none;
+  }
+
+  [contenteditable="true"]:focus {
+    background: #333;
+    box-shadow: 0 0 0 2px red;
+  }
+
+  select {
+    background: #222;
+    color: white;
+    border: 1px solid red;
+    border-radius: 5px;
+    padding: 5px;
+  }
+
+  select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px red;
+  }
+
+  /* 🔥 Popup modal styling */
   #productModal {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.85);
-    justify-content:center;
-    align-items:center;
-    z-index:1000;
-    opacity:0;
-    transition:opacity .25s ease;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
   }
-  #productModal.show {
-    display:flex;
-    opacity:1;
+
+  #productModal .modal-content {
+    background: #111;
+    border: 1px solid red;
+    border-radius: 12px;
+    padding: 20px 30px;
+    width: 300px;
+    color: white;
+    text-align: left;
   }
-  .modal-content {
-    background:#111;
-    color:white;
-    padding:20px;
-    border-radius:10px;
-    width:90%;
-    max-width:420px;
-    box-shadow:0 0 20px red;
-    position:relative;
-    animation:slideIn .25s ease;
-  }
-  @keyframes slideIn {
-    from{ transform:translateY(-10px); opacity:0 }
-    to{ transform:translateY(0); opacity:1 }
-  }
+
   #productModal input, #productModal select {
-    width:100%;
-    margin-bottom:12px;
-    padding:8px;
-    border-radius:6px;
-    border:1px solid red;
-    background:#222;
-    color:white;
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #222;
+    color: white;
   }
-  #closeModal {
-    position:absolute;
-    top:10px;
-    right:12px;
-    background:none;
-    border:none;
-    color:red;
-    font-size:22px;
-    cursor:pointer;
+
+  #productModal h3 {
+    text-align: center;
+    color: red;
+    margin-bottom: 10px;
   }
-  .muted { color:#aaa; font-size:.9rem; }
+
+  #productModal .modal-actions {
+    text-align: center;
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
+
 <h1>Admin Dashboard</h1>
 
 <!-- ORDERS -->
@@ -111,7 +131,14 @@
   <table>
     <thead>
       <tr>
-        <th>Order #</th><th>Name</th><th>Email</th><th>Product</th><th>Type</th><th>Qty</th><th>Total</th><th>Status</th>
+        <th>Order #</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Product</th>
+        <th>Type</th>
+        <th>Qty</th>
+        <th>Total</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody id="ordersBody"></tbody>
@@ -122,26 +149,32 @@
 <div class="section">
   <h2>Products</h2>
   <div style="text-align:center;">
-    <button id="addProduct">➕ Add Product</button>
+    <button id="openAddProduct">➕ Add Product</button>
     <button id="generateSKU">🔢 Generate Missing SKUs</button>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>Name / Type</th><th>Size</th><th>Product Type</th><th>SKU</th><th>Supplier</th><th>Stock</th><th>Status</th><th>Price</th><th>Delete</th>
+        <th>Name / Type</th>
+        <th>Size</th>
+        <th>Product Type</th>
+        <th>SKU</th>
+        <th>Supplier</th>
+        <th>Stock</th>
+        <th>Status</th>
+        <th>Price</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody id="productBody"></tbody>
   </table>
 </div>
 
-<!-- ADD PRODUCT MODAL -->
-<div id="productModal" aria-hidden="true">
-  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <button id="closeModal" title="Close">✖</button>
-    <h3 id="modalTitle" style="text-align:center;color:red;margin:0 0 12px 0;">Add New Product</h3>
-
+<!-- 🔥 Add Product Modal -->
+<div id="productModal">
+  <div class="modal-content">
+    <h3>Add New Product</h3>
     <label>Product Type</label>
     <select id="productType">
       <option value="cookie">Cookie</option>
@@ -149,32 +182,30 @@
     </select>
 
     <label>Name / Type</label>
-    <input id="productName" placeholder="e.g. Chocolate Chip or Red Rope" autocomplete="off" />
-
-    <div id="braceletOptions" style="display:none;">
-      <label>Size</label>
-      <input id="productSize" placeholder="e.g. Small, Medium, Large" />
-    </div>
+    <input type="text" id="productName" placeholder="e.g. Chocolate Chip" />
 
     <label>Price ($)</label>
-    <input id="productPrice" type="number" step="0.01" value="5.00" />
+    <input type="number" id="productPrice" min="0" step="0.01" value="5" />
 
     <label>Stock</label>
-    <input id="productStock" type="number" value="10" />
+    <input type="number" id="productStock" min="0" value="10" />
 
-    <label>Supplier <span class="muted">(optional)</span></label>
-    <input id="productSupplier" placeholder="e.g. Local Vendor" />
+    <label>Supplier</label>
+    <input type="text" id="productSupplier" placeholder="Supplier name" />
 
-    <button id="saveProduct">✅ Add Product</button>
+    <div class="modal-actions">
+      <button id="saveProduct">✅ Save</button>
+      <button id="closeModal">❌ Cancel</button>
+    </div>
   </div>
 </div>
 
 <script type="module">
-/* Firebase imports */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { 
+  getFirestore, collection, getDocs, updateDoc, doc, addDoc, deleteDoc 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -187,76 +218,62 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* DOM references */
 const ordersBody = document.getElementById("ordersBody");
 const productBody = document.getElementById("productBody");
-const generateSKU = document.getElementById("generateSKU");
-const addProduct = document.getElementById("addProduct");
 
+// Modal elements
 const modal = document.getElementById("productModal");
-const closeModalBtn = document.getElementById("closeModal");
-const productTypeSelect = document.getElementById("productType");
-const braceletOptions = document.getElementById("braceletOptions");
-const productNameInput = document.getElementById("productName");
-const productSizeInput = document.getElementById("productSize");
-const productPriceInput = document.getElementById("productPrice");
-const productStockInput = document.getElementById("productStock");
-const productSupplierInput = document.getElementById("productSupplier");
+const openBtn = document.getElementById("openAddProduct");
+const closeBtn = document.getElementById("closeModal");
 const saveBtn = document.getElementById("saveProduct");
+const generateSKU = document.getElementById("generateSKU");
 
-/* ---------- ORDERS ---------- */
+openBtn.addEventListener("click", () => modal.style.display = "flex");
+closeBtn.addEventListener("click", () => modal.style.display = "none");
+
+// 🧾 Load Orders
 async function loadOrders() {
-  try {
-    const [cookieSnap, braceletSnap] = await Promise.all([
-      getDocs(collection(db, "cookieOrders")),
-      getDocs(collection(db, "braceletOrders"))
-    ]);
-    const all = [];
-    cookieSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "cookieOrders", type: "Cookie" }));
-    braceletSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "braceletOrders", type: "Bracelet" }));
-    ordersBody.innerHTML = "";
-    all.forEach(o => {
-      const price = typeof o.totalPrice === "number" ? `$${o.totalPrice.toFixed(2)}` : (o.totalPrice ? `$${Number(o.totalPrice).toFixed(2)}` : "$0.00");
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${o.orderNumber || "-"}</td>
-        <td contenteditable="true" data-field="name">${o.name || "-"}</td>
-        <td contenteditable="true" data-field="email">${o.email || "-"}</td>
-        <td contenteditable="true" data-field="productName">${o.productName || o.type || "-"}</td>
-        <td>${o.type}</td>
-        <td contenteditable="true" data-field="quantity">${o.quantity ?? 1}</td>
-        <td contenteditable="true" data-field="totalPrice">${price}</td>
-        <td>
-          <select data-field="status">
-            <option value="Pending" ${o.status==="Pending" ? "selected":""}>Pending</option>
-            <option value="Processing" ${o.status==="Processing" ? "selected":""}>Processing</option>
-            <option value="Completed" ${o.status==="Completed" ? "selected":""}>Completed</option>
-            <option value="Cancelled" ${o.status==="Cancelled" ? "selected":""}>Cancelled</option>
-          </select>
-        </td>
-      `;
-      row.querySelectorAll("[contenteditable]").forEach(cell => {
-        const field = cell.dataset.field;
-        cell.addEventListener("blur", async e => {
-          let value = e.target.innerText.replace("$","").trim();
-          if (["totalPrice","quantity"].includes(field)) value = Number(value);
-          try { await updateDoc(doc(db, o.collection, o.id), { [field]: value }); } catch(err){ alert("Save failed"); }
-        });
-      });
-      row.querySelector("select[data-field='status']").addEventListener("change", async e => {
-        await updateDoc(doc(db, o.collection, o.id), { status: e.target.value });
-      });
-      ordersBody.appendChild(row);
-    });
-  } catch (err) { console.error("loadOrders error", err); }
+  const [cookieSnap, braceletSnap] = await Promise.all([
+    getDocs(collection(db, "cookieOrders")),
+    getDocs(collection(db, "braceletOrders"))
+  ]);
+
+  ordersBody.innerHTML = "";
+  const all = [];
+  cookieSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "cookieOrders", type: "Cookie" }));
+  braceletSnap.forEach(d => all.push({ id: d.id, ...d.data(), collection: "braceletOrders", type: "Bracelet" }));
+
+  all.forEach(o => {
+    const price = o.totalPrice ? `$${o.totalPrice.toFixed(2)}` : "$0.00";
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${o.orderNumber || "-"}</td>
+      <td contenteditable="true" data-field="name">${o.name || "-"}</td>
+      <td contenteditable="true" data-field="email">${o.email || "-"}</td>
+      <td contenteditable="true" data-field="productName">${o.productName || o.type || "-"}</td>
+      <td>${o.type}</td>
+      <td contenteditable="true" data-field="quantity">${o.quantity || 1}</td>
+      <td contenteditable="true" data-field="totalPrice">${price}</td>
+      <td>
+        <select data-field="status">
+          <option value="Pending" ${o.status === "Pending" ? "selected" : ""}>Pending</option>
+          <option value="Processing" ${o.status === "Processing" ? "selected" : ""}>Processing</option>
+          <option value="Completed" ${o.status === "Completed" ? "selected" : ""}>Completed</option>
+          <option value="Cancelled" ${o.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+        </select>
+      </td>
+    `;
+    ordersBody.appendChild(row);
+  });
 }
 
-/* ---------- PRODUCTS ---------- */
+// 📦 Load Products
 async function loadProducts() {
   const [cookieSnap, braceletSnap] = await Promise.all([
     getDocs(collection(db, "products_cookies")),
     getDocs(collection(db, "products_bracelets"))
   ]);
+
   productBody.innerHTML = "";
   const allProducts = [];
   cookieSnap.forEach(d => allProducts.push({ id: d.id, ...d.data(), collection: "products_cookies", productType: "Cookie" }));
@@ -268,7 +285,6 @@ async function loadProducts() {
     const displaySize = isBracelet ? (p.size || "-") : "-";
     const stock = Number(p.stock ?? 0);
     const basePrice = Number(p.price ?? 0);
-    const adjustedPrice = (stock > 0 && stock <= 10) ? basePrice + 1 : basePrice;
     const status = stock <= 0 ? "Out of Stock" : stock <= 10 ? "Low Stock" : "In Stock";
 
     const row = document.createElement("tr");
@@ -280,84 +296,61 @@ async function loadProducts() {
       <td contenteditable="true" data-field="supplier">${p.supplier || "-"}</td>
       <td contenteditable="true" data-field="stock">${stock}</td>
       <td>${status}</td>
-      <td contenteditable="true" data-field="price">$${adjustedPrice.toFixed(2)}</td>
+      <td contenteditable="true" data-field="price">$${basePrice.toFixed(2)}</td>
       <td><button class="delete-btn" data-id="${p.id}" data-col="${p.collection}">🗑️</button></td>
     `;
 
-    row.querySelectorAll("[contenteditable]").forEach(cell => {
-      const field = cell.dataset.field;
-      if (!field) return;
-      cell.addEventListener("blur", async e => {
-        let value = e.target.innerText.replace("$","").trim();
-        if (["stock","price"].includes(field)) value = Number(value);
-        await updateDoc(doc(db, p.collection, p.id), { [field]: value });
-        loadProducts();
-      });
-    });
     row.querySelector(".delete-btn").addEventListener("click", async () => {
       if (confirm(`Delete "${displayName}"?`)) {
         await deleteDoc(doc(db, p.collection, p.id));
         loadProducts();
       }
     });
+
     productBody.appendChild(row);
   });
 }
 
-/* ---------- MODAL ---------- */
-function openModal() {
-  productTypeSelect.value = "cookie";
-  braceletOptions.style.display = "none";
-  productNameInput.value = "";
-  productSizeInput.value = "";
-  productPriceInput.value = "5.00";
-  productStockInput.value = "10";
-  productSupplierInput.value = "";
-  modal.classList.add("show");
-  setTimeout(()=>productNameInput.focus(),150);
-}
-function closeModal() {
-  modal.classList.remove("show");
-}
-addProduct.addEventListener("click", openModal);
-closeModalBtn.addEventListener("click", closeModal);
-modal.addEventListener("click", e => { if (e.target===modal) closeModal(); });
-document.addEventListener("keydown", e => { if (e.key==="Escape") closeModal(); });
-productTypeSelect.addEventListener("change", () => {
-  braceletOptions.style.display = productTypeSelect.value==="bracelet" ? "block" : "none";
-});
+// ➕ Save Product (from modal)
 saveBtn.addEventListener("click", async () => {
-  const type = productTypeSelect.value;
-  const name = productNameInput.value.trim();
-  const size = productSizeInput.value.trim();
-  const price = parseFloat(productPriceInput.value);
-  const stock = parseInt(productStockInput.value);
-  const supplier = productSupplierInput.value.trim() || "-";
-  if (!name || isNaN(price) || isNaN(stock)) return alert("Please fill all fields.");
-  const data = {
-    name: type==="cookie"?name:undefined,
-    type: type==="bracelet"?name:undefined,
-    price, stock, supplier,
-    size: type==="bracelet"?size||"-":undefined,
-    sku: `${type==="bracelet"?"BR":"CK"}-${Math.random().toString(36).substring(2,7).toUpperCase()}`
-  };
-  const col = type==="cookie"?"products_cookies":"products_bracelets";
-  await addDoc(collection(db,col),data);
-  alert("✅ Product added!");
-  closeModal();
-  loadProducts();
+  const type = document.getElementById("productType").value;
+  const name = document.getElementById("productName").value.trim();
+  const price = Number(document.getElementById("productPrice").value);
+  const stock = Number(document.getElementById("productStock").value);
+  const supplier = document.getElementById("productSupplier").value.trim();
+
+  if (!name) return alert("Please enter a product name.");
+
+  try {
+    const data = {
+      name: type === "cookie" ? name : undefined,
+      type: type === "bracelet" ? name : undefined,
+      price, stock, supplier,
+      size: type === "bracelet" ? "-" : undefined,
+      sku: `${type === "bracelet" ? "BR" : "CK"}-${Math.random().toString(36).substring(2,7).toUpperCase()}`
+    };
+
+    await addDoc(collection(db, type === "cookie" ? "products_cookies" : "products_bracelets"), data);
+    alert("✅ Product added successfully!");
+    modal.style.display = "none";
+    loadProducts();
+  } catch (err) {
+    console.error("❌ Add product failed:", err);
+    alert("Error adding product — check console for details.");
+  }
 });
 
-/* ---------- GENERATE SKU ---------- */
+// 🔢 Generate SKUs
 generateSKU.addEventListener("click", async () => {
-  const collections = ["products_cookies","products_bracelets"];
+  const collections = ["products_cookies", "products_bracelets"];
   for (const col of collections) {
-    const snap = await getDocs(collection(db,col));
+    const snap = await getDocs(collection(db, col));
     for (const d of snap.docs) {
-      if (!d.data().sku) {
-        const prefix = col.includes("bracelet")?"BR":"CK";
-        const sku = `${prefix}-${Math.random().toString(36).substring(2,7).toUpperCase()}`;
-        await updateDoc(doc(db,col,d.id),{sku});
+      const data = d.data();
+      if (!data.sku) {
+        const prefix = col.includes("bracelet") ? "BR" : "CK";
+        const newSKU = `${prefix}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+        await updateDoc(doc(db, col, d.id), { sku: newSKU });
       }
     }
   }
@@ -365,7 +358,7 @@ generateSKU.addEventListener("click", async () => {
   loadProducts();
 });
 
-/* ---------- INIT ---------- */
+// Init
 loadOrders();
 loadProducts();
 </script>
