@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bracelet Preorder – Tactics & Treats</title>
+<style>
+  body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #4a0000, #000);
+    color: white;
+    margin: 0;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    color: #ff3b3b;
+    margin-bottom: 1rem;
+  }
+  form {
+    background: rgba(30, 0, 0, 0.8);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    max-width: 500px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(255,0,0,0.3);
+  }
+  label {
+    display: block;
+    margin-top: 0.75rem;
+    font-weight: 500;
+  }
+  input, select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin-top: 5px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 14px;
+  }
+  select option {
+    color: #000;
+    background: #fff;
+  }
+  button {
+    margin-top: 20px;
+    padding: 12px;
+    border: none;
+    background: #ff3b3b;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    transition: 0.2s;
+  }
+  button:hover {
+    background: darkred;
+  }
+  a {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    color: #ff3b3b;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+
+<body>
+  <h1>🎀 Bracelet Preorder</h1>
+  <form id="braceletForm">
+    <label>Name</label>
+    <input id="braceletName" type="text" required>
+
+    <label>Email</label>
+    <input id="braceletEmail" type="email" required>
+
+    <label>Choose Bracelet</label>
+    <select id="braceletSelect" required></select>
+
+    <label>Color 1</label>
+    <select id="color1" required></select>
+
+    <label>Color 2</label>
+    <select id="color2" required></select>
+
+    <label>Quantity</label>
+    <input id="braceletQty" type="number" min="1" required>
+
+    <button type="button" onclick="submitOrder()">Submit Bracelet Order</button>
+  </form>
+
+  <a href="cookies.html">Go to Cookie Preorder</a>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+    authDomain: "bracelets-and-color.firebaseapp.com",
+    projectId: "bracelets-and-color",
+    storageBucket: "bracelets-and-color.firebasestorage.app",
+    messagingSenderId: "382292570673",
+    appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
+    measurementId: "G-BJPQN6S7YB"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function loadBracelets() {
+    const braceletSnap = await getDocs(collection(db, "products_bracelets"));
+    const braceletSelect = document.getElementById("braceletSelect");
+    const color1Select = document.getElementById("color1");
+    const color2Select = document.getElementById("color2");
+
+    braceletSelect.innerHTML = '<option value="">Select a bracelet</option>';
+    color1Select.innerHTML = '<option value="">Select Color 1</option>';
+    color2Select.innerHTML = '<option value="">Select Color 2</option>';
+
+    braceletSnap.forEach(doc => {
+      const data = doc.data();
+      const opt = document.createElement("option");
+      if (data.stock <= 0) {
+        opt.textContent = `${data.name || data.type} - OUT OF STOCK`;
+        opt.disabled = true;
+      } else {
+        opt.textContent = `${data.name || data.type} - $${data.price}`;
+        opt.value = JSON.stringify(data);
+      }
+      braceletSelect.appendChild(opt);
+    });
+
+    const colorSnap = await getDocs(collection(db, "braceletColors"));
+    colorSnap.forEach(doc => {
+      const color = doc.data().name;
+      color1Select.innerHTML += `<option value="${color}">${color}</option>`;
+      color2Select.innerHTML += `<option value="${color}">${color}</option>`;
+    });
+  }
+
+  window.addEventListener("load", loadBracelets);
+
+  window.submitOrder = async function() {
+    const name = braceletName.value.trim();
+    const email = braceletEmail.value.trim();
+    const qty = Number(braceletQty.value);
+    const productData = JSON.parse(braceletSelect.value);
+
+    if (!productData) return alert("Please select a bracelet in stock!");
+
+    const order = {
+      name,
+      email,
+      product: productData.name,
+      qty,
+      price: productData.price,
+      total: productData.price * qty,
+      color1: color1.value,
+      color2: color2.value,
+      createdAt: new Date(),
+      status: "Pending"
+    };
+
+    await addDoc(collection(db, "braceletOrders"), order);
+    alert("Bracelet order submitted!");
+    document.getElementById("braceletForm").reset();
+  };
+</script>
+</body>
+</html>
