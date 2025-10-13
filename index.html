@@ -3,245 +3,69 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tactics & Treats – Preorder</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-
+<title>Tactics & Treats – Home</title>
 <style>
-body {
-  background: linear-gradient(to right, #8b0000 0%, #000 50%, #8b0000 100%);
-  background-attachment: fixed;
-}
-.paw-overlay {
-  background-image: url('your-logo.png');
-  background-repeat: repeat;
-  background-size: 100px;
-  opacity: 0.05;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 0;
-}
-main, header, footer { position: relative; z-index: 10; }
-.tab-btn {
-  cursor: pointer;
-  padding: 10px 20px;
-  font-weight: bold;
-  border-radius: 10px 10px 0 0;
-  background: #800000;
-  color: white;
-  margin-right: 5px;
-  transition: 0.3s;
-}
-.tab-btn.active { background: #ff0000; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+  body {
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top, #1a1a1a 0%, #000 70%);
+    color: #fff;
+    margin: 0;
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    position: relative;
+    text-align: center;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: url("logo.png") repeat;
+    background-size: 200px;
+    opacity: 0.07;
+    z-index: -2;
+  }
+  h1 {
+    font-size: 2.8rem;
+    color: #ff2b2b;
+    text-shadow: 0 0 10px rgba(255,0,0,0.7);
+    margin-bottom: 50px;
+  }
+  .button-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  a {
+    display: inline-block;
+    text-decoration: none;
+    color: white;
+    background: #c40000;
+    border: 2px solid #fff;
+    border-radius: 12px;
+    padding: 16px 32px;
+    font-weight: 600;
+    font-size: 1.2rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+  }
+  a:hover {
+    transform: translateY(-3px);
+    background: #ff0000;
+    box-shadow: 0 0 15px rgba(255,0,0,0.6);
+  }
 </style>
 </head>
 
-<body class="min-h-screen flex flex-col items-center py-10 relative">
-<div class="paw-overlay"></div>
-
-<header class="w-full text-center mb-8">
-  <img src="your-logo.png" alt="Tactics & Treats Logo" class="mx-auto w-40 h-auto mb-4" />
-  <h1 class="text-3xl font-bold text-white drop-shadow-lg">Tactics & Treats</h1>
-  <p class="text-gray-200">Preorder Cookies & Bracelets</p>
-</header>
-
-<main class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
-
-  <!-- Tabs -->
-  <div class="flex justify-center mb-6">
-    <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
-    <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
+<body>
+  <h1>🐾 Sandpoint High – Tactics & Treats</h1>
+  <div class="button-container">
+    <a href="cookies.html">🍪 Cookie Orders</a>
+    <a href="bracelets.html">🧿 Bracelet Orders</a>
   </div>
-
-  <!-- COOKIE FORM -->
-  <div id="cookiesTab" class="tab-content active">
-    <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Cookie Preorder</h2>
-    <form id="cookieForm" class="space-y-4">
-      <input id="nameC" type="text" placeholder="Your Name" class="w-full border p-2 rounded" required />
-      <input id="emailC" type="email" placeholder="Your Email" class="w-full border p-2 rounded" required />
-
-      <select id="cookieType" class="w-full border p-2 rounded">
-        <option value="">Select Cookie</option>
-      </select>
-
-      <input id="cookieQty" type="number" min="1" placeholder="Quantity" class="w-full border p-2 rounded" required />
-      
-      <!-- Address / School Section -->
-      <div>
-        <label class="flex items-center space-x-2">
-          <input type="checkbox" id="isSchoolC" class="mr-2"> <span>I'm at Sandpoint High</span>
-        </label>
-        <select id="classSelectC" class="hidden w-full border p-2 rounded mt-2"></select>
-        <div id="addressFieldsC" class="mt-2">
-          <input id="addressC" type="text" placeholder="Address" class="w-full border p-2 rounded mb-2" />
-          <select id="stateC" class="w-full border p-2 rounded">
-            <option value="">Select State</option>
-          </select>
-        </div>
-      </div>
-
-      <p id="cookiePrice" class="text-center font-bold mt-2">Total: $0.00</p>
-      <button type="button" id="submitCookieBtn" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition">Submit Cookie Order</button>
-    </form>
-  </div>
-
-  <!-- BRACELET FORM -->
-  <div id="braceletsTab" class="tab-content">
-    <h2 class="text-2xl font-semibold mb-4 text-center text-red-700">Bracelet Preorder</h2>
-    <form id="braceletForm" class="space-y-4">
-      <input id="nameB" type="text" placeholder="Your Name" class="w-full border p-2 rounded" required />
-      <input id="emailB" type="email" placeholder="Your Email" class="w-full border p-2 rounded" required />
-
-      <select id="braceletType" class="w-full border p-2 rounded">
-        <option value="">Select Bracelet</option>
-      </select>
-
-      <input id="braceletQty" type="number" min="1" placeholder="Quantity" class="w-full border p-2 rounded" required />
-
-      <!-- Address / School Section -->
-      <div>
-        <label class="flex items-center space-x-2">
-          <input type="checkbox" id="isSchoolB" class="mr-2"> <span>I'm at Sandpoint High</span>
-        </label>
-        <select id="classSelectB" class="hidden w-full border p-2 rounded mt-2"></select>
-        <div id="addressFieldsB" class="mt-2">
-          <input id="addressB" type="text" placeholder="Address" class="w-full border p-2 rounded mb-2" />
-          <select id="stateB" class="w-full border p-2 rounded">
-            <option value="">Select State</option>
-          </select>
-        </div>
-      </div>
-
-      <p id="braceletPrice" class="text-center font-bold mt-2">Total: $0.00</p>
-      <button type="button" id="submitBraceletBtn" class="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition">Submit Bracelet Order</button>
-    </form>
-  </div>
-
-  <p id="status" class="text-center mt-3"></p>
-</main>
-
-<footer class="mt-8 text-gray-300 text-sm text-center">
-  © 2025 Tactics & Treats • Handmade with ❤️
-</footer>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-  authDomain: "bracelets-and-color.firebaseapp.com",
-  projectId: "bracelets-and-color",
-  storageBucket: "bracelets-and-color.firebasestorage.app",
-  messagingSenderId: "382292570673",
-  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
-  measurementId: "G-BJPQN6S7YB"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Load U.S. states
-const states = ["ID","WA","CA","TX","MT","NY","NV","OR","AZ","UT","CO","WY","ND","SD","MN","WI","IL","IN","MI","OH","PA","FL","GA","NC","SC","TN","VA","WV","MA","NH","ME","VT","RI","CT","MD","DE","AL","MS","LA","AR","MO","IA","KS","NE","OK","NM","AK","HI"];
-function populateStates(select) { states.forEach(s=>select.appendChild(new Option(s,s))); }
-populateStates(document.getElementById("stateC"));
-populateStates(document.getElementById("stateB"));
-
-// Toggle school/address
-function setupSchoolToggle(box, classSel, addrFields) {
-  box.addEventListener("change", ()=>{
-    if(box.checked){ classSel.classList.remove("hidden"); addrFields.classList.add("hidden"); }
-    else { classSel.classList.add("hidden"); addrFields.classList.remove("hidden"); }
-  });
-}
-setupSchoolToggle(document.getElementById("isSchoolC"), document.getElementById("classSelectC"), document.getElementById("addressFieldsC"));
-setupSchoolToggle(document.getElementById("isSchoolB"), document.getElementById("classSelectB"), document.getElementById("addressFieldsB"));
-
-// Load class list
-async function loadClasses() {
-  const snap = await getDocs(collection(db, "classes"));
-  const classes = snap.docs.map(d=>d.data().name);
-  [document.getElementById("classSelectC"), document.getElementById("classSelectB")].forEach(sel=>{
-    sel.innerHTML='<option value="">Select Class</option>';
-    classes.forEach(c=>sel.appendChild(new Option(c,c)));
-  });
-}
-await loadClasses();
-
-// Load cookie products
-const cookieSelect = document.getElementById("cookieType");
-const cookieQty = document.getElementById("cookieQty");
-const cookiePrice = document.getElementById("cookiePrice");
-let cookieProducts = {};
-const cookieSnap = await getDocs(collection(db, "products_cookies"));
-cookieSnap.forEach(doc=>{
-  const d = doc.data();
-  cookieProducts[d.name] = d.price;
-  cookieSelect.appendChild(new Option(`${d.name} – $${d.price}`, d.name));
-});
-function updateCookieTotal() {
-  const type = cookieSelect.value;
-  const qty = parseInt(cookieQty.value) || 0;
-  cookiePrice.textContent = `Total: $${((cookieProducts[type]||0)*qty).toFixed(2)}`;
-}
-cookieSelect.addEventListener("change", updateCookieTotal);
-cookieQty.addEventListener("input", updateCookieTotal);
-
-// Load bracelet products
-const braceletSelect = document.getElementById("braceletType");
-const braceletQty = document.getElementById("braceletQty");
-const braceletPrice = document.getElementById("braceletPrice");
-let braceletProducts = {};
-const braceletSnap = await getDocs(collection(db, "products_bracelets"));
-braceletSnap.forEach(doc=>{
-  const d = doc.data();
-  braceletProducts[d.type] = d.price;
-  braceletSelect.appendChild(new Option(`${d.type} – $${d.price}`, d.type));
-});
-function updateBraceletTotal() {
-  const type = braceletSelect.value;
-  const qty = parseInt(braceletQty.value) || 0;
-  braceletPrice.textContent = `Total: $${((braceletProducts[type]||0)*qty).toFixed(2)}`;
-}
-braceletSelect.addEventListener("change", updateBraceletTotal);
-braceletQty.addEventListener("input", updateBraceletTotal);
-
-// Submit cookie order
-document.getElementById("submitCookieBtn").addEventListener("click", async ()=>{
-  const name = nameC.value.trim(), email=emailC.value.trim(), type=cookieSelect.value;
-  const qty=parseInt(cookieQty.value)||0;
-  const isSchool=isSchoolC.checked;
-  const className=classSelectC.value, address=addressC.value.trim(), state=stateC.value;
-  if(!name||!email||!type||qty<=0) return alert("Fill all fields");
-  const total=(cookieProducts[type]||0)*qty;
-  await addDoc(collection(db,"cookieOrders"),{name,email,type,quantity:qty,totalPrice:total,isSchool,className,address,state,createdAt:serverTimestamp()});
-  alert("✅ Cookie order submitted!");
-  cookieForm.reset(); cookiePrice.textContent="Total: $0.00";
-});
-
-// Submit bracelet order
-document.getElementById("submitBraceletBtn").addEventListener("click", async ()=>{
-  const name=nameB.value.trim(), email=emailB.value.trim(), type=braceletSelect.value;
-  const qty=parseInt(braceletQty.value)||0;
-  const isSchool=isSchoolB.checked;
-  const className=classSelectB.value, address=addressB.value.trim(), state=stateB.value;
-  if(!name||!email||!type||qty<=0) return alert("Fill all fields");
-  const total=(braceletProducts[type]||0)*qty;
-  await addDoc(collection(db,"braceletOrders"),{name,email,type,quantity:qty,totalPrice:total,isSchool,className,address,state,createdAt:serverTimestamp()});
-  alert("✅ Bracelet order submitted!");
-  braceletForm.reset(); braceletPrice.textContent="Total: $0.00";
-});
-</script>
-
-<script>
-const tabCookies=document.getElementById("tabCookies"),tabBracelets=document.getElementById("tabBracelets"),cookiesTab=document.getElementById("cookiesTab"),braceletsTab=document.getElementById("braceletsTab");
-tabCookies.addEventListener("click",()=>{tabCookies.classList.add("active");tabBracelets.classList.remove("active");cookiesTab.classList.add("active");braceletsTab.classList.remove("active");});
-tabBracelets.addEventListener("click",()=>{tabBracelets.classList.add("active");tabCookies.classList.remove("active");braceletsTab.classList.add("active");cookiesTab.classList.remove("active");});
-</script>
 </body>
 </html>
