@@ -1,159 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cookie Preorder – Tactics & Treats</title>
-<style>
-  body {
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #4a0000, #000);
-    color: white;
-    margin: 0;
-    padding: 2rem;
-    min-height: 100vh;
-  }
-  h1 {
-    text-align: center;
-    color: #ff3b3b;
-    margin-bottom: 1rem;
-  }
-  form {
-    background: rgba(30, 0, 0, 0.8);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    max-width: 500px;
-    margin: 0 auto;
-    box-shadow: 0 0 20px rgba(255,0,0,0.3);
-  }
-  label {
-    display: block;
-    margin-top: 0.75rem;
-    font-weight: 500;
-  }
-  input, select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.2);
-    margin-top: 5px;
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    font-size: 14px;
-  }
-  select option {
-    color: #000;
-    background: #fff;
-  }
-  button {
-    margin-top: 20px;
-    padding: 12px;
-    border: none;
-    background: #ff3b3b;
-    color: #fff;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    width: 100%;
-    transition: 0.2s;
-  }
-  button:hover {
-    background: darkred;
-  }
-  a {
-    display: block;
-    text-align: center;
-    margin-top: 1rem;
-    color: #ff3b3b;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookies – Tactics & Treats Preorder</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+    nav {
+      text-align: center;
+      background: #111;
+      padding: 10px 0;
+      border-bottom: 2px solid #ff0000;
+      box-shadow: 0 0 10px #ff0000;
+    }
+    nav a {
+      color: white;
+      margin: 0 15px;
+      font-weight: bold;
+      text-decoration: none;
+      transition: 0.2s;
+    }
+    nav a:hover {
+      color: #ff0000;
+      text-shadow: 0 0 6px #ff0000;
+    }
+    h1 {
+      text-align: center;
+      color: #ff0000;
+      margin-bottom: 30px;
+    }
+    form {
+      background: #111;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 500px;
+      box-shadow: 0 0 15px #ff0000;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 500;
+      color: white;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      border: none;
+      background: #ff0000;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: darkred;
+    }
+    .meet-label {
+      display: none;
+      color: #bbb;
+      font-style: italic;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>🍪 Cookie Preorder</h1>
+  <nav>
+    <a href="cookies.html">Cookies</a>
+    <a href="bracelets.html">Bracelets</a>
+    <a href="spiritwear.html">Spirit Wear</a>
+  </nav>
+
+  <h1>Cookie Preorder</h1>
+
   <form id="cookieForm">
     <label>Name</label>
-    <input id="cookieName" type="text" required>
+    <input id="cookieName" type="text" required />
 
     <label>Email</label>
-    <input id="cookieEmail" type="email" required>
+    <input id="cookieEmail" type="email" required />
 
     <label>Choose Cookie</label>
     <select id="cookieSelect" required></select>
 
     <label>Quantity</label>
-    <input id="cookieQty" type="number" min="1" required>
+    <input id="cookieQty" type="number" min="1" required />
 
-    <button type="button" onclick="submitOrder()">Submit Cookie Order</button>
+    <div class="checkbox-line">
+      <input type="checkbox" id="cookieAtSchool" onchange="toggleAddress('cookie')" />
+      <label for="cookieAtSchool">I'm at Sandpoint High</label>
+    </div>
+
+    <div id="cookieMeetLabel" class="meet-label">Meet by coffee shop</div>
+
+    <div id="cookieAddressField">
+      <label>Address</label>
+      <input id="cookieAddress" type="text" placeholder="123 Main St" />
+    </div>
+
+    <div id="cookieStateField">
+      <label>State</label>
+      <select id="cookieState">
+        <option value="">Select a state</option>
+        <option>ID</option><option>WA</option><option>MT</option><option>CA</option><option>OR</option>
+      </select>
+    </div>
+
+    <button type="button" onclick="submitOrder('cookie')">Submit Cookie Order</button>
   </form>
 
-  <a href="bracelets.html">Go to Bracelet Preorder</a>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-    authDomain: "bracelets-and-color.firebaseapp.com",
-    projectId: "bracelets-and-color",
-    storageBucket: "bracelets-and-color.firebasestorage.app",
-    messagingSenderId: "382292570673",
-    appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
-    measurementId: "G-BJPQN6S7YB"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  async function loadCookies() {
-    const cookieSnap = await getDocs(collection(db, "products_cookies"));
-    const cookieSelect = document.getElementById("cookieSelect");
-    cookieSelect.innerHTML = '<option value="">Select a cookie</option>';
-
-    cookieSnap.forEach(doc => {
-      const data = doc.data();
-      const opt = document.createElement("option");
-      if (data.stock <= 0) {
-        opt.textContent = `${data.name || data.type} - OUT OF STOCK`;
-        opt.disabled = true;
-      } else {
-        opt.textContent = `${data.name || data.type} - $${data.price}`;
-        opt.value = JSON.stringify(data);
-      }
-      cookieSelect.appendChild(opt);
-    });
-  }
-
-  window.addEventListener("load", loadCookies);
-
-  window.submitOrder = async function() {
-    const name = cookieName.value.trim();
-    const email = cookieEmail.value.trim();
-    const qty = Number(cookieQty.value);
-    const productData = JSON.parse(cookieSelect.value);
-
-    if (!productData) return alert("Please select a cookie in stock!");
-
-    const order = {
-      name,
-      email,
-      product: productData.name,
-      qty,
-      price: productData.price,
-      total: productData.price * qty,
-      createdAt: new Date(),
-      status: "Pending"
+    const firebaseConfig = {
+      apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+      authDomain: "bracelets-and-color.firebaseapp.com",
+      projectId: "bracelets-and-color",
+      storageBucket: "bracelets-and-color.firebasestorage.app",
+      messagingSenderId: "382292570673",
+      appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
+      measurementId: "G-BJPQN6S7YB"
     };
 
-    await addDoc(collection(db, "cookieOrders"), order);
-    alert("Cookie order submitted!");
-    document.getElementById("cookieForm").reset();
-  };
-</script>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadCookies() {
+      const cookieSnap = await getDocs(collection(db, "products_cookies"));
+      const select = document.getElementById("cookieSelect");
+      cookieSnap.forEach(doc => {
+        const data = doc.data();
+        const opt = document.createElement("option");
+        opt.value = JSON.stringify(data);
+        opt.textContent = data.stock && data.stock > 0
+          ? `${data.name} - $${data.price} (${data.stock} in stock)`
+          : `${data.name} - OUT OF STOCK`;
+        opt.disabled = !data.stock || data.stock === 0;
+        select.appendChild(opt);
+      });
+    }
+
+    window.addEventListener("load", loadCookies);
+
+    window.toggleAddress = function(prefix) {
+      const atSchool = document.getElementById(`${prefix}AtSchool`).checked;
+      document.getElementById(`${prefix}AddressField`).style.display = atSchool ? "none" : "block";
+      document.getElementById(`${prefix}StateField`).style.display = atSchool ? "none" : "block";
+      document.getElementById(`${prefix}MeetLabel`).style.display = atSchool ? "block" : "none";
+    };
+
+    window.submitOrder = async function(type) {
+      const name = document.getElementById(`${type}Name`).value.trim();
+      const email = document.getElementById(`${type}Email`).value.trim();
+      const qty = Number(document.getElementById(`${type}Qty`).value);
+      const product = JSON.parse(document.getElementById(`${type}Select`).value);
+      const atSchool = document.getElementById(`${type}AtSchool`).checked;
+      const address = atSchool ? "Meet by coffee shop" : document.getElementById(`${type}Address`).value.trim();
+      const state = atSchool ? "" : document.getElementById(`${type}State`).value;
+
+      if (product.stock === 0) {
+        alert("Sorry, this item is out of stock.");
+        return;
+      }
+
+      await addDoc(collection(db, "cookieOrders"), {
+        name, email, product: product.name, qty, address, state, atSchool,
+        total: qty * product.price, createdAt: new Date(), status: "Pending"
+      });
+      alert("Order submitted!");
+      document.getElementById(`${type}Form`).reset();
+    };
+  </script>
 </body>
 </html>
