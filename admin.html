@@ -1,545 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Admin Dashboard | Tactics & Treats</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tactics & Treats – Admin Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
 <style>
-  /* Basic layout/theme */
-  :root {
-    --accent: #ff0040;
-    --accent-2: #ff6600;
-    --bg: #000;
-    --panel: #111;
-    --muted: #222;
-    --text: #fff;
-  }
-  html,body { height:100%; margin:0; font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:var(--text); }
-  header { background: linear-gradient(90deg,var(--accent),var(--accent-2)); padding:18px 20px; box-shadow: 0 0 12px rgba(255,0,64,0.18); text-align:center; font-weight:700; }
-  main { max-width:1200px; margin:20px auto; padding:0 20px 60px; }
-
-  h1,h2 { color:var(--accent); margin:0 0 12px 0; }
-  h2 { font-size:1.1rem; border-left:5px solid var(--accent); padding-left:10px; margin-top:18px; }
-
-  .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:10px 0 6px; }
-  button { background:var(--accent); color:#fff; border: none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; transition:transform .12s, background .12s; }
-  button:hover { transform:scale(1.03); background:#ff3366; }
-  .muted { background:var(--muted); color:var(--accent); border:1px solid var(--accent); }
-  .danger { background:#333; color:#ffb2b2; border:1px solid #aa0000; }
-
-  table { width:100%; border-collapse:collapse; background:var(--panel); border-radius:10px; overflow:hidden; box-shadow:0 0 12px rgba(255,0,64,0.08); }
-  thead th { background:var(--panel); color:var(--accent); padding:10px; text-align:center; font-weight:700; }
-  tbody td { padding:10px; border-top:1px solid #222; text-align:center; color:#ddd; vertical-align:middle; }
-  tr:nth-child(even) td { background:#0a0a0a; }
-
-  .small { font-size:0.9rem; color:#ccc; }
-  .inline-input { padding:6px 8px; border-radius:6px; border:1px solid #333; background:#0a0a0a; color:#fff; min-width:80px; }
-  .editable { background:transparent; border:none; color:inherit; width:100%; outline:none; }
-
-  /* modal */
-  #productModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; z-index:1300; }
-  #productModal.show { display:flex; }
-  .modal { width:420px; background:var(--panel); padding:18px; border-radius:12px; box-shadow:0 0 20px rgba(255,0,64,0.12); }
-  .modal label { display:block; margin-top:10px; color:#ccc; font-size:0.95rem; }
-  .modal input, .modal select { width:100%; padding:8px; margin-top:6px; border-radius:8px; border:1px solid #333; background:#0a0a0a; color:#fff; }
-
-  /* admin overlay */
-  #adminOverlay { position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:2000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
-  #adminOverlay input { padding:10px; width:260px; border-radius:8px; border:1px solid var(--accent); background:#111; color:#fff; text-align:center; }
-  #rememberRow { display:flex; gap:8px; align-items:center; color:#ccc; font-size:0.9rem; }
-
-  footer { text-align:center; color:#666; margin-top:30px; padding-bottom:40px; }
-  a.link { color:var(--accent); text-decoration:none; }
-
-  /* responsive */
-  @media (max-width:680px) {
-    .modal { width:92%; }
-    .inline-input { min-width:60px; }
-  }
+body {
+  background: linear-gradient(to right, #000, #660000);
+  color: white;
+  font-family: 'Poppins', sans-serif;
+}
+.tab-btn {
+  cursor: pointer;
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 10px 10px 0 0;
+  background: #800000;
+  color: white;
+  margin-right: 5px;
+  transition: 0.3s;
+}
+.tab-btn.active { background: #ff0000; }
+.table-container { overflow-x: auto; margin-top: 10px; }
+th, td { padding: 10px; text-align: left; }
+th { background: #700000; }
+tr:nth-child(even) { background: #111; }
+tr:nth-child(odd) { background: #222; }
+input, select {
+  background: #333;
+  border: 1px solid #555;
+  color: white;
+  padding: 4px;
+  border-radius: 5px;
+  width: 100%;
+}
+button {
+  background: #b00;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+button:hover { background: #e00; }
+.add-section {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 15px;
+}
 </style>
 </head>
-<body>
-<header><h1>🛠️ Admin Dashboard — Tactics & Treats</h1></header>
 
-<!-- Admin overlay -->
-<div id="adminOverlay" role="dialog" aria-modal="true" aria-label="Admin Unlock">
-  <h2 style="color:var(--accent); margin:0;">Enter Admin Code</h2>
-  <input id="adminCodeInput" type="password" placeholder="Enter admin code" aria-label="Admin code" />
-  <div style="display:flex; gap:8px;">
-    <button id="adminUnlockBtn">Unlock</button>
-    <button id="adminCancelBtn" class="muted">Cancel</button>
+<body class="min-h-screen py-10 px-4">
+  <h1 class="text-3xl font-bold text-center mb-8">Admin Dashboard – Tactics & Treats</h1>
+
+  <div class="flex justify-center mb-6">
+    <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
+    <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
   </div>
-  <div id="rememberRow">
-    <input type="checkbox" id="rememberAdmin" /><label for="rememberAdmin" style="margin:0 0 0 4px;">Remember me</label>
-  </div>
-  <p id="adminError" style="display:none;color:#ff6666;">Incorrect code</p>
-</div>
 
-<main id="adminMain" style="display:none;">
-  <!-- ORDERS -->
-  <h2>Orders</h2>
-  <div class="controls">
-    <span class="small">Orders: <strong>cookieOrders</strong> &amp; <strong>braceletOrders</strong></span>
-    <button id="refreshOrders" class="muted">Refresh Orders</button>
-    <button id="exportOrders" class="muted">Export CSV</button>
-  </div>
-  <table id="ordersTable" aria-label="Orders">
-    <thead>
-      <tr>
-        <th>Order #</th><th>Name</th><th>Email</th><th>Product</th><th>Type</th><th>Qty</th><th>Total</th><th>Status</th><th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="ordersBody"></tbody>
-  </table>
+  <!-- PRODUCTS TABLE -->
+  <section class="table-container">
+    <h2 class="text-xl font-semibold mb-2">Products</h2>
+    <table class="min-w-full text-sm border border-gray-700 rounded">
+      <thead>
+        <tr>
+          <th>Name / Type</th>
+          <th>SKU</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Supplier</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productsTable">
+        <tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr>
+      </tbody>
+    </table>
 
-  <!-- PRODUCTS -->
-  <h2>Products</h2>
-  <div class="controls">
-    <span class="small">Products: <strong>Products_cookies</strong> &amp; <strong>Products_bracelets</strong></span>
-    <button id="generateSKU">🔢 Generate Missing SKUs</button>
-    <button id="addProductBtn">➕ Add Product</button>
-    <button id="refreshProducts" class="muted">Refresh Products</button>
-  </div>
-  <table id="productsTable" aria-label="Products">
-    <thead>
-      <tr>
-        <th>Name</th><th>Size</th><th>Category</th><th>SKU</th><th>Supplier</th><th>Stock</th><th>Status</th><th>Price</th><th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="productBody"></tbody>
-  </table>
-
-  <footer>© <span id="year"></span> Tactics & Treats — Admin</footer>
-</main>
-
-<!-- Add product modal -->
-<div id="productModal" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <h3 id="modalTitle" style="color:var(--accent); margin:0;">Add Product</h3>
-
-    <label for="productType">Product Type</label>
-    <select id="productType" aria-label="Product type"><option value="cookie">Cookie</option><option value="bracelet">Bracelet</option></select>
-
-    <label for="productName">Name</label>
-    <input id="productName" type="text" placeholder="Product name" />
-
-    <div id="braceletBlock" style="display:none;">
-      <label for="productSize">Size</label>
-      <input id="productSize" type="text" placeholder="Small / Medium / Large" />
+    <!-- ADD NEW PRODUCT -->
+    <div class="add-section">
+      <h3 class="text-lg mb-2 font-semibold">➕ Add New Product</h3>
+      <div class="grid grid-cols-5 gap-2">
+        <input id="newName" placeholder="Name / Type" />
+        <input id="newSKU" placeholder="SKU" />
+        <input id="newPrice" type="number" step="0.01" placeholder="Price" />
+        <input id="newStock" type="number" placeholder="Stock" />
+        <input id="newSupplier" placeholder="Supplier" />
+      </div>
+      <button class="mt-3" id="addProductBtn">Save Product</button>
     </div>
+  </section>
 
-    <label for="productImage">Image URL (optional)</label>
-    <input id="productImage" type="text" placeholder="https://..." />
-
-    <label for="productPrice">Price</label>
-    <input id="productPrice" type="number" step="0.01" value="5.00" />
-
-    <label for="productStock">Stock</label>
-    <input id="productStock" type="number" value="10" />
-
-    <label for="productSupplier">Supplier</label>
-    <input id="productSupplier" type="text" placeholder="Supplier name" />
-
-    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-      <button id="saveProductBtn">💾 Save</button>
-      <button id="cancelProductBtn" class="muted">Cancel</button>
-    </div>
-  </div>
-</div>
+  <!-- ORDERS TABLE -->
+  <section class="table-container mt-10">
+    <h2 class="text-xl font-semibold mb-2">Orders</h2>
+    <table class="min-w-full text-sm border border-gray-700 rounded">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Product / Type</th>
+          <th>SKU</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTable">
+        <tr><td colspan="9" class="text-center p-4 text-gray-400">Loading...</td></tr>
+      </tbody>
+    </table>
+  </section>
 
 <script type="module">
-/*
-  Full Admin Dashboard
-  - Collections expected (case-sensitive): 
-    Products_cookies, Products_bracelets, cookieOrders, braceletOrders
-  - Admin code: 20903 (remember via localStorage if checked)
-  - Replace firebaseConfig with your project values from Firebase Console (Project settings)
-*/
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { 
+  getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, addDoc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ===== CONFIG - Replace with your actual firebase config from Firebase Console ===== */
-const ADMIN_CODE = "20903";
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
   projectId: "bracelets-and-color",
-  storageBucket: "bracelets-and-color.appspot.com",
+  storageBucket: "bracelets-and-color.firebasestorage.app",
   messagingSenderId: "382292570673",
   appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
   measurementId: "G-BJPQN6S7YB"
 };
-/* ================================================================================== */
-
-/* Firebase imports */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  orderBy,
-  limit
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-/* Init */
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* Elements */
-const overlay = document.getElementById('adminOverlay');
-const adminUnlockBtn = document.getElementById('adminUnlockBtn');
-const adminCancelBtn = document.getElementById('adminCancelBtn');
-const adminCodeInput = document.getElementById('adminCodeInput');
-const rememberCheckbox = document.getElementById('rememberAdmin');
-const adminError = document.getElementById('adminError');
-const adminMain = document.getElementById('adminMain');
+let currentTab = "cookies";
+const tabCookies = document.getElementById("tabCookies");
+const tabBracelets = document.getElementById("tabBracelets");
+const productsTable = document.getElementById("productsTable");
+const ordersTable = document.getElementById("ordersTable");
 
-const ordersBody = document.getElementById('ordersBody');
-const refreshOrdersBtn = document.getElementById('refreshOrders');
-const exportOrdersBtn = document.getElementById('exportOrders');
-
-const productBody = document.getElementById('productBody');
-const generateSKUbtn = document.getElementById('generateSKU');
-const addProductBtn = document.getElementById('addProductBtn');
-const refreshProductsBtn = document.getElementById('refreshProducts');
-
-const productModal = document.getElementById('productModal');
-const productType = document.getElementById('productType');
-const braceletBlock = document.getElementById('braceletBlock');
-const productName = document.getElementById('productName');
-const productSize = document.getElementById('productSize');
-const productImage = document.getElementById('productImage');
-const productPrice = document.getElementById('productPrice');
-const productStock = document.getElementById('productStock');
-const productSupplier = document.getElementById('productSupplier');
-const saveProductBtn = document.getElementById('saveProductBtn');
-const cancelProductBtn = document.getElementById('cancelProductBtn');
-
-document.getElementById('year').textContent = new Date().getFullYear();
-
-/* Helpers */
-function escapeHTML(s) { if (s == null) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
-function showErrorOverlay(msg) { adminError.textContent = msg; adminError.style.display = 'block'; }
-function hideErrorOverlay(){ adminError.style.display = 'none'; }
-
-/* Remember admin code */
-if (localStorage.getItem('adminUnlocked') === 'true') {
-  // skip overlay automatically if remembered
-  overlay.style.display = 'none';
-  adminMain.style.display = 'block';
-  loadOrders();
-  loadProducts();
-}
-
-/* Overlay events */
-adminUnlockBtn.addEventListener('click', () => {
-  if (adminCodeInput.value === ADMIN_CODE) {
-    if (rememberCheckbox.checked) localStorage.setItem('adminUnlocked', 'true');
-    overlay.style.display = 'none';
-    adminMain.style.display = 'block';
-    hideErrorOverlay();
-    loadOrders();
-    loadProducts();
-  } else {
-    showErrorOverlay('Incorrect code');
-    adminCodeInput.value = '';
-  }
+tabCookies.addEventListener("click", () => {
+  currentTab = "cookies";
+  tabCookies.classList.add("active");
+  tabBracelets.classList.remove("active");
+  loadData();
 });
-adminCancelBtn.addEventListener('click', () => {
-  adminCodeInput.value = '';
+tabBracelets.addEventListener("click", () => {
+  currentTab = "bracelets";
+  tabBracelets.classList.add("active");
+  tabCookies.classList.remove("active");
+  loadData();
 });
-adminCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') adminUnlockBtn.click(); });
 
-/* ========== ORDERS ========== */
-async function loadOrders() {
-  ordersBody.innerHTML = '<tr><td colspan="9">Loading orders...</td></tr>';
+async function loadData() {
+  productsTable.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
+  ordersTable.innerHTML = "<tr><td colspan='9' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
+
+  const prodCol = collection(db, currentTab === "cookies" ? "products_cookies" : "products_bracelets");
+  const orderCol = collection(db, currentTab === "cookies" ? "cookieOrders" : "braceletOrders");
+
   try {
-    const [cookieSnap, braceletSnap] = await Promise.all([
-      getDocs(collection(db, 'cookieOrders')),
-      getDocs(collection(db, 'braceletOrders'))
+    const [prodSnap, orderSnap] = await Promise.all([
+      getDocs(prodCol), getDocs(orderCol)
     ]);
-    const all = [];
-    cookieSnap.forEach(d => all.push({ id: d.id, collection: 'cookieOrders', ...d.data(), type: 'Cookie' }));
-    braceletSnap.forEach(d => all.push({ id: d.id, collection: 'braceletOrders', ...d.data(), type: 'Bracelet' }));
-
-    if (all.length === 0) {
-      ordersBody.innerHTML = '<tr><td colspan="9">No orders found.</td></tr>';
-      return;
-    }
-
-    // sort by createdAt if exists
-    all.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-    ordersBody.innerHTML = '';
-    all.forEach(o => {
-      const qty = o.quantity ?? o.qty ?? 1;
-      const total = Number(o.totalPrice ?? o.total ?? 0).toFixed(2);
-      const status = o.status ?? 'Pending';
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${escapeHTML(o.orderNumber || o.id)}</td>
-        <td contenteditable data-field="name" class="editable">${escapeHTML(o.name || '-')}</td>
-        <td contenteditable data-field="email" class="editable">${escapeHTML(o.email || '-')}</td>
-        <td>${escapeHTML(o.productName || o.product || '-')}</td>
-        <td>${escapeHTML(o.type || o.productType || o.type || o.type)}</td>
-        <td contenteditable data-field="quantity" class="editable">${escapeHTML(qty)}</td>
-        <td contenteditable data-field="totalPrice" class="editable">$${escapeHTML(total)}</td>
-        <td>
-          <select data-field="status" aria-label="Order status">
-            <option ${status === 'Pending' ? 'selected' : ''}>Pending</option>
-            <option ${status === 'Processing' ? 'selected' : ''}>Processing</option>
-            <option ${status === 'Completed' ? 'selected' : ''}>Completed</option>
-            <option ${status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-          </select>
-        </td>
-        <td>
-          <button class="muted save-order" data-id="${o.id}" data-col="${o.collection}">Save</button>
-          <button class="danger delete-order" data-id="${o.id}" data-col="${o.collection}">Delete</button>
-        </td>
-      `;
-      // blur auto-save for editable cells
-      tr.querySelectorAll('[contenteditable]').forEach(cell => {
-        cell.addEventListener('blur', async (e) => {
-          const field = cell.dataset.field;
-          let value = e.target.innerText.replace('$', '').trim();
-          if (['quantity', 'totalPrice'].includes(field)) value = Number(value) || 0;
-          try { await updateDoc(doc(db, o.collection, o.id), { [field]: value }); }
-          catch (err) { console.error('order update error', err); }
-        });
-      });
-      const select = tr.querySelector('select[data-field="status"]');
-      select.addEventListener('change', async (e) => {
-        try { await updateDoc(doc(db, o.collection, o.id), { status: e.target.value }); }
-        catch (err) { console.error('order status update', err); }
-      });
-
-      // save and delete buttons
-      tr.querySelector('.save-order').addEventListener('click', async (ev) => {
-        const row = ev.target.closest('tr');
-        const name = row.querySelector('[data-field="name"]').innerText.trim();
-        const email = row.querySelector('[data-field="email"]').innerText.trim();
-        const quantity = Number(row.querySelector('[data-field="quantity"]').innerText.replace('$','').trim()) || 1;
-        let totalPrice = row.querySelector('[data-field="totalPrice"]').innerText.replace('$','').trim();
-        totalPrice = Number(totalPrice) || 0;
-        const statusVal = row.querySelector('select[data-field="status"]').value;
-        try {
-          await updateDoc(doc(db, o.collection, o.id), { name, email, quantity, totalPrice, status: statusVal });
-          alert('Order saved');
-          loadOrders();
-        } catch (err) { console.error('save order error', err); alert('Error saving order'); }
-      });
-      tr.querySelector('.delete-order').addEventListener('click', async (ev) => {
-        if (!confirm('Delete this order?')) return;
-        try {
-          await deleteDoc(doc(db, o.collection, o.id));
-          loadOrders();
-        } catch (err) { console.error('delete order', err); alert('Error deleting order'); }
-      });
-
-      ordersBody.appendChild(tr);
-    });
+    renderProducts(prodSnap.docs);
+    renderOrders(orderSnap.docs);
   } catch (err) {
-    console.error('loadOrders error', err);
-    ordersBody.innerHTML = '<tr><td colspan="9" style="color:#ff6666;">Error loading orders.</td></tr>';
+    console.error(err);
   }
 }
-refreshOrdersBtn.addEventListener('click', loadOrders);
 
-/* Export orders to CSV (basic) */
-exportOrdersBtn?.addEventListener('click', () => {
-  (async function() {
-    try {
-      const [cookieSnap, braceletSnap] = await Promise.all([
-        getDocs(collection(db, 'cookieOrders')),
-        getDocs(collection(db, 'braceletOrders'))
-      ]);
-      const rows = [];
-      cookieSnap.forEach(d => rows.push({ id: d.id, ...d.data(), collection: 'cookieOrders' }));
-      braceletSnap.forEach(d => rows.push({ id: d.id, ...d.data(), collection: 'braceletOrders' }));
-      if (rows.length === 0) return alert('No orders to export');
-      const csv = [Object.keys(rows[0]).join(',')].concat(rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `orders_export_${Date.now()}.csv`; a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) { console.error('export error', err); alert('Export failed'); }
-  })();
-});
-
-/* ========== PRODUCTS ========== */
-async function loadProducts() {
-  productBody.innerHTML = '<tr><td colspan="9">Loading products...</td></tr>';
-  try {
-    const [cookieSnap, braceletSnap] = await Promise.all([
-      getDocs(collection(db, 'Products_cookies')),
-      getDocs(collection(db, 'Products_bracelets'))
-    ]);
-    const all = [];
-    cookieSnap.forEach(d => all.push({ id: d.id, collection: 'Products_cookies', productType: 'Cookie', ...d.data() }));
-    braceletSnap.forEach(d => all.push({ id: d.id, collection: 'Products_bracelets', productType: 'Bracelet', ...d.data() }));
-
-    if (all.length === 0) {
-      productBody.innerHTML = '<tr><td colspan="9">No products found.</td></tr>';
-      return;
-    }
-
-    productBody.innerHTML = '';
-    all.forEach(p => {
-      const stock = Number(p.stock ?? 0);
-      const basePrice = Number(p.price ?? 0);
-      const adjustedPrice = (stock > 0 && stock <= 10) ? (basePrice + 1) : basePrice;
-      const status = stock <= 0 ? 'Out of Stock' : stock <= 10 ? 'Low Stock' : 'In Stock';
-      const isBracelet = (p.productType === 'Bracelet') || p.collection.includes('bracelet');
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td contenteditable data-field="name" class="editable">${escapeHTML(p.name || p.type || 'Unnamed')}</td>
-        <td contenteditable data-field="size" class="editable">${escapeHTML(isBracelet ? (p.size || '-') : '-')}</td>
-        <td>${escapeHTML(p.productType || (isBracelet ? 'Bracelet' : 'Cookie'))}</td>
-        <td contenteditable data-field="sku" class="editable">${escapeHTML(p.sku || '-')}</td>
-        <td contenteditable data-field="supplier" class="editable">${escapeHTML(p.supplier || '-')}</td>
-        <td contenteditable data-field="stock" class="editable">${escapeHTML(stock)}</td>
-        <td>${escapeHTML(status)}</td>
-        <td contenteditable data-field="price" class="editable">$${escapeHTML(adjustedPrice.toFixed(2))}</td>
-        <td>
-          <button class="muted save-product" data-id="${p.id}" data-col="${p.collection}">Save</button>
-          <button class="danger delete-product" data-id="${p.id}" data-col="${p.collection}">Delete</button>
-        </td>
-      `;
-
-      // inline blur saves
-      tr.querySelectorAll('[contenteditable]').forEach(cell => {
-        cell.addEventListener('blur', async (e) => {
-          const field = cell.dataset.field;
-          if (!field) return;
-          let value = cell.innerText.replace('$', '').trim();
-          if (['stock','price'].includes(field)) value = Number(value) || 0;
-          try { await updateDoc(doc(db, p.collection, p.id), { [field]: value }); }
-          catch (err) { console.error('inline product update', err); }
-          loadProducts();
-        });
-      });
-
-      // Save button
-      tr.querySelector('.save-product').addEventListener('click', async (ev) => {
-        const id = ev.target.dataset.id;
-        const col = ev.target.dataset.col;
-        const row = ev.target.closest('tr');
-        const nameVal = row.querySelector('[data-field="name"]').innerText.trim();
-        const sizeVal = row.querySelector('[data-field="size"]')?.innerText.trim();
-        const skuVal = row.querySelector('[data-field="sku"]').innerText.trim();
-        const supplierVal = row.querySelector('[data-field="supplier"]').innerText.trim();
-        const stockVal = Number(row.querySelector('[data-field="stock"]').innerText.replace('$','').trim()) || 0;
-        let priceVal = row.querySelector('[data-field="price"]').innerText.replace('$','').trim();
-        priceVal = Number(priceVal) || 0;
-        try {
-          await updateDoc(doc(db, col, id), { name: nameVal, size: sizeVal, sku: skuVal, supplier: supplierVal, stock: stockVal, price: priceVal });
-          alert('Product saved');
-          loadProducts();
-        } catch (err) { console.error('save product', err); alert('Error saving product'); }
-      });
-
-      // Delete button
-      tr.querySelector('.delete-product').addEventListener('click', async (ev) => {
-        const id = ev.target.dataset.id;
-        const col = ev.target.dataset.col;
-        if (!confirm('Delete this product?')) return;
-        try {
-          await deleteDoc(doc(db, col, id));
-          loadProducts();
-        } catch (err) { console.error('delete product', err); alert('Error deleting product'); }
-      });
-
-      productBody.appendChild(tr);
-    });
-
-  } catch (err) {
-    console.error('loadProducts error', err);
-    productBody.innerHTML = '<tr><td colspan="9" style="color:#ff6666;">Error loading products.</td></tr>';
+function renderProducts(docs) {
+  if (docs.length === 0) {
+    productsTable.innerHTML = `<tr><td colspan='6' class='text-center text-gray-400'>No products found</td></tr>`;
+    return;
   }
+  productsTable.innerHTML = "";
+  docs.forEach(docSnap => {
+    const d = docSnap.data();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input value="${d.name || d.type || ""}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku || ""}" id="sku-${docSnap.id}"></td>
+      <td><input type="number" step="0.01" value="${d.price || 0}" id="price-${docSnap.id}"></td>
+      <td><input type="number" value="${d.stock ?? 0}" id="stock-${docSnap.id}"></td>
+      <td><input value="${d.supplier || ""}" id="supplier-${docSnap.id}"></td>
+      <td class="flex gap-2">
+        <button onclick="saveProduct('${docSnap.id}')">💾 Save</button>
+        <button onclick="deleteProduct('${docSnap.id}')">🗑️</button>
+      </td>
+    `;
+    productsTable.appendChild(tr);
+  });
 }
-refreshProductsBtn.addEventListener('click', loadProducts);
 
-/* Add product modal handling */
-addProductBtn.addEventListener('click', () => {
-  productModal.classList.add('show');
-  productType.value = 'cookie';
-  braceletBlock.style.display = 'none';
-  productName.value = '';
-  productSize.value = '';
-  productImage.value = '';
-  productPrice.value = '5.00';
-  productStock.value = '10';
-  productSupplier.value = '';
+function renderOrders(docs) {
+  if (docs.length === 0) {
+    ordersTable.innerHTML = `<tr><td colspan='9' class='text-center text-gray-400'>No orders found</td></tr>`;
+    return;
+  }
+  ordersTable.innerHTML = "";
+  docs.forEach((docSnap, index) => {
+    const d = docSnap.data();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>#${index + 1}</td>
+      <td><input value="${d.name || ""}" id="oname-${docSnap.id}"></td>
+      <td><input value="${d.email || ""}" id="oemail-${docSnap.id}"></td>
+      <td><input value="${d.product || d.type || ""}" id="otype-${docSnap.id}"></td>
+      <td><input value="${d.sku || ""}" id="osku-${docSnap.id}"></td>
+      <td><input type="number" value="${d.quantity || d.qty || 1}" id="oqty-${docSnap.id}"></td>
+      <td><input type="number" step="0.01" value="${d.totalPrice || d.price || 0}" id="ototal-${docSnap.id}"></td>
+      <td>
+        <select id="ostatus-${docSnap.id}">
+          ${["Pending","Processing","Completed","Cancelled"].map(s =>
+            `<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}
+        </select>
+      </td>
+      <td class="flex gap-2">
+        <button onclick="saveOrder('${docSnap.id}')">💾</button>
+        <button onclick="deleteOrder('${docSnap.id}')">🗑️</button>
+      </td>
+    `;
+    ordersTable.appendChild(tr);
+  });
+}
+
+window.saveProduct = async (id) => {
+  const col = collection(db, currentTab === "cookies" ? "products_cookies" : "products_bracelets");
+  const ref = doc(col, id);
+  await updateDoc(ref, {
+    name: document.getElementById(`name-${id}`).value.trim(),
+    sku: document.getElementById(`sku-${id}`).value.trim(),
+    price: parseFloat(document.getElementById(`price-${id}`).value) || 0,
+    stock: parseInt(document.getElementById(`stock-${id}`).value) || 0,
+    supplier: document.getElementById(`supplier-${id}`).value.trim(),
+  });
+  alert("✅ Product updated!");
+};
+
+window.saveOrder = async (id) => {
+  const col = collection(db, currentTab === "cookies" ? "cookieOrders" : "braceletOrders");
+  const ref = doc(col, id);
+  await updateDoc(ref, {
+    name: document.getElementById(`oname-${id}`).value.trim(),
+    email: document.getElementById(`oemail-${id}`).value.trim(),
+    type: document.getElementById(`otype-${id}`).value.trim(),
+    sku: document.getElementById(`osku-${id}`).value.trim(),
+    quantity: parseInt(document.getElementById(`oqty-${id}`).value) || 1,
+    totalPrice: parseFloat(document.getElementById(`ototal-${id}`).value) || 0,
+    status: document.getElementById(`ostatus-${id}`).value,
+  });
+  alert("✅ Order updated!");
+};
+
+window.deleteProduct = async (id) => {
+  const col = collection(db, currentTab === "cookies" ? "products_cookies" : "products_bracelets");
+  await deleteDoc(doc(col, id));
+  loadData();
+};
+
+window.deleteOrder = async (id) => {
+  const col = collection(db, currentTab === "cookies" ? "cookieOrders" : "braceletOrders");
+  await deleteDoc(doc(col, id));
+  loadData();
+};
+
+// Add Product
+document.getElementById("addProductBtn").addEventListener("click", async () => {
+  const name = document.getElementById("newName").value.trim();
+  const sku = document.getElementById("newSKU").value.trim();
+  const price = parseFloat(document.getElementById("newPrice").value) || 0;
+  const stock = parseInt(document.getElementById("newStock").value) || 0;
+  const supplier = document.getElementById("newSupplier").value.trim();
+
+  if (!name || !sku) {
+    alert("⚠️ Please fill out both Name and SKU.");
+    return;
+  }
+
+  const col = collection(db, currentTab === "cookies" ? "products_cookies" : "products_bracelets");
+  await addDoc(col, { name, sku, price, stock, supplier });
+
+  document.getElementById("newName").value = "";
+  document.getElementById("newSKU").value = "";
+  document.getElementById("newPrice").value = "";
+  document.getElementById("newStock").value = "";
+  document.getElementById("newSupplier").value = "";
+
+  loadData();
+  alert("✅ Product added!");
 });
-cancelProductBtn.addEventListener('click', () => productModal.classList.remove('show'));
-productType.addEventListener('change', () => {
-  braceletBlock.style.display = productType.value === 'bracelet' ? 'block' : 'none';
-});
 
-/* Save new product */
-saveProductBtn.addEventListener('click', async () => {
-  const type = productType.value; // cookie or bracelet
-  const name = productName.value.trim();
-  const size = productSize.value.trim();
-  const image = productImage.value.trim() || '';
-  const price = Number(productPrice.value) || 0;
-  const stock = Number(productStock.value) || 0;
-  const supplier = productSupplier.value.trim() || '-';
-
-  if (!name) return alert('Please enter a product name.');
-
-  const data = {
-    name: type === 'cookie' ? name : undefined,
-    type: type === 'bracelet' ? name : undefined,
-    size: type === 'bracelet' ? (size || '-') : undefined,
-    image,
-    price,
-    stock,
-    supplier,
-    sku: (Math.random().toString(36).substring(2,8)).toUpperCase(),
-    productType: type === 'bracelet' ? 'Bracelet' : 'Cookie'
-  };
-
-  const col = type === 'cookie' ? 'Products_cookies' : 'Products_bracelets';
-  try {
-    await addDoc(collection(db, col), data);
-    alert('Product added');
-    productModal.classList.remove('show');
-    loadProducts();
-  } catch (err) { console.error('addDoc error', err); alert('Error adding product'); }
-});
-
-/* Generate missing SKUs */
-generateSKUbtn.addEventListener('click', async () => {
-  generateSKUbtn.disabled = true;
-  try {
-    const collections = ['Products_cookies', 'Products_bracelets'];
-    for (const c of collections) {
-      const snap = await getDocs(collection(db, c));
-      for (const d of snap.docs) {
-        const data = d.data();
-        if (!data.sku) {
-          const newSKU = Math.floor(Math.random()*900000 + 100000).toString();
-          await updateDoc(doc(db, c, d.id), { sku: newSKU });
-        }
-      }
-    }
-    alert('Missing SKUs generated');
-    loadProducts();
-  } catch (err) {
-    console.error('generate SKU', err);
-    alert('Error generating SKUs');
-  } finally { generateSKUbtn.disabled = false; }
-});
-
-/* Utility: if overlay already hidden by previous remember */
-if (overlay.style.display === 'none') { loadOrders(); loadProducts(); }
-
+loadData();
 </script>
 </body>
 </html>
