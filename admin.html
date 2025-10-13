@@ -7,119 +7,216 @@
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
 <style>
+/* --- GLOBAL STYLES --- */
 body {
-  background: linear-gradient(to right, #000, #660000);
-  color: white;
+  background: linear-gradient(135deg, #1a0000, #330000);
+  color: #f5f5f5;
   font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  padding: 2rem 1rem;
 }
+
+h1, h2, h3 {
+  color: #ffdddd;
+  letter-spacing: 0.5px;
+}
+
+/* --- CARD / SECTION STYLING --- */
+.card {
+  background: rgba(20, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+/* --- TABS --- */
 .tab-btn {
   cursor: pointer;
   padding: 10px 20px;
-  font-weight: bold;
-  border-radius: 10px 10px 0 0;
-  background: #800000;
-  color: white;
-  margin-right: 5px;
-  transition: 0.3s;
+  font-weight: 600;
+  border-radius: 12px 12px 0 0;
+  background: rgba(128, 0, 0, 0.5);
+  color: #ddd;
+  margin-right: 6px;
+  transition: all 0.3s ease;
 }
-.tab-btn.active { background: #ff0000; }
-.table-container { overflow-x: auto; margin-top: 10px; }
-th, td { padding: 10px; text-align: left; }
-th { background: #700000; }
-tr:nth-child(even) { background: #111; }
-tr:nth-child(odd) { background: #222; }
-input, select {
-  background: #333;
-  border: 1px solid #555;
-  color: white;
-  padding: 4px;
-  border-radius: 5px;
+.tab-btn:hover {
+  background: rgba(255, 0, 0, 0.35);
+}
+.tab-btn.active {
+  background: #ff0000;
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(255,0,0,0.4);
+}
+
+/* --- TABLES --- */
+.table-container {
+  overflow-x: auto;
+  border-radius: 10px;
+}
+
+table {
   width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
 }
+
+th {
+  background: rgba(128, 0, 0, 0.8);
+  color: #fff;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 10px;
+}
+td {
+  background: rgba(255,255,255,0.03);
+  padding: 8px;
+}
+tr:hover td {
+  background: rgba(255, 0, 0, 0.1);
+}
+
+/* --- INPUTS & SELECTS --- */
+input, select {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  padding: 6px 8px;
+  border-radius: 6px;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: #ff5555;
+  box-shadow: 0 0 6px rgba(255,0,0,0.4);
+}
+
+/* --- BUTTONS --- */
 button {
-  background: #b00;
+  background: linear-gradient(90deg, #b00, #e00);
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 5px 10px;
-  cursor: pointer;
+  padding: 6px 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s;
 }
-button:hover { background: #e00; }
+button:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(90deg, #e00, #ff3333);
+  box-shadow: 0 3px 10px rgba(255,0,0,0.4);
+}
+
+/* --- ADD SECTION --- */
 .add-section {
-  background: #111;
-  border: 1px solid #333;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
-  padding: 10px;
-  margin-top: 15px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+/* --- SCROLLBARS --- */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,0,0,0.4);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 </style>
 </head>
 
-<body class="min-h-screen py-10 px-4">
-  <h1 class="text-3xl font-bold text-center mb-8">Admin Dashboard – Tactics & Treats</h1>
+<body class="flex flex-col items-center">
+  <div class="max-w-6xl w-full">
+    <h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
 
-  <div class="flex justify-center mb-6">
-    <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
-    <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
+    <!-- Tabs -->
+    <div class="flex justify-center mb-6">
+      <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
+      <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
+    </div>
+
+    <!-- PRODUCTS TABLE -->
+    <section class="card">
+      <h2 class="text-xl font-semibold mb-2">Products</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Name / Type</th>
+              <th>SKU</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Supplier</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTable">
+            <tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ADD NEW PRODUCT -->
+      <div class="add-section">
+        <h3 class="text-lg mb-2 font-semibold">➕ Add New Product</h3>
+        <div class="grid grid-cols-5 gap-2">
+          <input id="newName" placeholder="Name / Type" />
+          <input id="newSKU" placeholder="SKU" />
+          <input id="newPrice" type="number" step="0.01" placeholder="Price" />
+          <input id="newStock" type="number" placeholder="Stock" />
+          <input id="newSupplier" placeholder="Supplier" />
+        </div>
+        <button class="mt-3" id="addProductBtn">Save Product</button>
+      </div>
+    </section>
+
+    <!-- ORDERS TABLE -->
+    <section class="card">
+      <h2 class="text-xl font-semibold mb-2">Orders</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Product / Type</th>
+              <th>SKU</th>
+              <th>Qty</th>
+              <th>Total</th>
+              <th>Address</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable">
+            <tr><td colspan="10" class="text-center p-4 text-gray-400">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <!-- PRODUCTS TABLE -->
-  <section class="table-container">
-    <h2 class="text-xl font-semibold mb-2">Products</h2>
-    <table class="min-w-full text-sm border border-gray-700 rounded">
-      <thead>
-        <tr>
-          <th>Name / Type</th>
-          <th>SKU</th>
-          <th>Price</th>
-          <th>Stock</th>
-          <th>Supplier</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="productsTable">
-        <tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr>
-      </tbody>
-    </table>
-
-    <!-- ADD NEW PRODUCT -->
-    <div class="add-section">
-      <h3 class="text-lg mb-2 font-semibold">➕ Add New Product</h3>
-      <div class="grid grid-cols-5 gap-2">
-        <input id="newName" placeholder="Name / Type" />
-        <input id="newSKU" placeholder="SKU" />
-        <input id="newPrice" type="number" step="0.01" placeholder="Price" />
-        <input id="newStock" type="number" placeholder="Stock" />
-        <input id="newSupplier" placeholder="Supplier" />
-      </div>
-      <button class="mt-3" id="addProductBtn">Save Product</button>
-    </div>
-  </section>
-
-  <!-- ORDERS TABLE -->
-  <section class="table-container mt-10">
-    <h2 class="text-xl font-semibold mb-2">Orders</h2>
-    <table class="min-w-full text-sm border border-gray-700 rounded">
-      <thead>
-        <tr>
-          <th>Order #</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Product / Type</th>
-          <th>SKU</th>
-          <th>Qty</th>
-          <th>Total</th>
-          <th>Address</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="ordersTable">
-        <tr><td colspan="10" class="text-center p-4 text-gray-400">Loading...</td></tr>
-      </tbody>
-    </table>
-  </section>
-
+<!-- ================= JS / FIREBASE ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { 
@@ -191,7 +288,7 @@ function renderProducts(docs) {
       <td><input type="number" value="${d.stock ?? 0}" id="stock-${docSnap.id}"></td>
       <td><input value="${d.supplier || ""}" id="supplier-${docSnap.id}"></td>
       <td class="flex gap-2">
-        <button onclick="saveProduct('${docSnap.id}')">💾 Save</button>
+        <button onclick="saveProduct('${docSnap.id}')">💾</button>
         <button onclick="deleteProduct('${docSnap.id}')">🗑️</button>
       </td>
     `;
