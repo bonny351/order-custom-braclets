@@ -78,6 +78,28 @@
       font-style: italic;
       margin-top: 10px;
     }
+    .paypal-btn {
+      display: inline-block;
+      background: #ffc439;
+      color: black;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      text-decoration: none;
+      margin-top: 15px;
+      transition: 0.2s;
+    }
+    .paypal-btn:hover {
+      background: #ffb347;
+    }
+    .paypal-container {
+      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      background: #222;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #ff0000;
+    }
   </style>
 </head>
 
@@ -181,11 +203,30 @@
         return;
       }
 
+      const total = qty * product.price;
+
       await addDoc(collection(db, "cookieOrders"), {
         name, email, product: product.name, qty, address, state, atSchool,
-        total: qty * product.price, createdAt: new Date(), status: "Pending"
+        total, createdAt: new Date(), status: "Pending"
       });
-      alert("Order submitted!");
+
+      // Remove previous PayPal container if exists
+      const oldDiv = document.querySelector(".paypal-container");
+      if (oldDiv) oldDiv.remove();
+
+      // Generate PayPal button
+      const PAYPAL_USERNAME = "isaiah40214";
+      const paypalLink = `https://www.paypal.com/paypalme/${PAYPAL_USERNAME}/${total.toFixed(2)}`;
+
+      const payDiv = document.createElement("div");
+      payDiv.className = "paypal-container";
+      payDiv.innerHTML = `
+        <p>Order submitted! Total: $${total.toFixed(2)}</p>
+        <p>Cookie: ${product.name} | Quantity: ${qty}</p>
+        <a href="${paypalLink}" target="_blank" class="paypal-btn">Pay with PayPal</a>
+      `;
+
+      document.getElementById(`${type}Form`).appendChild(payDiv);
       document.getElementById(`${type}Form`).reset();
     };
   </script>
