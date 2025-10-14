@@ -5,142 +5,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tactics & Treats – Admin Dashboard</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-
 <style>
-body {
-  background: linear-gradient(135deg, #1a0000, #330000);
-  color: #f5f5f5;
-  font-family: 'Poppins', sans-serif;
-  min-height: 100vh;
-  padding: 2rem 1rem;
-}
-h1, h2, h3 { color: #ffdddd; letter-spacing: 0.5px; }
-
-.card {
-  background: rgba(20, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.tab-btn {
-  cursor: pointer;
-  padding: 10px 20px;
-  font-weight: 600;
-  border-radius: 12px 12px 0 0;
-  background: rgba(128, 0, 0, 0.5);
-  color: #ddd;
-  margin-right: 6px;
-  transition: all 0.3s ease;
-}
-.tab-btn:hover { background: rgba(255, 0, 0, 0.35); }
-.tab-btn.active {
-  background: #ff0000;
-  color: #fff;
-  box-shadow: 0 3px 12px rgba(255,0,0,0.4);
-}
-
+body { background: linear-gradient(135deg, #1a0000, #330000); color: #f5f5f5; font-family: 'Poppins', sans-serif; min-height: 100vh; padding: 2rem 1rem; }
+h1,h2,h3 { color: #ffdddd; letter-spacing: 0.5px; }
+.card { background: rgba(20,0,0,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); padding: 1.5rem; margin-bottom: 2rem; }
+.tab-btn { cursor: pointer; padding: 10px 20px; font-weight: 600; border-radius: 12px 12px 0 0; background: rgba(128,0,0,0.5); color: #ddd; margin-right: 6px; transition: all 0.3s ease; }
+.tab-btn:hover { background: rgba(255,0,0,0.35); }
+.tab-btn.active { background: #ff0000; color: #fff; box-shadow: 0 3px 12px rgba(255,0,0,0.4); }
 .table-container { overflow-x: auto; border-radius: 10px; }
-table {
-  width: 100%; border-collapse: collapse; font-size: 0.9rem;
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
-}
-th {
-  background: rgba(128, 0, 0, 0.8);
-  color: #fff; font-weight: 600;
-  text-transform: uppercase; padding: 10px;
-}
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
+th { background: rgba(128,0,0,0.8); color: #fff; font-weight: 600; text-transform: uppercase; padding: 10px; }
 td { background: rgba(255,255,255,0.03); padding: 8px; }
-tr:hover td { background: rgba(255, 0, 0, 0.1); }
-
-input, select {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: white;
-  padding: 6px 8px;
-  border-radius: 6px;
-  width: 100%;
-}
-button {
-  background: linear-gradient(90deg, #b00, #e00);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-weight: 600;
-  transition: all 0.3s;
-}
-button:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(90deg, #e00, #ff3333);
-}
+tr:hover td { background: rgba(255,0,0,0.1); }
+input, select { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px 8px; border-radius: 6px; width: 100%; }
+button { background: linear-gradient(90deg,#b00,#e00); color:white; border:none; border-radius:8px; padding:6px 12px; font-weight:600; transition: all 0.3s; }
+button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e00,#ff3333); }
 </style>
 </head>
-
 <body class="flex flex-col items-center">
-  <div class="max-w-6xl w-full">
-    <h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
+<div class="max-w-6xl w-full">
+  <h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
 
-    <!-- Tabs -->
-    <div class="flex justify-center mb-6">
-      <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
-      <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
-      <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
-    </div>
-
-    <!-- PRODUCTS -->
-    <section class="card">
-      <h2 class="text-xl font-semibold mb-2">Products</h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Name / Type</th>
-              <th>SKU</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Supplier</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="productsTable">
-            <tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ORDERS -->
-    <section class="card">
-      <h2 class="text-xl font-semibold mb-2">Orders</h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Product</th>
-              <th>Size</th>
-              <th>Qty</th>
-              <th>Total</th>
-              <th>Address</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="ordersTable">
-            <tr><td colspan="10" class="text-center p-4 text-gray-400">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+  <!-- Tabs -->
+  <div class="flex justify-center mb-6">
+    <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
+    <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
+    <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
   </div>
 
-<!-- ========== JS ========== -->
+  <!-- PRODUCTS -->
+  <section class="card">
+    <h2 class="text-xl font-semibold mb-2">Products</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name / Type</th>
+            <th>SKU</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Supplier</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productsTable">
+          <tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ORDERS -->
+  <section class="card">
+    <h2 class="text-xl font-semibold mb-2">Orders</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Product</th>
+            <th>Size</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Address</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable">
+          <tr><td colspan="10" class="text-center p-4 text-gray-400">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -149,10 +90,9 @@ const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
   projectId: "bracelets-and-color",
-  storageBucket: "bracelets-and-color.firebasestorage.app",
+  storageBucket: "bracelets-and-color.appspot.com",
   messagingSenderId: "382292570673",
-  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
-  measurementId: "G-BJPQN6S7YB"
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -181,7 +121,7 @@ async function loadData() {
   ordersTable.innerHTML = "<tr><td colspan='10' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
 
   const prodCol = collection(db, `products_${currentTab}`);
-  const orderCol = collection(db, `${currentTab === "spirit" ? "spiritOrders" : currentTab + "Orders"}`);
+  const orderCol = collection(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`);
 
   const [prodSnap, orderSnap] = await Promise.all([getDocs(prodCol), getDocs(orderCol)]);
   renderProducts(prodSnap.docs);
@@ -192,16 +132,15 @@ function renderProducts(docs) {
   productsTable.innerHTML = docs.length
     ? ""
     : `<tr><td colspan='6' class='text-center text-gray-400'>No products found</td></tr>`;
-
   docs.forEach(docSnap => {
     const d = docSnap.data();
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><input value="${d.name || ""}" id="name-${docSnap.id}"></td>
-      <td><input value="${d.sku || ""}" id="sku-${docSnap.id}"></td>
-      <td><input type="number" value="${d.price || 0}" id="price-${docSnap.id}"></td>
-      <td><input type="number" value="${d.stock ?? 0}" id="stock-${docSnap.id}"></td>
-      <td><input value="${d.supplier || ""}" id="supplier-${docSnap.id}"></td>
+      <td><input value="${d.name||""}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku||""}" id="sku-${docSnap.id}"></td>
+      <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
+      <td><input type="number" value="${d.stock??0}" id="stock-${docSnap.id}"></td>
+      <td><input value="${d.supplier||""}" id="supplier-${docSnap.id}"></td>
       <td class="flex gap-2">
         <button onclick="saveProduct('${docSnap.id}')">💾</button>
         <button onclick="deleteProduct('${docSnap.id}')">🗑️</button>
@@ -215,24 +154,19 @@ function renderOrders(docs) {
   ordersTable.innerHTML = docs.length
     ? ""
     : `<tr><td colspan='10' class='text-center text-gray-400'>No orders found</td></tr>`;
-  docs.forEach((docSnap, i) => {
-    const d = docSnap.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>#${i + 1}</td>
-      <td><input value="${d.name || ""}" id="oname-${docSnap.id}"></td>
-      <td><input value="${d.email || ""}" id="oemail-${docSnap.id}"></td>
-      <td><input value="${d.product || ""}" id="oproduct-${docSnap.id}"></td>
-      <td><input value="${d.size || ""}" id="osize-${docSnap.id}" placeholder="Size"></td>
-      <td><input type="number" value="${d.qty || 1}" id="oqty-${docSnap.id}"></td>
-      <td><input type="number" value="${d.total || 0}" id="ototal-${docSnap.id}"></td>
-      <td><input value="${d.address || ''}" id="oaddress-${docSnap.id}"></td>
-      <td>
-        <select id="ostatus-${docSnap.id}">
-          ${["Pending","Processing","Completed","Cancelled"].map(s =>
-            `<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}
-        </select>
-      </td>
+  docs.forEach((docSnap,i)=>{
+    const d=docSnap.data();
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>#${i+1}</td>
+      <td><input value="${d.name||""}" id="oname-${docSnap.id}"></td>
+      <td><input value="${d.email||""}" id="oemail-${docSnap.id}"></td>
+      <td><input value="${d.product||""}" id="oproduct-${docSnap.id}"></td>
+      <td><input value="${d.size||""}" id="osize-${docSnap.id}" placeholder="Size"></td>
+      <td><input type="number" value="${d.qty||1}" id="oqty-${docSnap.id}"></td>
+      <td><input type="number" value="${d.total||0}" id="ototal-${docSnap.id}"></td>
+      <td><input value="${d.address||''}" id="oaddress-${docSnap.id}"></td>
+      <td><select id="ostatus-${docSnap.id}">${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}</select></td>
       <td class="flex gap-2">
         <button onclick="saveOrder('${docSnap.id}')">💾</button>
         <button onclick="deleteOrder('${docSnap.id}')">🗑️</button>
@@ -242,40 +176,39 @@ function renderOrders(docs) {
   });
 }
 
-window.saveProduct = async id => {
-  const ref = doc(db, `products_${currentTab}`, id);
-  await updateDoc(ref, {
+window.saveProduct=async id=>{
+  const ref=doc(db, `products_${currentTab}`, id);
+  await updateDoc(ref,{
     name: document.getElementById(`name-${id}`).value.trim(),
     sku: document.getElementById(`sku-${id}`).value.trim(),
-    price: parseFloat(document.getElementById(`price-${id}`).value) || 0,
-    stock: parseInt(document.getElementById(`stock-${id}`).value) || 0,
+    price: parseFloat(document.getElementById(`price-${id}`).value)||0,
+    stock: parseInt(document.getElementById(`stock-${id}`).value)||0,
     supplier: document.getElementById(`supplier-${id}`).value.trim(),
   });
   alert("✅ Product saved!");
 };
 
-window.saveOrder = async id => {
-  const ref = doc(db, `${currentTab === "spirit" ? "spiritOrders" : currentTab + "Orders"}`, id);
-  await updateDoc(ref, {
+window.saveOrder=async id=>{
+  const ref=doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id);
+  await updateDoc(ref,{
     name: document.getElementById(`oname-${id}`).value.trim(),
     email: document.getElementById(`oemail-${id}`).value.trim(),
     product: document.getElementById(`oproduct-${id}`).value.trim(),
     size: document.getElementById(`osize-${id}`).value.trim(),
-    qty: parseInt(document.getElementById(`oqty-${id}`).value) || 1,
-    total: parseFloat(document.getElementById(`ototal-${id}`).value) || 0,
+    qty: parseInt(document.getElementById(`oqty-${id}`).value)||1,
+    total: parseFloat(document.getElementById(`ototal-${id}`).value)||0,
     address: document.getElementById(`oaddress-${id}`).value.trim(),
     status: document.getElementById(`ostatus-${id}`).value,
   });
   alert("✅ Order updated!");
 };
 
-window.deleteProduct = async id => {
+window.deleteProduct=async id=>{
   await deleteDoc(doc(db, `products_${currentTab}`, id));
   loadData();
 };
-
-window.deleteOrder = async id => {
-  await deleteDoc(doc(db, `${currentTab === "spirit" ? "spiritOrders" : currentTab + "Orders"}`, id));
+window.deleteOrder=async id=>{
+  await deleteDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id));
   loadData();
 };
 
@@ -283,4 +216,3 @@ loadData();
 </script>
 </body>
 </html>
-
