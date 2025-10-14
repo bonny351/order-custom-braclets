@@ -57,6 +57,28 @@ nav a:hover {
   color: white;
   text-decoration: underline;
 }
+.paypal-btn {
+  display: inline-block;
+  background: #ffc439;
+  color: black;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  margin-top: 15px;
+  transition: 0.2s;
+}
+.paypal-btn:hover {
+  background: #ffb347;
+}
+.paypal-container {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(50,0,0,0.8);
+  border-radius: 12px;
+  box-shadow: 0 0 10px #ff0000;
+}
 </style>
 </head>
 
@@ -64,8 +86,7 @@ nav a:hover {
   <nav class="mb-6">
     <a href="cookies.html">Cookies</a> |
     <a href="bracelets.html">Bracelets</a> |
-    <a href="spiritwear.html" class="text-white underline">Spirit Wear</a> |
-  
+    <a href="spiritwear.html" class="text-white underline">Spirit Wear</a>
   </nav>
 
   <h1 class="text-3xl font-bold mb-4 text-red-200">Spirit Wear Preorder</h1>
@@ -117,7 +138,6 @@ nav a:hover {
     <p id="message" class="text-center mt-4 text-yellow-300 hidden"></p>
   </div>
 
-<!-- ================= FIREBASE SCRIPT ================= -->
 <script type="module">
 import { 
   initializeApp 
@@ -126,7 +146,6 @@ import {
   getFirestore, collection, getDocs, addDoc, runTransaction, doc, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// ✅ Correct Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -140,11 +159,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ✅ Fixed collection names
 const productsCol = collection(db, "products_spirit");
 const ordersCol = collection(db, "spiritOrders");
 
-// Elements
 const select = document.getElementById("productSelect");
 const priceDisplay = document.getElementById("priceDisplay");
 const totalDisplay = document.getElementById("totalDisplay");
@@ -154,7 +171,6 @@ const message = document.getElementById("message");
 let products = {};
 let currentPrice = 0;
 
-// ================== Load products ==================
 async function loadProducts() {
   try {
     const snapshot = await getDocs(productsCol);
@@ -183,7 +199,6 @@ async function loadProducts() {
 }
 await loadProducts();
 
-// ================== Update totals ==================
 select.addEventListener("change", () => {
   const selected = products[select.value];
   currentPrice = selected ? Number(selected.price) || 0 : 0;
@@ -199,7 +214,7 @@ function updateTotals() {
   totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
 }
 
-// ================== Handle submit ==================
+// ================== Submit with PayPal ==================
 document.getElementById("orderForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   message.classList.add("hidden");
@@ -212,6 +227,12 @@ document.getElementById("orderForm").addEventListener("submit", async (e) => {
 
   if (!name || !email || !productId || !size) {
     alert("⚠️ Please fill out all fields.");
+    return;
+  }
+
+  const selectedProduct = products[productId];
+  if (!selectedProduct || selectedProduct.stock < quantity) {
+    alert("❌ Not enough stock available.");
     return;
   }
 
@@ -236,13 +257,30 @@ document.getElementById("orderForm").addEventListener("submit", async (e) => {
         timestamp: serverTimestamp(),
         status: "Pending"
       });
+
+      // Remove previous PayPal container if exists
+      const oldDiv = document.querySelector(".paypal-container");
+      if (oldDiv) oldDiv.remove();
+
+      // Add PayPal button
+      const PAYPAL_USERNAME = "isaiah40214";
+      const paypalLink = `https://www.paypal.com/paypalme/${PAYPAL_USERNAME}/${total.toFixed(2)}`;
+
+      const payDiv = document.createElement("div");
+      payDiv.className = "paypal-container";
+      payDiv.innerHTML = `
+        <p>Order submitted! Total: $${total.toFixed(2)}</p>
+        <p>Item: ${data.name} | Size: ${size} | Quantity: ${quantity}</p>
+        <a href="${paypalLink}" target="_blank" class="paypal-btn">Pay with PayPal</a>
+      `;
+      document.querySelector(".card").appendChild(payDiv);
+      document.getElementById("orderForm").reset();
+      updateTotals();
+      await loadProducts();
     });
 
     message.textContent = "✅ Order placed successfully!";
     message.classList.remove("hidden");
-    document.getElementById("orderForm").reset();
-    updateTotals();
-    await loadProducts();
 
   } catch (error) {
     console.error(error);
