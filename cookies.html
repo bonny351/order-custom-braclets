@@ -1,234 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cookies – Tactics & Treats Preorder</title>
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
-      color: white;
-      margin: 0;
-      padding: 20px;
-    }
-    nav {
-      text-align: center;
-      background: #111;
-      padding: 10px 0;
-      border-bottom: 2px solid #ff0000;
-      box-shadow: 0 0 10px #ff0000;
-    }
-    nav a {
-      color: white;
-      margin: 0 15px;
-      font-weight: bold;
-      text-decoration: none;
-      transition: 0.2s;
-    }
-    nav a:hover {
-      color: #ff0000;
-      text-shadow: 0 0 6px #ff0000;
-    }
-    h1 {
-      text-align: center;
-      color: #ff0000;
-      margin-bottom: 30px;
-    }
-    form {
-      background: #111;
-      border-radius: 16px;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 500px;
-      box-shadow: 0 0 15px #ff0000;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: 500;
-      color: white;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin-top: 5px;
-      font-size: 14px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 12px;
-      border: none;
-      background: #ff0000;
-      color: #fff;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: darkred;
-    }
-    .meet-label {
-      display: none;
-      color: #bbb;
-      font-style: italic;
-      margin-top: 10px;
-    }
-    .paypal-btn {
-      display: inline-block;
-      background: #ffc439;
-      color: black;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      text-decoration: none;
-      margin-top: 15px;
-      transition: 0.2s;
-    }
-    .paypal-btn:hover {
-      background: #ffb347;
-    }
-    .paypal-container {
-      text-align: center;
-      margin-top: 20px;
-      padding: 15px;
-      background: #222;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #ff0000;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cookies – Tactics & Treats Preorder</title>
+<style>
+  body { font-family: "Poppins", sans-serif; background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c); color: white; margin: 0; padding: 20px; }
+  nav { text-align: center; background: #111; padding: 10px 0; border-bottom: 2px solid #ff0000; box-shadow: 0 0 10px #ff0000; }
+  nav a { color: white; margin: 0 15px; font-weight: bold; text-decoration: none; transition: 0.2s; }
+  nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+  h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
+  form { background: #111; border-radius: 16px; padding: 20px; margin: 20px auto; max-width: 500px; box-shadow: 0 0 15px #ff0000; }
+  label { display: block; margin-top: 10px; font-weight: 500; color: white; }
+  input, select { width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px; }
+  button { margin-top: 20px; padding: 12px; border: none; background: #ff0000; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; }
+  button:hover { background: darkred; }
+  .meet-label { display: none; color: #bbb; font-style: italic; margin-top: 10px; }
+  .paypal-btn { display: inline-block; background: #ffc439; color: black; padding: 10px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; margin-top: 15px; transition: 0.2s; }
+  .paypal-btn:hover { background: #ffb347; }
+  .paypal-container { text-align: center; margin-top: 20px; padding: 15px; background: #222; border-radius: 12px; box-shadow: 0 0 10px #ff0000; }
+</style>
 </head>
-
 <body>
-  <nav>
-    <a href="cookies.html">Cookies</a>
-    <a href="bracelets.html">Bracelets</a>
-    <a href="spiritwear.html">Spirit Wear</a>
-  </nav>
+<nav>
+  <a href="cookies.html">Cookies</a>
+  <a href="bracelets.html">Bracelets</a>
+  <a href="spiritwear.html">Spirit Wear</a>
+</nav>
 
-  <h1>Cookie Preorder</h1>
+<h1>Cookie Preorder</h1>
 
-  <form id="cookieForm">
-    <label>Name</label>
-    <input id="cookieName" type="text" required />
+<form id="cookieForm">
+  <label>Name</label>
+  <input id="cookieName" type="text" required />
 
-    <label>Email</label>
-    <input id="cookieEmail" type="email" required />
+  <label>Email</label>
+  <input id="cookieEmail" type="email" required />
 
-    <label>Choose Cookie</label>
-    <select id="cookieSelect" required></select>
+  <label>Choose Cookie</label>
+  <select id="cookieSelect" required></select>
 
-    <label>Quantity</label>
-    <input id="cookieQty" type="number" min="1" required />
+  <label>Quantity</label>
+  <input id="cookieQty" type="number" min="1" required />
 
-    <div class="checkbox-line">
-      <input type="checkbox" id="cookieAtSchool" onchange="toggleAddress('cookie')" />
-      <label for="cookieAtSchool">I'm at Sandpoint High</label>
-    </div>
+  <div class="checkbox-line">
+    <input type="checkbox" id="cookieAtSchool" onchange="toggleAddress('cookie')" />
+    <label for="cookieAtSchool">I'm at Sandpoint High</label>
+  </div>
 
-    <div id="cookieMeetLabel" class="meet-label">Meet by coffee shop</div>
+  <div id="cookieMeetLabel" class="meet-label">Meet by coffee shop</div>
 
-    <div id="cookieAddressField">
-      <label>Address</label>
-      <input id="cookieAddress" type="text" placeholder="123 Main St" />
-    </div>
+  <div id="cookieAddressField">
+    <label>Address</label>
+    <input id="cookieAddress" type="text" placeholder="123 Main St" />
+  </div>
 
-    <div id="cookieStateField">
-      <label>State</label>
-      <select id="cookieState">
-        <option value="">Select a state</option>
-        <option>ID</option><option>WA</option><option>MT</option><option>CA</option><option>OR</option>
-      </select>
-    </div>
+  <div id="cookieStateField">
+    <label>State</label>
+    <select id="cookieState">
+      <option value="">Select a state</option>
+      <option>ID</option><option>WA</option><option>MT</option><option>CA</option><option>OR</option>
+    </select>
+  </div>
 
-    <button type="button" onclick="submitOrder('cookie')">Submit Cookie Order</button>
-  </form>
+  <button type="button" onclick="submitOrder('cookie')">Submit Cookie Order</button>
+</form>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-      authDomain: "bracelets-and-color.firebaseapp.com",
-      projectId: "bracelets-and-color",
-      storageBucket: "bracelets-and-color.firebasestorage.app",
-      messagingSenderId: "382292570673",
-      appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10",
-      measurementId: "G-BJPQN6S7YB"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.firebasestorage.app",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    async function loadCookies() {
-      const cookieSnap = await getDocs(collection(db, "products_cookies"));
-      const select = document.getElementById("cookieSelect");
-      cookieSnap.forEach(doc => {
-        const data = doc.data();
-        const opt = document.createElement("option");
-        opt.value = JSON.stringify(data);
-        opt.textContent = data.stock && data.stock > 0
-          ? `${data.name} - $${data.price} (${data.stock} in stock)`
-          : `${data.name} - OUT OF STOCK`;
-        opt.disabled = !data.stock || data.stock === 0;
-        select.appendChild(opt);
-      });
-    }
+// Load products from Firebase
+async function loadCookies() {
+  const cookieSnap = await getDocs(collection(db, "products_cookies"));
+  const select = document.getElementById("cookieSelect");
+  select.innerHTML = ""; // clear previous options
+  cookieSnap.forEach(doc => {
+    const data = doc.data();
+    const opt = document.createElement("option");
+    opt.value = JSON.stringify(data); // store full object including paymentLink
+    opt.textContent = data.stock && data.stock > 0
+      ? `${data.name} - $${data.price} (${data.stock} in stock)`
+      : `${data.name} - OUT OF STOCK`;
+    opt.disabled = !data.stock || data.stock === 0;
+    select.appendChild(opt);
+  });
+}
 
-    window.addEventListener("load", loadCookies);
+window.addEventListener("load", loadCookies);
 
-    window.toggleAddress = function(prefix) {
-      const atSchool = document.getElementById(`${prefix}AtSchool`).checked;
-      document.getElementById(`${prefix}AddressField`).style.display = atSchool ? "none" : "block";
-      document.getElementById(`${prefix}StateField`).style.display = atSchool ? "none" : "block";
-      document.getElementById(`${prefix}MeetLabel`).style.display = atSchool ? "block" : "none";
-    };
+window.toggleAddress = function(prefix) {
+  const atSchool = document.getElementById(`${prefix}AtSchool`).checked;
+  document.getElementById(`${prefix}AddressField`).style.display = atSchool ? "none" : "block";
+  document.getElementById(`${prefix}StateField`).style.display = atSchool ? "none" : "block";
+  document.getElementById(`${prefix}MeetLabel`).style.display = atSchool ? "block" : "none";
+};
 
-    window.submitOrder = async function(type) {
-      const name = document.getElementById(`${type}Name`).value.trim();
-      const email = document.getElementById(`${type}Email`).value.trim();
-      const qty = Number(document.getElementById(`${type}Qty`).value);
-      const product = JSON.parse(document.getElementById(`${type}Select`).value);
-      const atSchool = document.getElementById(`${type}AtSchool`).checked;
-      const address = atSchool ? "Meet by coffee shop" : document.getElementById(`${type}Address`).value.trim();
-      const state = atSchool ? "" : document.getElementById(`${type}State`).value;
+window.submitOrder = async function(type) {
+  const name = document.getElementById(`${type}Name`).value.trim();
+  const email = document.getElementById(`${type}Email`).value.trim();
+  const qty = Number(document.getElementById(`${type}Qty`).value);
+  const product = JSON.parse(document.getElementById(`${type}Select`).value);
+  const atSchool = document.getElementById(`${type}AtSchool`).checked;
+  const address = atSchool ? "Meet by coffee shop" : document.getElementById(`${type}Address`).value.trim();
+  const state = atSchool ? "" : document.getElementById(`${type}State`).value;
 
-      if (product.stock === 0) {
-        alert("Sorry, this item is out of stock.");
-        return;
-      }
+  if (product.stock === 0) {
+    alert("Sorry, this item is out of stock.");
+    return;
+  }
 
-      const total = qty * product.price;
+  const total = qty * product.price;
 
-      await addDoc(collection(db, "cookieOrders"), {
-        name, email, product: product.name, qty, address, state, atSchool,
-        total, createdAt: new Date(), status: "Pending"
-      });
+  await addDoc(collection(db, "cookieOrders"), {
+    name, email, product: product.name, qty, address, state, atSchool,
+    total, createdAt: new Date(), status: "Pending", paymentLink: product.paymentLink || null
+  });
 
-      // Remove previous PayPal container if exists
-      const oldDiv = document.querySelector(".paypal-container");
-      if (oldDiv) oldDiv.remove();
+  // Remove previous PayPal container if exists
+  const oldDiv = document.querySelector(".paypal-container");
+  if (oldDiv) oldDiv.remove();
 
-      // Generate PayPal button
-      const PAYPAL_USERNAME = "isaiah40214";
-      const paypalLink = `https://www.paypal.com/paypalme/${PAYPAL_USERNAME}/${total.toFixed(2)}`;
+  // Use admin-defined paymentLink
+  if (!product.paymentLink) {
+    alert("❌ No payment link is set for this product. Contact admin.");
+    return;
+  }
 
-      const payDiv = document.createElement("div");
-      payDiv.className = "paypal-container";
-      payDiv.innerHTML = `
-        <p>Order submitted! Total: $${total.toFixed(2)}</p>
-        <p>Cookie: ${product.name} | Quantity: ${qty}</p>
-        <a href="${paypalLink}" target="_blank" class="paypal-btn">Pay with PayPal</a>
-      `;
+  const payDiv = document.createElement("div");
+  payDiv.className = "paypal-container";
+  payDiv.innerHTML = `
+    <p>Order submitted! Total: $${total.toFixed(2)}</p>
+    <p>Cookie: ${product.name} | Quantity: ${qty}</p>
+    <a href="${product.paymentLink}" target="_blank" class="paypal-btn">Pay Here</a>
+  `;
 
-      document.getElementById(`${type}Form`).appendChild(payDiv);
-      document.getElementById(`${type}Form`).reset();
-    };
-  </script>
+  document.getElementById(`${type}Form`).appendChild(payDiv);
+  document.getElementById(`${type}Form`).reset();
+};
+</script>
 </body>
 </html>
