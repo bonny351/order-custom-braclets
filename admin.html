@@ -3,88 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tactics & Treats – Admin Dashboard</title>
+<title>Tactics & Treats Admin</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg,#1a0000,#330000); color: #f5f5f5; min-height: 100vh; padding:2rem; }
-h1,h2,h3 { color: #ffdddd; }
-.card { background: rgba(20,0,0,0.7); backdrop-filter: blur(10px); border-radius: 1rem; padding: 1.5rem; margin-bottom:2rem; box-shadow:0 4px 15px rgba(0,0,0,0.4);}
-.tab-btn { cursor:pointer; padding:10px 20px; font-weight:600; border-radius:12px 12px 0 0; background: rgba(128,0,0,0.5); color:#ddd; margin-right:6px; transition:all 0.3s ease;}
-.tab-btn:hover { background: rgba(255,0,0,0.35);}
-.tab-btn.active { background:#ff0000; color:#fff; box-shadow:0 3px 12px rgba(255,0,0,0.4);}
-.table-container { overflow-x:auto; border-radius:10px;}
-table { width:100%; border-collapse: collapse; font-size:0.9rem; }
-th { background: rgba(128,0,0,0.8); color:#fff; font-weight:600; text-transform: uppercase; padding:10px;}
-td { background: rgba(255,255,255,0.03); padding:8px; }
-tr:hover td { background: rgba(255,0,0,0.1);}
-input,select { background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; padding:6px 8px; border-radius:6px; width:100%;}
-button { background: linear-gradient(90deg,#b00,#e00); color:white; border:none; border-radius:8px; padding:6px 12px; font-weight:600; transition:all 0.3s;}
-button:hover { transform:translateY(-1px); background: linear-gradient(90deg,#e00,#ff3333);}
+  body { font-family: 'Poppins', sans-serif; background: #111; color: white; padding: 20px; }
+  nav a { margin-right: 15px; font-weight: bold; text-decoration: none; color: #fff; }
+  nav a.active { text-decoration: underline; color: #ff0000; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #444; padding: 8px; text-align: left; }
+  th { background: #222; }
+  input, select { width: 100%; background: #222; color: white; border: 1px solid #555; border-radius: 4px; padding: 4px; }
+  button { background: #ff0000; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-right: 4px; }
 </style>
 </head>
-<body class="flex flex-col items-center">
-<div class="max-w-6xl w-full">
-<h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
+<body>
 
-<!-- Tabs -->
-<div class="flex justify-center mb-6">
-<div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
-<div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
-<div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
-</div>
+<nav>
+  <a href="#" id="tabCookies" class="active">Cookies</a>
+  <a href="#" id="tabBracelets">Bracelets</a>
+  <a href="#" id="tabSpirit">Spirit Wear</a>
+</nav>
 
-<!-- Products -->
-<section class="card">
-<h2 class="text-xl font-semibold mb-2 flex justify-between items-center">
-Products
-<button onclick="addProduct()">+ Add Product</button>
-</h2>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>Name / Type</th>
-<th>SKU</th>
-<th>Price</th>
-<th>Stock</th>
-<th>Supplier</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody id="productsTable"><tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr></tbody>
-</table>
-</div>
+<section class="card mt-4">
+  <h2 class="text-xl font-semibold mb-2">Products</h2>
+  <div class="table-container overflow-auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Name / Type</th>
+          <th>SKU</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Supplier</th>
+          <th>Sizes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productsTable">
+        <tr><td colspan="7" class="text-center p-4 text-gray-400">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <button class="mt-4" onclick="addProduct()">➕ Add Product</button>
 </section>
 
-<!-- Orders -->
-<section class="card">
-<h2 class="text-xl font-semibold mb-2">Orders</h2>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>#</th>
-<th>Name</th>
-<th>Email</th>
-<th>Product</th>
-<th>Size</th>
-<th>Qty</th>
-<th>Total</th>
-<th>Address</th>
-<th>Status</th>
-<th>Payment</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody id="ordersTable"><tr><td colspan="11" class="text-center p-4 text-gray-400">Loading...</td></tr></tbody>
-</table>
-</div>
+<section class="card mt-6">
+  <h2 class="text-xl font-semibold mb-2">Orders</h2>
+  <div class="table-container overflow-auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Product</th>
+          <th>Quantity</th>
+          <th>Size / Color</th>
+          <th>Address</th>
+          <th>State</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTable">
+        <tr><td colspan="10" class="text-center p-4 text-gray-400">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 </section>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -94,131 +84,119 @@ const firebaseConfig = {
   messagingSenderId: "382292570673",
   appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentTab = "cookies";
-const tabs = {cookies: document.getElementById("tabCookies"), bracelets: document.getElementById("tabBracelets"), spirit: document.getElementById("tabSpirit")};
-Object.entries(tabs).forEach(([key, el])=>{
-  el.addEventListener("click", ()=>{
+const tabs = {
+  cookies: document.getElementById("tabCookies"),
+  bracelets: document.getElementById("tabBracelets"),
+  spirit: document.getElementById("tabSpirit")
+};
+
+Object.entries(tabs).forEach(([key, el]) => {
+  el.addEventListener("click", () => {
     currentTab = key;
-    Object.values(tabs).forEach(t=>t.classList.remove("active"));
+    Object.values(tabs).forEach(t => t.classList.remove("active"));
     el.classList.add("active");
-    loadData();
+    loadProducts();
   });
 });
 
 const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
 
-const orderCollections = {cookies:"cookieOrders", bracelets:"braceletOrders", spirit:"spiritOrders"};
-const prodCollections = {cookies:"products_cookies", bracelets:"products_bracelets", spirit:"products_spirit"};
-
-async function loadData(){
-  // Products
-  productsTable.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
-  ordersTable.innerHTML = "<tr><td colspan='11' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
-
-  const prodCol = collection(db, prodCollections[currentTab]);
-  const orderCol = collection(db, orderCollections[currentTab]);
-
-  const [prodSnap, orderSnap] = await Promise.all([getDocs(prodCol), getDocs(orderCol)]);
-  renderProducts(prodSnap.docs);
-  renderOrders(orderSnap.docs);
-}
-
-function renderProducts(docs){
-  productsTable.innerHTML = docs.length?"": "<tr><td colspan='6' class='text-center text-gray-400'>No products found</td></tr>";
-  docs.forEach(docSnap=>{
+async function loadProducts() {
+  const prodCol = collection(db, `products_${currentTab}`);
+  const prodSnap = await getDocs(prodCol);
+  
+  productsTable.innerHTML = prodSnap.docs.length ? "" : `<tr><td colspan='7' class='text-center text-gray-400'>No products found</td></tr>`;
+  
+  prodSnap.docs.forEach(docSnap => {
     const d = docSnap.data();
-    const displayName = d.name||d.productName||d.type||"Unnamed Product";
     const tr = document.createElement("tr");
+    const sizes = Array.isArray(d.sizes) ? d.sizes.join(", ") : "";
+
     tr.innerHTML = `
-      <td><input value="${displayName}" id="name-${docSnap.id}"></td>
-      <td><input value="${d.sku||""}" id="sku-${docSnap.id}"></td>
-      <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
-      <td><input type="number" value="${d.stock??0}" id="stock-${docSnap.id}"></td>
-      <td><input value="${d.supplier||""}" id="supplier-${docSnap.id}"></td>
-      <td class="flex gap-2"><button onclick="saveProduct('${docSnap.id}')">💾</button><button onclick="deleteProduct('${docSnap.id}')">🗑️</button></td>
+      <td><input value="${d.name || d.productName || d.type || ""}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku || ""}" id="sku-${docSnap.id}"></td>
+      <td><input type="number" value="${d.price || 0}" id="price-${docSnap.id}"></td>
+      <td><input type="number" value="${d.stock ?? 0}" id="stock-${docSnap.id}"></td>
+      <td><input value="${d.supplier || ""}" id="supplier-${docSnap.id}"></td>
+      <td><input value="${sizes}" id="sizes-${docSnap.id}" placeholder="Comma-separated"></td>
+      <td class="flex gap-2">
+        <button onclick="saveProduct('${docSnap.id}')">💾</button>
+        <button onclick="deleteProduct('${docSnap.id}')">🗑️</button>
+      </td>
     `;
     productsTable.appendChild(tr);
   });
 }
 
-function renderOrders(docs){
-  ordersTable.innerHTML = docs.length?"": "<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>";
-  docs.forEach((docSnap,i)=>{
-    const d = docSnap.data();
-    const displayName = d.name||d.customerName||"Unnamed";
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>#${i+1}</td>
-      <td><input value="${displayName}" id="oname-${docSnap.id}"></td>
-      <td><input value="${d.email||""}" id="oemail-${docSnap.id}"></td>
-      <td><input value="${d.product||""}" id="oproduct-${docSnap.id}"></td>
-      <td><input value="${d.size||""}" id="osize-${docSnap.id}"></td>
-      <td><input type="number" value="${d.qty||1}" id="oqty-${docSnap.id}"></td>
-      <td><input type="number" value="${d.total||0}" id="ototal-${docSnap.id}"></td>
-      <td><input value="${d.address||''}" id="oaddress-${docSnap.id}"></td>
-      <td><select id="ostatus-${docSnap.id}">${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}</select></td>
-      <td><input value="${d.payment||""}" id="opayment-${docSnap.id}"></td>
-      <td class="flex gap-2"><button onclick="saveOrder('${docSnap.id}')">💾</button><button onclick="deleteOrder('${docSnap.id}')">🗑️</button></td>
-    `;
-    ordersTable.appendChild(tr);
-  });
-}
+window.saveProduct = async id => {
+  const ref = doc(db, `products_${currentTab}`, id);
+  const sizesInput = document.getElementById(`sizes-${id}`).value.trim();
+  const sizesArray = sizesInput ? sizesInput.split(",").map(s => s.trim()) : [];
 
-// CRUD
-window.saveProduct = async id=>{
-  const ref = doc(db, prodCollections[currentTab], id);
-  await updateDoc(ref,{
+  await updateDoc(ref, {
     name: document.getElementById(`name-${id}`).value.trim(),
     sku: document.getElementById(`sku-${id}`).value.trim(),
-    price: parseFloat(document.getElementById(`price-${id}`).value)||0,
-    stock: parseInt(document.getElementById(`stock-${id}`).value)||0,
-    supplier: document.getElementById(`supplier-${id}`).value.trim()
+    price: parseFloat(document.getElementById(`price-${id}`).value) || 0,
+    stock: parseInt(document.getElementById(`stock-${id}`).value) || 0,
+    supplier: document.getElementById(`supplier-${id}`).value.trim(),
+    sizes: sizesArray
   });
   alert("✅ Product saved!");
 };
 
-window.deleteProduct = async id=>{
-  if(confirm("Delete this product?")){
-    await deleteDoc(doc(db, prodCollections[currentTab], id));
-    loadData();
-  }
+window.deleteProduct = async id => {
+  await deleteDoc(doc(db, `products_${currentTab}`, id));
+  loadProducts();
 };
 
-window.addProduct = async ()=>{
-  const ref = await addDoc(collection(db, prodCollections[currentTab]), {
-    name:"New Product", sku:"", price:0, stock:0, supplier:""
+window.addProduct = async () => {
+  await addDoc(collection(db, `products_${currentTab}`), {
+    name: "New Product",
+    sku: "",
+    price: 0,
+    stock: 0,
+    supplier: "",
+    sizes: []
   });
-  loadData();
+  loadProducts();
 };
 
-window.saveOrder = async id=>{
-  const ref = doc(db, orderCollections[currentTab], id);
-  await updateDoc(ref,{
-    name: document.getElementById(`oname-${id}`).value.trim(),
-    email: document.getElementById(`oemail-${id}`).value.trim(),
-    product: document.getElementById(`oproduct-${id}`).value.trim(),
-    size: document.getElementById(`osize-${id}`).value.trim(),
-    qty: parseInt(document.getElementById(`oqty-${id}`).value)||1,
-    total: parseFloat(document.getElementById(`ototal-${id}`).value)||0,
-    address: document.getElementById(`oaddress-${id}`).value.trim(),
-    status: document.getElementById(`ostatus-${id}`).value,
-    payment: document.getElementById(`opayment-${id}`).value.trim()
+async function loadOrders() {
+  const ordersCol = collection(db, "allOrders");
+  const ordersSnap = await getDocs(ordersCol);
+  
+  ordersTable.innerHTML = ordersSnap.docs.length ? "" : `<tr><td colspan='10' class='text-center text-gray-400'>No orders found</td></tr>`;
+
+  ordersSnap.docs.forEach(docSnap => {
+    const d = docSnap.data();
+    const createdAt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleString() : "";
+    ordersTable.innerHTML += `
+      <tr>
+        <td>${d.name || ""}</td>
+        <td>${d.email || ""}</td>
+        <td>${d.product || ""}</td>
+        <td>${d.quantity || 1}</td>
+        <td>${d.size || d.color1 ? d.size || d.color1 + " / " + d.color2 : ""}</td>
+        <td>${d.address || ""}</td>
+        <td>${d.state || ""}</td>
+        <td>${d.paymentMethod || ""}</td>
+        <td>${d.status || ""}</td>
+        <td>${createdAt}</td>
+      </tr>
+    `;
   });
-  alert("✅ Order updated!");
-};
+}
 
-window.deleteOrder = async id=>{
-  if(confirm("Delete this order?")){
-    await deleteDoc(doc(db, orderCollections[currentTab], id));
-    loadData();
-  }
-};
+// Initial load
+loadProducts();
+loadOrders();
 
-loadData();
 </script>
 </body>
 </html>
