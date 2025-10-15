@@ -124,6 +124,24 @@ button:hover {
   <label>Color 2</label>
   <select id="color2" required></select>
 
+  <label>Clip Type</label>
+  <select id="clipType" required>
+    <option value="">Select Clip Type</option>
+    <option value="Plastic">Plastic</option>
+    <option value="Metal">Metal</option>
+    <option value="Adjustable Knot">Adjustable Knot</option>
+  </select>
+
+  <label>Clip Color</label>
+  <select id="clipColor" required>
+    <option value="">Select Clip Color</option>
+    <option value="Black">Black</option>
+    <option value="Silver">Silver</option>
+    <option value="Gold">Gold</option>
+    <option value="Red">Red</option>
+    <option value="Blue">Blue</option>
+  </select>
+
   <label>Quantity</label>
   <input id="braceletQty" type="number" min="1" value="1" required />
 
@@ -176,14 +194,12 @@ async function loadBracelets() {
 
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
-      // Bracelet option
       const opt = document.createElement("option");
       opt.value = docSnap.id;
       opt.textContent = data.type + " - $" + data.price + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
       opt.disabled = !data.stock || data.stock === 0;
       braceletSelect.appendChild(opt);
 
-      // Sizes
       if (data.size && !sizesSet.has(data.size)) {
         sizesSet.add(data.size);
         const sizeOpt = document.createElement("option");
@@ -192,7 +208,6 @@ async function loadBracelets() {
         sizeSelect.appendChild(sizeOpt);
       }
 
-      // Colors
       if (data.colorOptions) {
         data.colorOptions.forEach(color => {
           if (!colorsSet.has(color)) {
@@ -224,10 +239,12 @@ async function submitOrder() {
   const size = sizeSelect.value;
   const color1 = color1Select.value;
   const color2 = color2Select.value;
+  const clipType = document.getElementById("clipType").value;
+  const clipColor = document.getElementById("clipColor").value;
   const qty = parseInt(document.getElementById("braceletQty").value) || 1;
   const payment = document.getElementById("braceletPayment").value;
 
-  if (!name || !email || !braceletId || !size || !color1 || !color2) {
+  if (!name || !email || !braceletId || !size || !color1 || !color2 || !clipType || !clipColor) {
     return alert("⚠️ Please fill all fields correctly.");
   }
 
@@ -245,15 +262,16 @@ async function submitOrder() {
     const total = data.price * qty;
 
     await addDoc(collection(db, "braceletOrders"), {
-      name, email, product: data.type, size, color1, color2, qty, total,
-      payment, createdAt: new Date(), status: "Pending"
+      name, email, product: data.type, size, color1, color2,
+      clipType, clipColor, qty, total, payment,
+      createdAt: new Date(), status: "Pending"
     });
 
     if (payment === "PayPal") {
       const link = data.paypalLink || "#";
       paypalDiv.innerHTML = `
         <p>Order submitted! Total: $${total.toFixed(2)}</p>
-        <p>${data.type} | Size: ${size} | Colors: ${color1}, ${color2} | Quantity: ${qty}</p>
+        <p>${data.type} | Size: ${size} | Colors: ${color1}, ${color2} | Clip: ${clipType} (${clipColor}) | Qty: ${qty}</p>
         <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>
       `;
       paypalDiv.style.display = "block";
@@ -269,10 +287,6 @@ async function submitOrder() {
   }
 }
 
-// Make function accessible to HTML onclick
-window.submitOrder = submitOrder;
-
-// Attach event listener instead of inline onclick
 document.getElementById("submitBtn").addEventListener("click", submitOrder);
 
 loadBracelets();
