@@ -205,14 +205,15 @@ async function loadBracelets() {
     color1Select.innerHTML = '<option value="">Select Color 1</option>';
     color2Select.innerHTML = '<option value="">Select Color 2</option>';
 
-    const sizesSet = new Set();
     const colorsSet = new Set();
 
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       const opt = document.createElement("option");
+      // Show lowest price as hint
+      const minPrice = typeof data.price === "object" ? Math.min(...Object.values(data.price)) : data.price;
       opt.value = docSnap.id;
-      opt.textContent = data.type + " - $" + (typeof data.price === "object" ? Math.min(...Object.values(data.price)) : data.price) + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
+      opt.textContent = data.type + " - $" + minPrice + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
       opt.disabled = !data.stock || data.stock === 0;
       braceletSelect.appendChild(opt);
 
@@ -239,7 +240,7 @@ async function loadBracelets() {
   }
 }
 
-// When bracelet changes, populate sizes and reset price
+// Populate sizes & reset price when bracelet changes
 braceletSelect.addEventListener("change", async () => {
   const braceletId = braceletSelect.value;
   if (!braceletId) return;
@@ -258,7 +259,6 @@ braceletSelect.addEventListener("change", async () => {
     sizeSelect.appendChild(opt);
   });
 
-  // Reset price display
   priceDisplay.textContent = "Price: $0.00";
 });
 
@@ -281,7 +281,7 @@ clipTypeSelect.addEventListener("change", () => {
   }
 });
 
-// Submit order safely
+// Submit order
 async function submitOrder() {
   const name = document.getElementById("braceletName").value.trim();
   const email = document.getElementById("braceletEmail").value.trim();
@@ -300,7 +300,7 @@ async function submitOrder() {
 
   if (!currentBraceletData) return alert("❌ Bracelet data not loaded.");
 
-  const price = currentBraceletData.price[size] || 0;
+  const price = currentBraceletData.price[size] || 0; // price depends only on size
   const total = price * qty;
 
   try {
