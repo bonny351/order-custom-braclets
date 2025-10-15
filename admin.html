@@ -33,7 +33,30 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
     <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
   </div>
 
-  <!-- ORDERS -->
+  <!-- Products Section -->
+  <section class="card">
+    <h2 class="text-xl font-semibold mb-2">Products 
+      <button onclick="addProduct()" class="ml-4 text-sm px-2 py-1 bg-green-600 hover:bg-green-700 rounded">+ Add Product</button>
+    </h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name / Type</th>
+            <th>SKU</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productsTable">
+          <tr><td colspan="5" class="text-center p-4 text-gray-400">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Orders Section -->
   <section class="card">
     <h2 class="text-xl font-semibold mb-2">Orders</h2>
     <div class="table-container">
@@ -48,8 +71,8 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
             <th>Qty</th>
             <th>Total</th>
             <th>Address</th>
+            <th>Payment</th>
             <th>Status</th>
-            <th>Payment Method</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -63,7 +86,7 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -73,6 +96,7 @@ const firebaseConfig = {
   messagingSenderId: "382292570673",
   appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -82,6 +106,7 @@ const tabs = {
   bracelets: document.getElementById("tabBracelets"),
   spirit: document.getElementById("tabSpirit")
 };
+
 Object.entries(tabs).forEach(([key, el])=>{
   el.addEventListener("click", ()=>{
     currentTab = key;
@@ -91,16 +116,44 @@ Object.entries(tabs).forEach(([key, el])=>{
   });
 });
 
+const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
 
 async function loadData(){
+  productsTable.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
   ordersTable.innerHTML = "<tr><td colspan='11' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
 
-  const colName = currentTab === "spirit" ? "spiritOrders" : currentTab+"Orders";
-  const snap = await getDocs(collection(db, colName));
-  ordersTable.innerHTML = snap.docs.length ? "" : `<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>`;
+  const prodCol = collection(db, `products_${currentTab}`);
+  const orderCol = collection(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`);
 
-  snap.docs.forEach((docSnap,i)=>{
+  const [prodSnap, orderSnap] = await Promise.all([getDocs(prodCol), getDocs(orderCol)]);
+  renderProducts(prodSnap.docs);
+  renderOrders(orderSnap.docs);
+}
+
+function renderProducts(docs){
+  productsTable.innerHTML = docs.length? "": `<tr><td colspan='5' class='text-center text-gray-400'>No products found</td></tr>`;
+  docs.forEach(docSnap=>{
+    const d = docSnap.data();
+    const displayName = d.name || d.productName || d.type || "Unnamed Product";
+    const tr = document.createElement("tr");
+    tr.innerHTML=`
+      <td><input value="${displayName}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku||""}" id="sku-${docSnap.id}"></td>
+      <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
+      <td><input type="number" value="${d.stock??0}" id="stock-${docSnap.id}"></td>
+      <td class="flex gap-2">
+        <button onclick="saveProduct('${docSnap.id}')">💾</button>
+        <button onclick="deleteProduct('${docSnap.id}')">🗑️</button>
+      </td>
+    `;
+    productsTable.appendChild(tr);
+  });
+}
+
+function renderOrders(docs){
+  ordersTable.innerHTML = docs.length? "": `<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>`;
+  docs.forEach((docSnap,i)=>{
     const d = docSnap.data();
     const tr=document.createElement("tr");
     tr.innerHTML=`
@@ -108,12 +161,23 @@ async function loadData(){
       <td><input value="${d.name||''}" id="oname-${docSnap.id}"></td>
       <td><input value="${d.email||''}" id="oemail-${docSnap.id}"></td>
       <td><input value="${d.product||''}" id="oproduct-${docSnap.id}"></td>
-      <td><input value="${d.size||d.color1 ? `${d.size || ''} ${d.color1 || ''} ${d.color2 || ''}` : ''}" id="osize-${docSnap.id}"></td>
-      <td><input type="number" value="${d.qty||d.quantity||1}" id="oqty-${docSnap.id}"></td>
+      <td><input value="${d.size||d.color1? `${d.size||''} ${d.color1||''} ${d.color2||''}`:''}" id="osize-${docSnap.id}"></td>
+      <td><input type="number" value="${d.qty||1}" id="oqty-${docSnap.id}"></td>
       <td><input type="number" value="${d.total||0}" id="ototal-${docSnap.id}"></td>
       <td><input value="${d.address||''}" id="oaddress-${docSnap.id}"></td>
-      <td><select id="ostatus-${docSnap.id}">${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}</select></td>
-      <td><input value="${d.paymentMethod||''}" id="opayment-${docSnap.id}"></td>
+      <td>
+        <select id="opayment-${docSnap.id}">
+          <option value="PayPal" ${d.payment==='PayPal'?'selected':''}>PayPal</option>
+          <option value="Cash" ${d.payment==='Cash'?'selected':''}>Cash</option>
+        </select>
+      </td>
+      <td>
+        <select id="ostatus-${docSnap.id}">
+          <option value="Pending" ${d.status==='Pending'?'selected':''}>Pending</option>
+          <option value="Completed" ${d.status==='Completed'?'selected':''}>Completed</option>
+          <option value="Cancelled" ${d.status==='Cancelled'?'selected':''}>Cancelled</option>
+        </select>
+      </td>
       <td class="flex gap-2">
         <button onclick="saveOrder('${docSnap.id}')">💾</button>
         <button onclick="deleteOrder('${docSnap.id}')">🗑️</button>
@@ -123,27 +187,53 @@ async function loadData(){
   });
 }
 
-window.saveOrder=async id=>{
-  const ref=doc(db, currentTab==="spirit"?"spiritOrders":currentTab+"Orders", id);
-  await updateDoc(ref,{
-    name: document.getElementById(`oname-${id}`).value.trim(),
-    email: document.getElementById(`oemail-${id}`).value.trim(),
-    product: document.getElementById(`oproduct-${id}`).value.trim(),
-    size: document.getElementById(`osize-${id}`).value.trim(),
-    qty: parseInt(document.getElementById(`oqty-${id}`).value)||1,
-    total: parseFloat(document.getElementById(`ototal-${id}`).value)||0,
-    address: document.getElementById(`oaddress-${id}`).value.trim(),
-    status: document.getElementById(`ostatus-${id}`).value,
-    paymentMethod: document.getElementById(`opayment-${id}`).value.trim()
-  });
-  alert("✅ Order updated!");
-};
+async function saveProduct(id){
+  const name = document.getElementById(`name-${id}`).value;
+  const sku = document.getElementById(`sku-${id}`).value;
+  const price = parseFloat(document.getElementById(`price-${id}`).value);
+  const stock = parseInt(document.getElementById(`stock-${id}`).value);
+  await updateDoc(doc(db, `products_${currentTab}`, id), {name, sku, price, stock});
+  alert("Product updated!");
+}
 
-window.deleteOrder=async id=>{
-  await deleteDoc(doc(db, currentTab==="spirit"?"spiritOrders":currentTab+"Orders", id));
+async function deleteProduct(id){
+  if(confirm("Delete this product?")){
+    await deleteDoc(doc(db, `products_${currentTab}`, id));
+    loadData();
+  }
+}
+
+async function addProduct(){
+  const name = prompt("Product name:");
+  if(!name) return;
+  await addDoc(collection(db, `products_${currentTab}`), {name, sku:"", price:0, stock:0});
   loadData();
-};
+}
 
+async function saveOrder(id){
+  const name = document.getElementById(`oname-${id}`).value;
+  const email = document.getElementById(`oemail-${id}`).value;
+  const product = document.getElementById(`oproduct-${id}`).value;
+  const size = document.getElementById(`osize-${id}`).value;
+  const qty = parseInt(document.getElementById(`oqty-${id}`).value);
+  const total = parseFloat(document.getElementById(`ototal-${id}`).value);
+  const address = document.getElementById(`oaddress-${id}`).value;
+  const payment = document.getElementById(`opayment-${id}`).value;
+  const status = document.getElementById(`ostatus-${id}`).value;
+
+  await updateDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id), 
+    {name,email,product,size,qty,total,address,payment,status});
+  alert("Order updated!");
+}
+
+async function deleteOrder(id){
+  if(confirm("Delete this order?")){
+    await deleteDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id));
+    loadData();
+  }
+}
+
+// Initial load
 loadData();
 </script>
 </body>
