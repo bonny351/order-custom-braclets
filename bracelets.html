@@ -5,45 +5,134 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bracelets – Tactics & Treats Preorder</title>
 <style>
-body { font-family: "Poppins", sans-serif; background: linear-gradient(to right,#7a0c0c,#000,#7a0c0c); color:white; margin:0; padding:20px; }
-nav { text-align:center; background:#111; padding:10px 0; border-bottom:2px solid #ff0000; box-shadow:0 0 10px #ff0000; }
-nav a { color:white; margin:0 15px; font-weight:bold; text-decoration:none; transition:.2s; }
-nav a:hover { color:#ff0000; text-shadow:0 0 6px #ff0000; }
-h1 { text-align:center; color:#ff0000; margin-bottom:30px; }
-form { background:#111; border-radius:16px; padding:20px; max-width:500px; margin:0 auto; box-shadow:0 0 15px #ff0000; }
-label { display:block; margin-top:10px; font-weight:500; color:white; }
-input, select { width:100%; padding:10px; border-radius:8px; border:none; margin-top:5px; font-size:14px; }
-button { margin-top:20px; padding:12px; border:none; background:#ff0000; color:#fff; font-weight:bold; border-radius:8px; cursor:pointer; width:100%; transition:.2s; }
-button:hover { background:darkred; }
-.paypal-container { text-align:center; margin-top:20px; padding:15px; background:#222; border-radius:12px; box-shadow:0 0 10px #ff0000; }
-.paypal-btn { display:inline-block; background:#ffc439; color:black; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; margin-top:15px; transition:.2s; }
-.paypal-btn:hover { background:#ffb347; }
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
+nav {
+  text-align: center;
+  background: #111;
+  padding: 10px 0;
+  border-bottom: 2px solid #ff0000;
+  box-shadow: 0 0 10px #ff0000;
+}
+nav a {
+  color: white;
+  margin: 0 15px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
+}
+nav a:hover {
+  color: #ff0000;
+  text-shadow: 0 0 6px #ff0000;
+}
+h1 {
+  text-align: center;
+  color: #ff0000;
+  margin-bottom: 30px;
+}
+form {
+  background: #111;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  box-shadow: 0 0 15px #ff0000;
+}
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 500;
+  color: white;
+}
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 5px;
+  font-size: 14px;
+}
+button {
+  margin-top: 20px;
+  padding: 12px;
+  border: none;
+  background: #ff0000;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: 0.2s;
+}
+button:hover {
+  background: darkred;
+}
+.paypal-btn {
+  display: inline-block;
+  background: #ffc439;
+  color: black;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  margin-top: 15px;
+  transition: 0.2s;
+}
+.paypal-btn:hover {
+  background: #ffb347;
+}
+.paypal-container {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  background: #222;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #ff0000;
+}
 </style>
 </head>
 <body>
 <nav>
   <a href="cookies.html">Cookies</a>
-  <a href="bracelets.html" class="text-white underline">Bracelets</a>
+  <a href="bracelets.html">Bracelets</a>
   <a href="spiritwear.html">Spirit Wear</a>
 </nav>
 
 <h1>Bracelet Preorder</h1>
 
 <form id="braceletForm">
-  <label>Name</label><input id="braceletName" type="text" required />
-  <label>Email</label><input id="braceletEmail" type="email" required />
-  <label>Choose Bracelet</label><select id="braceletSelect" required></select>
-  <label>Size</label><select id="braceletSize" required>
-    <option value="">Loading sizes...</option>
-  </select>
-  <label>Color 1</label><select id="color1" required></select>
-  <label>Color 2</label><select id="color2" required></select>
-  <label>Quantity</label><input id="braceletQty" type="number" min="1" required />
+  <label>Name</label>
+  <input id="braceletName" type="text" required />
+
+  <label>Email</label>
+  <input id="braceletEmail" type="email" required />
+
+  <label>Choose Bracelet</label>
+  <select id="braceletSelect" required></select>
+
+  <label>Size</label>
+  <select id="braceletSize" required></select>
+
+  <label>Color 1</label>
+  <select id="color1" required></select>
+
+  <label>Color 2</label>
+  <select id="color2" required></select>
+
+  <label>Quantity</label>
+  <input id="braceletQty" type="number" min="1" value="1" required />
+
   <label>Payment Method</label>
-  <select id="braceletPayment" required>
-    <option value="Cash">Cash</option>
+  <select id="braceletPayment">
     <option value="PayPal">PayPal</option>
+    <option value="Cash">Cash</option>
   </select>
+
   <button type="button" onclick="submitOrder()">Submit Bracelet Order</button>
 </form>
 
@@ -51,7 +140,7 @@ button:hover { background:darkred; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, doc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -71,76 +160,84 @@ const color1Select = document.getElementById("color1");
 const color2Select = document.getElementById("color2");
 
 async function loadBracelets() {
-  const braceletSnap = await getDocs(collection(db,"products_bracelets"));
-  const colorsSnap = await getDocs(collection(db,"braceletColors"));
-
-  braceletSelect.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "products_bracelets"));
+  braceletSelect.innerHTML = '<option value="">Select Bracelet</option>';
+  sizeSelect.innerHTML = '<option value="">Select Size</option>';
   color1Select.innerHTML = '<option value="">Select Color 1</option>';
   color2Select.innerHTML = '<option value="">Select Color 2</option>';
-  sizeSelect.innerHTML = '<option value="">Select Size</option>';
 
-  braceletSnap.forEach(doc=>{
-    const data=doc.data();
-    const opt=document.createElement("option");
-    opt.value=doc.id;
-    opt.textContent = `${data.type || data.name} - $${data.price} (${data.stock} in stock)`;
-    if(!data.stock || data.stock===0) opt.disabled=true;
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const opt = document.createElement("option");
+    opt.value = docSnap.id;
+    opt.textContent = data.type + " - $" + data.price + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
+    opt.disabled = !data.stock || data.stock === 0;
     braceletSelect.appendChild(opt);
 
-    // Add size from each product
-    if(data.size) {
-      const sizeOption = document.createElement("option");
-      sizeOption.value = data.size;
-      sizeOption.textContent = data.size;
-      sizeSelect.appendChild(sizeOption);
+    // Fill sizes
+    if (data.size) {
+      const sizeOpt = document.createElement("option");
+      sizeOpt.value = data.size;
+      sizeOpt.textContent = data.size;
+      sizeSelect.appendChild(sizeOpt);
     }
-  });
 
-  colorsSnap.forEach(doc=>{
-    const color=doc.data().name;
-    color1Select.innerHTML += `<option value="${color}">${color}</option>`;
-    color2Select.innerHTML += `<option value="${color}">${color}</option>`;
+    // Fill colors
+    if (data.colorOptions) {
+      data.colorOptions.forEach(color => {
+        const c1 = document.createElement("option");
+        c1.value = color;
+        c1.textContent = color;
+        color1Select.appendChild(c1);
+
+        const c2 = document.createElement("option");
+        c2.value = color;
+        c2.textContent = color;
+        color2Select.appendChild(c2);
+      });
+    }
   });
 }
 
-loadBracelets();
+await loadBracelets();
 
 async function submitOrder() {
-  const name=document.getElementById("braceletName").value.trim();
-  const email=document.getElementById("braceletEmail").value.trim();
-  const braceletId=document.getElementById("braceletSelect").value;
-  const size=document.getElementById("braceletSize").value;
-  const color1=document.getElementById("color1").value;
-  const color2=document.getElementById("color2").value;
-  const qty=parseInt(document.getElementById("braceletQty").value)||1;
-  const payment=document.getElementById("braceletPayment").value;
+  const name = document.getElementById("braceletName").value.trim();
+  const email = document.getElementById("braceletEmail").value.trim();
+  const braceletId = document.getElementById("braceletSelect").value;
+  const size = document.getElementById("braceletSize").value;
+  const color1 = document.getElementById("color1").value;
+  const color2 = document.getElementById("color2").value;
+  const qty = parseInt(document.getElementById("braceletQty").value) || 1;
+  const payment = document.getElementById("braceletPayment").value;
 
-  if(!name || !email || !braceletId || !size || !color1 || !color2) return alert("Fill all fields");
+  if (!name || !email || !braceletId || !size || !color1 || !color2) {
+    return alert("⚠️ Please fill all fields.");
+  }
 
-  const braceletSnap = await getDocs(collection(db,"products_bracelets"));
-  let selectedBracelet;
-  braceletSnap.forEach(doc=>{
-    if(doc.id===braceletId) selectedBracelet=doc.data();
-  });
-  if(!selectedBracelet) return alert("Product not found");
+  const braceletRef = doc(db, "products_bracelets", braceletId);
+  const braceletSnap = await getDoc(braceletRef);
+  if (!braceletSnap.exists()) return alert("❌ Bracelet not found.");
 
-  const total = selectedBracelet.price*qty;
+  const data = braceletSnap.data();
+  const total = data.price * qty;
 
-  await addDoc(collection(db,"braceletOrders"),{
-    name,email,product:selectedBracelet.type||selectedBracelet.name,
-    size,color1,color2,qty,total,payment,createdAt:new Date(),status:"Pending"
+  await addDoc(collection(db, "braceletOrders"), {
+    name, email, product: data.type, size, color1, color2, qty, total, payment, createdAt: new Date(), status: "Pending"
   });
 
   const paypalDiv = document.getElementById("paypalContainer");
-  if(payment==="PayPal"){
-    const link = selectedBracelet.paypalLink||"#";
-    paypalDiv.innerHTML=`<p>Order submitted! Total: $${total.toFixed(2)}</p>
-    <p>${selectedBracelet.type} | Size: ${size} | Colors: ${color1}, ${color2} | Quantity: ${qty}</p>
-    <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>`;
-    paypalDiv.style.display="block";
+  if (payment === "PayPal") {
+    const link = data.paypalLink || "#";
+    paypalDiv.innerHTML = `
+      <p>Order submitted! Total: $${total.toFixed(2)}</p>
+      <p>${data.type} | Size: ${size} | Colors: ${color1}, ${color2} | Quantity: ${qty}</p>
+      <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>
+    `;
+    paypalDiv.style.display = "block";
   } else {
-    paypalDiv.style.display="none";
-    alert(`Order submitted! Total: $${total.toFixed(2)} | Payment: Cash`);
+    paypalDiv.style.display = "none";
+    alert(`✅ Order submitted! Total: $${total.toFixed(2)} | Payment: Cash`);
   }
 
   document.getElementById("braceletForm").reset();
