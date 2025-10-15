@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tactics & Treats – Admin Dashboard</title>
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 <style>
@@ -23,7 +23,7 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
 </style>
 </head>
 <body class="flex flex-col items-center">
-<div class="max-w-6xl w-full">
+<div class="max-w-7xl w-full">
   <h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
 
   <!-- Tabs -->
@@ -33,9 +33,12 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
     <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
   </div>
 
-  <!-- PRODUCTS -->
+  <!-- Products Section -->
   <section class="card">
-    <h2 class="text-xl font-semibold mb-2">Products <button onclick="addProduct()">➕ Add Product</button></h2>
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-xl font-semibold">Products</h2>
+      <button onclick="addProduct()">➕ Add Product</button>
+    </div>
     <div class="table-container">
       <table>
         <thead>
@@ -44,8 +47,8 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
             <th>SKU</th>
             <th>Price</th>
             <th>Stock</th>
-            <th>Size</th>
             <th>Supplier</th>
+            <th>Size</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -56,9 +59,11 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
     </div>
   </section>
 
-  <!-- ORDERS -->
+  <!-- Orders Section -->
   <section class="card">
-    <h2 class="text-xl font-semibold mb-2">Orders</h2>
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-xl font-semibold">Orders</h2>
+    </div>
     <div class="table-container">
       <table>
         <thead>
@@ -71,8 +76,8 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
             <th>Qty</th>
             <th>Total</th>
             <th>Address</th>
-            <th>Payment</th>
             <th>Status</th>
+            <th>Payment</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -105,6 +110,19 @@ const tabs = {
   bracelets: document.getElementById("tabBracelets"),
   spirit: document.getElementById("tabSpirit")
 };
+
+const prodCollections = {
+  cookies: "products_cookies",
+  bracelets: "products_bracelets",
+  spirit: "products_spirit"
+};
+
+const orderCollections = {
+  cookies: "cookieOrders",
+  bracelets: "braceletOrders",
+  spirit: "spiritOrders"
+};
+
 Object.entries(tabs).forEach(([key, el])=>{
   el.addEventListener("click", ()=>{
     currentTab = key;
@@ -121,10 +139,9 @@ async function loadData(){
   productsTable.innerHTML = "<tr><td colspan='7' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
   ordersTable.innerHTML = "<tr><td colspan='11' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
 
-  const prodCol = collection(db, `products_${currentTab}`);
-  const orderCol = collection(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`);
+  const prodSnap = await getDocs(collection(db, prodCollections[currentTab]));
+  const orderSnap = await getDocs(collection(db, orderCollections[currentTab]));
 
-  const [prodSnap, orderSnap] = await Promise.all([getDocs(prodCol), getDocs(orderCol)]);
   renderProducts(prodSnap.docs);
   renderOrders(orderSnap.docs);
 }
@@ -135,12 +152,12 @@ function renderProducts(docs){
     const d = docSnap.data();
     const tr = document.createElement("tr");
     tr.innerHTML=`
-      <td><input value="${d.name || d.type || ""}" id="name-${docSnap.id}"></td>
-      <td><input value="${d.sku||""}" id="sku-${docSnap.id}"></td>
+      <td><input value="${d.name||d.type||''}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku||''}" id="sku-${docSnap.id}"></td>
       <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
       <td><input type="number" value="${d.stock||0}" id="stock-${docSnap.id}"></td>
-      <td><input value="${d.size||""}" id="size-${docSnap.id}"></td>
-      <td><input value="${d.supplier||""}" id="supplier-${docSnap.id}"></td>
+      <td><input value="${d.supplier||''}" id="supplier-${docSnap.id}"></td>
+      <td><input value="${d.size||''}" id="size-${docSnap.id}"></td>
       <td class="flex gap-2"><button onclick="saveProduct('${docSnap.id}')">💾</button><button onclick="deleteProduct('${docSnap.id}')">🗑️</button></td>
     `;
     productsTable.appendChild(tr);
@@ -149,88 +166,83 @@ function renderProducts(docs){
 
 function renderOrders(docs){
   ordersTable.innerHTML = docs.length? "": `<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>`;
-  docs.forEach((docSnap,i)=>{
+  docs.forEach((docSnap,index)=>{
     const d = docSnap.data();
-    const tr=document.createElement("tr");
+    const tr = document.createElement("tr");
     tr.innerHTML=`
-      <td>#${i+1}</td>
-      <td><input value="${d.name||""}" id="oname-${docSnap.id}"></td>
-      <td><input value="${d.email||""}" id="oemail-${docSnap.id}"></td>
-      <td><input value="${d.product||""}" id="oproduct-${docSnap.id}"></td>
-      <td><input value="${d.size||""}" id="osize-${docSnap.id}"></td>
-      <td><input type="number" value="${d.qty||1}" id="oqty-${docSnap.id}"></td>
-      <td><input type="number" value="${d.total||0}" id="ototal-${docSnap.id}"></td>
-      <td><input value="${d.address||''}" id="oaddress-${docSnap.id}"></td>
-      <td><select id="opayment-${docSnap.id}">
-        <option value="PayPal" ${d.payment==="PayPal"?"selected":""}>PayPal</option>
-        <option value="Cash" ${d.payment==="Cash"?"selected":""}>Cash</option>
-      </select></td>
-      <td><select id="ostatus-${docSnap.id}">${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}</select></td>
+      <td>${index+1}</td>
+      <td><input value="${d.name||''}" id="orderName-${docSnap.id}"></td>
+      <td><input value="${d.email||''}" id="orderEmail-${docSnap.id}"></td>
+      <td><input value="${d.product||''}" id="orderProduct-${docSnap.id}"></td>
+      <td><input value="${d.size||''}" id="orderSize-${docSnap.id}"></td>
+      <td><input type="number" value="${d.quantity||d.qty||0}" id="orderQty-${docSnap.id}"></td>
+      <td><input type="number" value="${d.total||0}" id="orderTotal-${docSnap.id}"></td>
+      <td><input value="${d.address||''}" id="orderAddress-${docSnap.id}"></td>
+      <td><input value="${d.status||''}" id="orderStatus-${docSnap.id}"></td>
+      <td>
+        <select id="orderPayment-${docSnap.id}">
+          <option value="Cash" ${d.payment==='Cash'?'selected':''}>Cash</option>
+          <option value="PayPal" ${d.payment==='PayPal'?'selected':''}>PayPal</option>
+        </select>
+      </td>
       <td class="flex gap-2"><button onclick="saveOrder('${docSnap.id}')">💾</button><button onclick="deleteOrder('${docSnap.id}')">🗑️</button></td>
     `;
     ordersTable.appendChild(tr);
   });
 }
 
+// Product actions
 async function saveProduct(id){
-  const ref = doc(db, `products_${currentTab}`, id);
-  await updateDoc(ref,{
+  const data = {
     name: document.getElementById(`name-${id}`).value,
     sku: document.getElementById(`sku-${id}`).value,
-    price: Number(document.getElementById(`price-${id}`).value),
-    stock: Number(document.getElementById(`stock-${id}`).value),
-    size: document.getElementById(`size-${id}`).value,
-    supplier: document.getElementById(`supplier-${id}`).value
-  });
-  alert("Product saved!");
+    price: parseFloat(document.getElementById(`price-${id}`).value),
+    stock: parseInt(document.getElementById(`stock-${id}`).value),
+    supplier: document.getElementById(`supplier-${id}`).value,
+    size: document.getElementById(`size-${id}`).value
+  };
+  await updateDoc(doc(db, prodCollections[currentTab], id), data);
   loadData();
 }
 
 async function deleteProduct(id){
   if(confirm("Delete this product?")){
-    await deleteDoc(doc(db, `products_${currentTab}`, id));
-    loadData();
-  }
-}
-
-async function saveOrder(id){
-  const ref = doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id);
-  await updateDoc(ref,{
-    name: document.getElementById(`oname-${id}`).value,
-    email: document.getElementById(`oemail-${id}`).value,
-    product: document.getElementById(`oproduct-${id}`).value,
-    size: document.getElementById(`osize-${id}`).value,
-    qty: Number(document.getElementById(`oqty-${id}`).value),
-    total: Number(document.getElementById(`ototal-${id}`).value),
-    address: document.getElementById(`oaddress-${id}`).value,
-    payment: document.getElementById(`opayment-${id}`).value,
-    status: document.getElementById(`ostatus-${id}`).value
-  });
-  alert("Order saved!");
-  loadData();
-}
-
-async function deleteOrder(id){
-  if(confirm("Delete this order?")){
-    await deleteDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id));
+    await deleteDoc(doc(db, prodCollections[currentTab], id));
     loadData();
   }
 }
 
 async function addProduct(){
-  const colRef = collection(db, `products_${currentTab}`);
-  await addDoc(colRef,{
-    name:"",
-    sku:"",
-    price:0,
-    stock:0,
-    size:"",
-    supplier:""
-  });
+  const data = { name:"New Product", sku:"", price:0, stock:0, supplier:"", size:"" };
+  await addDoc(collection(db, prodCollections[currentTab]), data);
   loadData();
 }
 
-// initial load
+// Order actions
+async function saveOrder(id){
+  const data = {
+    name: document.getElementById(`orderName-${id}`).value,
+    email: document.getElementById(`orderEmail-${id}`).value,
+    product: document.getElementById(`orderProduct-${id}`).value,
+    size: document.getElementById(`orderSize-${id}`).value,
+    quantity: parseInt(document.getElementById(`orderQty-${id}`).value),
+    total: parseFloat(document.getElementById(`orderTotal-${id}`).value),
+    address: document.getElementById(`orderAddress-${id}`).value,
+    status: document.getElementById(`orderStatus-${id}`).value,
+    payment: document.getElementById(`orderPayment-${id}`).value
+  };
+  await updateDoc(doc(db, orderCollections[currentTab], id), data);
+  loadData();
+}
+
+async function deleteOrder(id){
+  if(confirm("Delete this order?")){
+    await deleteDoc(doc(db, orderCollections[currentTab], id));
+    loadData();
+  }
+}
+
+// Initial load
 loadData();
 </script>
 </body>
