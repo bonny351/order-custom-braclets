@@ -1,87 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tactics & Treats – Admin Dashboard</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { background: linear-gradient(135deg, #1a0000, #330000); color: #f5f5f5; font-family: 'Poppins', sans-serif; min-height: 100vh; padding: 2rem 1rem; }
-h1,h2,h3 { color: #ffdddd; letter-spacing: 0.5px; }
-.card { background: rgba(20,0,0,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); padding: 1.5rem; margin-bottom: 2rem; }
-.tab-btn { cursor: pointer; padding: 10px 20px; font-weight: 600; border-radius: 12px 12px 0 0; background: rgba(128,0,0,0.5); color: #ddd; margin-right: 6px; transition: all 0.3s ease; }
-.tab-btn:hover { background: rgba(255,0,0,0.35); }
-.tab-btn.active { background: #ff0000; color: #fff; box-shadow: 0 3px 12px rgba(255,0,0,0.4); }
-.table-container { overflow-x: auto; border-radius: 10px; }
-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
-th { background: rgba(128,0,0,0.8); color: #fff; font-weight: 600; text-transform: uppercase; padding: 10px; }
-td { background: rgba(255,255,255,0.03); padding: 8px; }
-tr:hover td { background: rgba(255,0,0,0.1); }
-input, select { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px 8px; border-radius: 6px; width: 100%; }
-button { background: linear-gradient(90deg,#b00,#e00); color:white; border:none; border-radius:8px; padding:6px 12px; font-weight:600; transition: all 0.3s; }
-button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e00,#ff3333); }
+body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg,#1a0000,#330000); color: #f5f5f5; min-height: 100vh; padding:2rem; }
+h1,h2,h3 { color: #ffdddd; }
+.card { background: rgba(20,0,0,0.7); backdrop-filter: blur(10px); border-radius: 1rem; padding: 1.5rem; margin-bottom:2rem; box-shadow:0 4px 15px rgba(0,0,0,0.4);}
+.tab-btn { cursor:pointer; padding:10px 20px; font-weight:600; border-radius:12px 12px 0 0; background: rgba(128,0,0,0.5); color:#ddd; margin-right:6px; transition:all 0.3s ease;}
+.tab-btn:hover { background: rgba(255,0,0,0.35);}
+.tab-btn.active { background:#ff0000; color:#fff; box-shadow:0 3px 12px rgba(255,0,0,0.4);}
+.table-container { overflow-x:auto; border-radius:10px;}
+table { width:100%; border-collapse: collapse; font-size:0.9rem; }
+th { background: rgba(128,0,0,0.8); color:#fff; font-weight:600; text-transform: uppercase; padding:10px;}
+td { background: rgba(255,255,255,0.03); padding:8px; }
+tr:hover td { background: rgba(255,0,0,0.1);}
+input,select { background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; padding:6px 8px; border-radius:6px; width:100%;}
+button { background: linear-gradient(90deg,#b00,#e00); color:white; border:none; border-radius:8px; padding:6px 12px; font-weight:600; transition:all 0.3s;}
+button:hover { transform:translateY(-1px); background: linear-gradient(90deg,#e00,#ff3333);}
 </style>
 </head>
 <body class="flex flex-col items-center">
-<div class="max-w-7xl w-full">
-  <h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
+<div class="max-w-6xl w-full">
+<h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
 
-  <!-- Tabs -->
-  <div class="flex justify-center mb-6">
-    <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
-    <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
-    <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
-  </div>
+<!-- Tabs -->
+<div class="flex justify-center mb-6">
+<div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
+<div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
+<div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
+</div>
 
-  <!-- PRODUCTS -->
-  <section class="card">
-    <h2 class="text-xl font-semibold mb-2 flex justify-between items-center">Products <button onclick="addProduct()">➕ Add Product</button></h2>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Name / Type</th>
-            <th>SKU</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Supplier</th>
-            <th>Payment Link</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="productsTable">
-          <tr><td colspan="7" class="text-center p-4 text-gray-400">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+<!-- Products -->
+<section class="card">
+<h2 class="text-xl font-semibold mb-2 flex justify-between items-center">
+Products
+<button onclick="addProduct()">+ Add Product</button>
+</h2>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Name / Type</th>
+<th>SKU</th>
+<th>Price</th>
+<th>Stock</th>
+<th>Supplier</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="productsTable"><tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr></tbody>
+</table>
+</div>
+</section>
 
-  <!-- ORDERS -->
-  <section class="card">
-    <h2 class="text-xl font-semibold mb-2">Orders</h2>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Product</th>
-            <th>Size</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th>Address</th>
-            <th>Status</th>
-            <th>Payment</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="ordersTable">
-          <tr><td colspan="11" class="text-center p-4 text-gray-400">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+<!-- Orders -->
+<section class="card">
+<h2 class="text-xl font-semibold mb-2">Orders</h2>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Name</th>
+<th>Email</th>
+<th>Product</th>
+<th>Size</th>
+<th>Qty</th>
+<th>Total</th>
+<th>Address</th>
+<th>Status</th>
+<th>Payment</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="ordersTable"><tr><td colspan="11" class="text-center p-4 text-gray-400">Loading...</td></tr></tbody>
+</table>
+</div>
+</section>
 </div>
 
 <script type="module">
@@ -96,12 +94,11 @@ const firebaseConfig = {
   messagingSenderId: "382292570673",
   appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentTab = "cookies";
-const tabs = { cookies: document.getElementById("tabCookies"), bracelets: document.getElementById("tabBracelets"), spirit: document.getElementById("tabSpirit") };
+const tabs = {cookies: document.getElementById("tabCookies"), bracelets: document.getElementById("tabBracelets"), spirit: document.getElementById("tabSpirit")};
 Object.entries(tabs).forEach(([key, el])=>{
   el.addEventListener("click", ()=>{
     currentTab = key;
@@ -114,12 +111,16 @@ Object.entries(tabs).forEach(([key, el])=>{
 const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
 
+const orderCollections = {cookies:"cookieOrders", bracelets:"braceletOrders", spirit:"spiritOrders"};
+const prodCollections = {cookies:"products_cookies", bracelets:"products_bracelets", spirit:"products_spirit"};
+
 async function loadData(){
-  productsTable.innerHTML = "<tr><td colspan='7' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
+  // Products
+  productsTable.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
   ordersTable.innerHTML = "<tr><td colspan='11' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
 
-  const prodCol = collection(db, `products_${currentTab}`);
-  const orderCol = collection(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`);
+  const prodCol = collection(db, prodCollections[currentTab]);
+  const orderCol = collection(db, orderCollections[currentTab]);
 
   const [prodSnap, orderSnap] = await Promise.all([getDocs(prodCol), getDocs(orderCol)]);
   renderProducts(prodSnap.docs);
@@ -127,17 +128,17 @@ async function loadData(){
 }
 
 function renderProducts(docs){
-  productsTable.innerHTML = docs.length? "": `<tr><td colspan='7' class='text-center text-gray-400'>No products found</td></tr>`;
+  productsTable.innerHTML = docs.length?"": "<tr><td colspan='6' class='text-center text-gray-400'>No products found</td></tr>";
   docs.forEach(docSnap=>{
     const d = docSnap.data();
+    const displayName = d.name||d.productName||d.type||"Unnamed Product";
     const tr = document.createElement("tr");
-    tr.innerHTML=`
-      <td><input value="${d.name||d.type||''}" id="name-${docSnap.id}"></td>
-      <td><input value="${d.sku||''}" id="sku-${docSnap.id}"></td>
+    tr.innerHTML = `
+      <td><input value="${displayName}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku||""}" id="sku-${docSnap.id}"></td>
       <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
       <td><input type="number" value="${d.stock??0}" id="stock-${docSnap.id}"></td>
-      <td><input value="${d.supplier||''}" id="supplier-${docSnap.id}"></td>
-      <td><input value="${d.paymentLink||''}" id="pay-${docSnap.id}"></td>
+      <td><input value="${d.supplier||""}" id="supplier-${docSnap.id}"></td>
       <td class="flex gap-2"><button onclick="saveProduct('${docSnap.id}')">💾</button><button onclick="deleteProduct('${docSnap.id}')">🗑️</button></td>
     `;
     productsTable.appendChild(tr);
@@ -145,42 +146,57 @@ function renderProducts(docs){
 }
 
 function renderOrders(docs){
-  ordersTable.innerHTML = docs.length? "": `<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>`;
+  ordersTable.innerHTML = docs.length?"": "<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>";
   docs.forEach((docSnap,i)=>{
     const d = docSnap.data();
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
+    const displayName = d.name||d.customerName||"Unnamed";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
       <td>#${i+1}</td>
-      <td><input value="${d.name||''}" id="oname-${docSnap.id}"></td>
-      <td><input value="${d.email||''}" id="oemail-${docSnap.id}"></td>
-      <td><input value="${d.product||''}" id="oproduct-${docSnap.id}"></td>
-      <td><input value="${d.size||''}" id="osize-${docSnap.id}" placeholder="Size"></td>
+      <td><input value="${displayName}" id="oname-${docSnap.id}"></td>
+      <td><input value="${d.email||""}" id="oemail-${docSnap.id}"></td>
+      <td><input value="${d.product||""}" id="oproduct-${docSnap.id}"></td>
+      <td><input value="${d.size||""}" id="osize-${docSnap.id}"></td>
       <td><input type="number" value="${d.qty||1}" id="oqty-${docSnap.id}"></td>
       <td><input type="number" value="${d.total||0}" id="ototal-${docSnap.id}"></td>
       <td><input value="${d.address||''}" id="oaddress-${docSnap.id}"></td>
       <td><select id="ostatus-${docSnap.id}">${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}</select></td>
-      <td><select id="opayment-${docSnap.id}"><option value="PayPal" ${d.payment==="PayPal"?"selected":""}>PayPal</option><option value="Cash" ${d.payment==="Cash"?"selected":""}>Cash</option></select></td>
+      <td><input value="${d.payment||""}" id="opayment-${docSnap.id}"></td>
       <td class="flex gap-2"><button onclick="saveOrder('${docSnap.id}')">💾</button><button onclick="deleteOrder('${docSnap.id}')">🗑️</button></td>
     `;
     ordersTable.appendChild(tr);
   });
 }
 
-window.saveProduct=async id=>{
-  const ref=doc(db, `products_${currentTab}`, id);
+// CRUD
+window.saveProduct = async id=>{
+  const ref = doc(db, prodCollections[currentTab], id);
   await updateDoc(ref,{
     name: document.getElementById(`name-${id}`).value.trim(),
     sku: document.getElementById(`sku-${id}`).value.trim(),
     price: parseFloat(document.getElementById(`price-${id}`).value)||0,
     stock: parseInt(document.getElementById(`stock-${id}`).value)||0,
-    supplier: document.getElementById(`supplier-${id}`).value.trim(),
-    paymentLink: document.getElementById(`pay-${id}`).value.trim()
+    supplier: document.getElementById(`supplier-${id}`).value.trim()
   });
   alert("✅ Product saved!");
 };
 
-window.saveOrder=async id=>{
-  const ref=doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id);
+window.deleteProduct = async id=>{
+  if(confirm("Delete this product?")){
+    await deleteDoc(doc(db, prodCollections[currentTab], id));
+    loadData();
+  }
+};
+
+window.addProduct = async ()=>{
+  const ref = await addDoc(collection(db, prodCollections[currentTab]), {
+    name:"New Product", sku:"", price:0, stock:0, supplier:""
+  });
+  loadData();
+};
+
+window.saveOrder = async id=>{
+  const ref = doc(db, orderCollections[currentTab], id);
   await updateDoc(ref,{
     name: document.getElementById(`oname-${id}`).value.trim(),
     email: document.getElementById(`oemail-${id}`).value.trim(),
@@ -190,17 +206,16 @@ window.saveOrder=async id=>{
     total: parseFloat(document.getElementById(`ototal-${id}`).value)||0,
     address: document.getElementById(`oaddress-${id}`).value.trim(),
     status: document.getElementById(`ostatus-${id}`).value,
-    payment: document.getElementById(`opayment-${id}`).value
+    payment: document.getElementById(`opayment-${id}`).value.trim()
   });
   alert("✅ Order updated!");
 };
 
-window.deleteProduct=async id=>{ await deleteDoc(doc(db, `products_${currentTab}`, id)); loadData(); };
-window.deleteOrder=async id=>{ await deleteDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id)); loadData(); };
-
-window.addProduct = async ()=>{
-  const ref = await addDoc(collection(db, `products_${currentTab}`), { name:"New Product", sku:"", price:0, stock:0, supplier:"", paymentLink:"" });
-  loadData();
+window.deleteOrder = async id=>{
+  if(confirm("Delete this order?")){
+    await deleteDoc(doc(db, orderCollections[currentTab], id));
+    loadData();
+  }
 };
 
 loadData();
