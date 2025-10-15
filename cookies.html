@@ -1,28 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Cookies – Tactics & Treats Preorder</title>
 <style>
-body { font-family: "Poppins", sans-serif; background: linear-gradient(to right,#7a0c0c,#000,#7a0c0c); color:white; margin:0; padding:20px; }
-nav { text-align:center; background:#111; padding:10px 0; border-bottom:2px solid #ff0000; box-shadow:0 0 10px #ff0000; }
-nav a { color:white; margin:0 15px; font-weight:bold; text-decoration:none; transition:.2s; }
-nav a:hover { color:#ff0000; text-shadow:0 0 6px #ff0000; }
-h1 { text-align:center; color:#ff0000; margin-bottom:30px; }
-form { background:#111; border-radius:16px; padding:20px; max-width:500px; margin:0 auto; box-shadow:0 0 15px #ff0000; }
-label { display:block; margin-top:10px; font-weight:500; color:white; }
-input, select { width:100%; padding:10px; border-radius:8px; border:none; margin-top:5px; font-size:14px; }
-button { margin-top:20px; padding:12px; border:none; background:#ff0000; color:#fff; font-weight:bold; border-radius:8px; cursor:pointer; width:100%; transition:.2s; }
-button:hover { background:darkred; }
-.paypal-container { text-align:center; margin-top:20px; padding:15px; background:#222; border-radius:12px; box-shadow:0 0 10px #ff0000; }
-.paypal-btn { display:inline-block; background:#ffc439; color:black; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; margin-top:15px; transition:.2s; }
-.paypal-btn:hover { background:#ffb347; }
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
+nav {
+  text-align: center;
+  background: #111;
+  padding: 10px 0;
+  border-bottom: 2px solid #ff0000;
+  box-shadow: 0 0 10px #ff0000;
+}
+nav a {
+  color: white;
+  margin: 0 15px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
+}
+nav a:hover {
+  color: #ff0000;
+  text-shadow: 0 0 6px #ff0000;
+}
+h1 {
+  text-align: center;
+  color: #ff0000;
+  margin-bottom: 30px;
+}
+form {
+  background: #111;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  box-shadow: 0 0 15px #ff0000;
+}
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 500;
+  color: white;
+}
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 5px;
+  font-size: 14px;
+}
+button {
+  margin-top: 20px;
+  padding: 12px;
+  border: none;
+  background: #ff0000;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: 0.2s;
+}
+button:hover {
+  background: darkred;
+}
+.paypal-btn {
+  display: inline-block;
+  background: #ffc439;
+  color: black;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  margin-top: 15px;
+  transition: 0.2s;
+}
+.paypal-btn:hover {
+  background: #ffb347;
+}
+.paypal-container {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  background: #222;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #ff0000;
+}
 </style>
 </head>
 <body>
 <nav>
-  <a href="cookies.html">Cookies</a>
+  <a href="cookies.html" class="text-white underline">Cookies</a>
   <a href="bracelets.html">Bracelets</a>
   <a href="spiritwear.html">Spirit Wear</a>
 </nav>
@@ -30,23 +106,35 @@ button:hover { background:darkred; }
 <h1>Cookie Preorder</h1>
 
 <form id="cookieForm">
-  <label>Name</label><input id="cookieName" type="text" required />
-  <label>Email</label><input id="cookieEmail" type="email" required />
-  <label>Choose Cookie</label><select id="cookieSelect" required></select>
-  <label>Quantity</label><input id="cookieQty" type="number" min="1" required />
+  <label>Name</label>
+  <input id="cookieName" type="text" required />
+
+  <label>Email</label>
+  <input id="cookieEmail" type="email" required />
+
+  <label>Choose Cookie</label>
+  <select id="cookieSelect" required></select>
+
+  <label>Size</label>
+  <select id="cookieSize" required></select>
+
+  <label>Quantity</label>
+  <input id="cookieQty" type="number" min="1" value="1" required />
+
   <label>Payment Method</label>
-  <select id="cookiePayment" required>
-    <option value="Cash">Cash</option>
+  <select id="cookiePayment">
     <option value="PayPal">PayPal</option>
+    <option value="Cash">Cash</option>
   </select>
-  <button type="button" onclick="submitOrder()">Submit Cookie Order</button>
+
+  <button type="button" onclick="submitCookieOrder()">Submit Cookie Order</button>
 </form>
 
 <div id="paypalContainer" class="paypal-container" style="display:none;"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, doc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -56,56 +144,71 @@ const firebaseConfig = {
   messagingSenderId: "382292570673",
   appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function loadCookies(){
-  const snapshot = await getDocs(collection(db,"products_cookies"));
-  const select = document.getElementById("cookieSelect");
-  select.innerHTML = "";
-  snapshot.forEach(doc=>{
-    const data = doc.data();
+const cookieSelect = document.getElementById("cookieSelect");
+const cookieSize = document.getElementById("cookieSize");
+
+async function loadCookies() {
+  const snapshot = await getDocs(collection(db, "products_cookies"));
+  cookieSelect.innerHTML = '<option value="">Select Cookie</option>';
+  cookieSize.innerHTML = '<option value="">Select Size</option>';
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
     const opt = document.createElement("option");
-    opt.value = doc.id;
-    opt.textContent = `${data.name} - $${data.price} (${data.stock} in stock)`;
-    if(!data.stock || data.stock===0) opt.disabled=true;
-    select.appendChild(opt);
+    opt.value = docSnap.id;
+    opt.textContent = data.name + " - $" + data.price + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
+    opt.disabled = !data.stock || data.stock === 0;
+    cookieSelect.appendChild(opt);
+
+    // Sizes
+    if (data.size) {
+      const sizeOpt = document.createElement("option");
+      sizeOpt.value = data.size;
+      sizeOpt.textContent = data.size;
+      cookieSize.appendChild(sizeOpt);
+    }
   });
 }
-loadCookies();
 
-async function submitOrder(){
+await loadCookies();
+
+async function submitCookieOrder() {
   const name = document.getElementById("cookieName").value.trim();
   const email = document.getElementById("cookieEmail").value.trim();
   const cookieId = document.getElementById("cookieSelect").value;
-  const qty = parseInt(document.getElementById("cookieQty").value)||1;
+  const size = document.getElementById("cookieSize").value;
+  const qty = parseInt(document.getElementById("cookieQty").value) || 1;
   const payment = document.getElementById("cookiePayment").value;
 
-  if(!name || !email || !cookieId) return alert("Fill all fields");
+  if (!name || !email || !cookieId || !size) return alert("⚠️ Please fill all fields.");
 
-  const cookieSnap = await getDocs(collection(db,"products_cookies"));
-  let selectedCookie;
-  cookieSnap.forEach(doc=>{
-    if(doc.id===cookieId) selectedCookie=doc.data();
-  });
-  if(!selectedCookie) return alert("Product not found");
+  const cookieRef = doc(db, "products_cookies", cookieId);
+  const cookieSnap = await getDoc(cookieRef);
+  if (!cookieSnap.exists()) return alert("❌ Cookie not found.");
 
-  const total = selectedCookie.price*qty;
+  const data = cookieSnap.data();
+  const total = data.price * qty;
 
-  await addDoc(collection(db,"cookieOrders"),{
-    name,email,product:selectedCookie.name,qty,total,payment,createdAt:new Date(),status:"Pending"
+  await addDoc(collection(db, "cookieOrders"), {
+    name, email, product: data.name, size, qty, total, payment, createdAt: new Date(), status: "Pending"
   });
 
-  // Show PayPal if selected
   const paypalDiv = document.getElementById("paypalContainer");
-  if(payment==="PayPal"){
-    const link = selectedCookie.paypalLink||"#"; // get from Firebase
-    paypalDiv.innerHTML=`<p>Order submitted! Total: $${total.toFixed(2)}</p>
-    <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>`;
-    paypalDiv.style.display="block";
+  if (payment === "PayPal") {
+    const link = data.paypalLink || "#";
+    paypalDiv.innerHTML = `
+      <p>Order submitted! Total: $${total.toFixed(2)}</p>
+      <p>${data.name} | Size: ${size} | Quantity: ${qty}</p>
+      <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>
+    `;
+    paypalDiv.style.display = "block";
   } else {
-    paypalDiv.style.display="none";
-    alert(`Order submitted! Total: $${total.toFixed(2)} | Payment: Cash`);
+    paypalDiv.style.display = "none";
+    alert(`✅ Order submitted! Total: $${total.toFixed(2)} | Payment: Cash`);
   }
 
   document.getElementById("cookieForm").reset();
