@@ -133,7 +133,7 @@ button:hover {
     <option value="Cash">Cash</option>
   </select>
 
-  <button type="button" onclick="submitOrder()">Submit Bracelet Order</button>
+  <button type="button" id="submitBtn">Submit Bracelet Order</button>
 </form>
 
 <div id="paypalContainer" class="paypal-container" style="display:none;"></div>
@@ -142,6 +142,7 @@ button:hover {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, getDocs, getDoc, doc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -158,67 +159,71 @@ const braceletSelect = document.getElementById("braceletSelect");
 const sizeSelect = document.getElementById("braceletSize");
 const color1Select = document.getElementById("color1");
 const color2Select = document.getElementById("color2");
+const paypalDiv = document.getElementById("paypalContainer");
+const form = document.getElementById("braceletForm");
 
+// Load bracelets safely
 async function loadBracelets() {
-  const snapshot = await getDocs(collection(db, "products_bracelets"));
+  try {
+    const snapshot = await getDocs(collection(db, "products_bracelets"));
+    braceletSelect.innerHTML = '<option value="">Select Bracelet</option>';
+    sizeSelect.innerHTML = '<option value="">Select Size</option>';
+    color1Select.innerHTML = '<option value="">Select Color 1</option>';
+    color2Select.innerHTML = '<option value="">Select Color 2</option>';
 
-  // Clear previous options
-  braceletSelect.innerHTML = '<option value="">Select Bracelet</option>';
-  sizeSelect.innerHTML = '<option value="">Select Size</option>';
-  color1Select.innerHTML = '<option value="">Select Color 1</option>';
-  color2Select.innerHTML = '<option value="">Select Color 2</option>';
+    const sizesSet = new Set();
+    const colorsSet = new Set();
 
-  const sizesSet = new Set();
-  const colorsSet = new Set();
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      // Bracelet option
+      const opt = document.createElement("option");
+      opt.value = docSnap.id;
+      opt.textContent = data.type + " - $" + data.price + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
+      opt.disabled = !data.stock || data.stock === 0;
+      braceletSelect.appendChild(opt);
 
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
+      // Sizes
+      if (data.size && !sizesSet.has(data.size)) {
+        sizesSet.add(data.size);
+        const sizeOpt = document.createElement("option");
+        sizeOpt.value = data.size;
+        sizeOpt.textContent = data.size;
+        sizeSelect.appendChild(sizeOpt);
+      }
 
-    // Bracelet selection
-    const opt = document.createElement("option");
-    opt.value = docSnap.id;
-    opt.textContent = data.type + " - $" + data.price + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
-    opt.disabled = !data.stock || data.stock === 0;
-    braceletSelect.appendChild(opt);
+      // Colors
+      if (data.colorOptions) {
+        data.colorOptions.forEach(color => {
+          if (!colorsSet.has(color)) {
+            colorsSet.add(color);
+            const c1 = document.createElement("option");
+            c1.value = color;
+            c1.textContent = color;
+            color1Select.appendChild(c1);
 
-    // Sizes (unique)
-    if (data.size && !sizesSet.has(data.size)) {
-      sizesSet.add(data.size);
-      const sizeOpt = document.createElement("option");
-      sizeOpt.value = data.size;
-      sizeOpt.textContent = data.size;
-      sizeSelect.appendChild(sizeOpt);
-    }
-
-    // Colors (unique)
-    if (data.colorOptions) {
-      data.colorOptions.forEach(color => {
-        if (!colorsSet.has(color)) {
-          colorsSet.add(color);
-          const c1 = document.createElement("option");
-          c1.value = color;
-          c1.textContent = color;
-          color1Select.appendChild(c1);
-
-          const c2 = document.createElement("option");
-          c2.value = color;
-          c2.textContent = color;
-          color2Select.appendChild(c2);
-        }
-      });
-    }
-  });
+            const c2 = document.createElement("option");
+            c2.value = color;
+            c2.textContent = color;
+            color2Select.appendChild(c2);
+          }
+        });
+      }
+    });
+  } catch (err) {
+    console.error("Error loading bracelets:", err);
+    alert("⚠️ Could not load bracelets. Please try again later.");
+  }
 }
 
-loadBracelets();
-
+// Submit order safely
 async function submitOrder() {
   const name = document.getElementById("braceletName").value.trim();
   const email = document.getElementById("braceletEmail").value.trim();
-  const braceletId = document.getElementById("braceletSelect").value;
-  const size = document.getElementById("braceletSize").value;
-  const color1 = document.getElementById("color1").value;
-  const color2 = document.getElementById("color2").value;
+  const braceletId = braceletSelect.value;
+  const size = sizeSelect.value;
+  const color1 = color1Select.value;
+  const color2 = color2Select.value;
   const qty = parseInt(document.getElementById("braceletQty").value) || 1;
   const payment = document.getElementById("braceletPayment").value;
 
@@ -226,34 +231,24 @@ async function submitOrder() {
     return alert("⚠️ Please fill all fields correctly.");
   }
 
-  const braceletRef = doc(db, "products_bracelets", braceletId);
-  const braceletSnap = await getDoc(braceletRef);
-  if (!braceletSnap.exists()) return alert("❌ Bracelet not found.");
-
-  const data = braceletSnap.data();
-
-  if (data.stock && qty > data.stock) {
-    return alert(`⚠️ Only ${data.stock} items in stock for this bracelet.`);
-  }
-
-  const total = data.price * qty;
-
   try {
+    const braceletRef = doc(db, "products_bracelets", braceletId);
+    const braceletSnap = await getDoc(braceletRef);
+    if (!braceletSnap.exists()) return alert("❌ Bracelet not found.");
+
+    const data = braceletSnap.data();
+
+    if (data.stock && qty > data.stock) {
+      return alert(`⚠️ Only ${data.stock} items in stock for this bracelet.`);
+    }
+
+    const total = data.price * qty;
+
     await addDoc(collection(db, "braceletOrders"), {
-      name,
-      email,
-      product: data.type,
-      size,
-      color1,
-      color2,
-      qty,
-      total,
-      payment,
-      createdAt: new Date(),
-      status: "Pending"
+      name, email, product: data.type, size, color1, color2, qty, total,
+      payment, createdAt: new Date(), status: "Pending"
     });
 
-    const paypalDiv = document.getElementById("paypalContainer");
     if (payment === "PayPal") {
       const link = data.paypalLink || "#";
       paypalDiv.innerHTML = `
@@ -267,12 +262,20 @@ async function submitOrder() {
       alert(`✅ Order submitted! Total: $${total.toFixed(2)} | Payment: Cash`);
     }
 
-    document.getElementById("braceletForm").reset();
+    form.reset();
   } catch (err) {
-    console.error(err);
+    console.error("Order submission failed:", err);
     alert("❌ Failed to submit order. Please try again.");
   }
 }
+
+// Make function accessible to HTML onclick
+window.submitOrder = submitOrder;
+
+// Attach event listener instead of inline onclick
+document.getElementById("submitBtn").addEventListener("click", submitOrder);
+
+loadBracelets();
 </script>
 </body>
 </html>
