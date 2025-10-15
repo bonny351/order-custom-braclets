@@ -57,6 +57,11 @@ input, select {
   margin-top: 5px;
   font-size: 14px;
 }
+select:disabled {
+  background: #555;
+  color: #aaa;
+  cursor: not-allowed;
+}
 button {
   margin-top: 20px;
   padding: 12px;
@@ -94,6 +99,11 @@ button:hover {
   border-radius: 12px;
   box-shadow: 0 0 10px #ff0000;
 }
+#priceDisplay {
+  margin-top: 5px;
+  font-weight: bold;
+  color: #ffb347;
+}
 </style>
 </head>
 <body>
@@ -117,6 +127,7 @@ button:hover {
 
   <label>Size</label>
   <select id="braceletSize" required></select>
+  <p id="priceDisplay">Price: $0.00</p>
 
   <label>Color 1</label>
   <select id="color1" required></select>
@@ -177,8 +188,13 @@ const braceletSelect = document.getElementById("braceletSelect");
 const sizeSelect = document.getElementById("braceletSize");
 const color1Select = document.getElementById("color1");
 const color2Select = document.getElementById("color2");
+const clipTypeSelect = document.getElementById("clipType");
+const clipColorSelect = document.getElementById("clipColor");
 const paypalDiv = document.getElementById("paypalContainer");
+const priceDisplay = document.getElementById("priceDisplay");
 const form = document.getElementById("braceletForm");
+
+let currentBraceletData = null;
 
 // Load bracelets safely
 async function loadBracelets() {
@@ -196,17 +212,9 @@ async function loadBracelets() {
       const data = docSnap.data();
       const opt = document.createElement("option");
       opt.value = docSnap.id;
-      opt.textContent = data.type + " - $" + data.price + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
+      opt.textContent = data.type + " - $" + (typeof data.price === "object" ? Math.min(...Object.values(data.price)) : data.price) + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
       opt.disabled = !data.stock || data.stock === 0;
       braceletSelect.appendChild(opt);
-
-      if (data.size && !sizesSet.has(data.size)) {
-        sizesSet.add(data.size);
-        const sizeOpt = document.createElement("option");
-        sizeOpt.value = data.size;
-        sizeOpt.textContent = data.size;
-        sizeSelect.appendChild(sizeOpt);
-      }
 
       if (data.colorOptions) {
         data.colorOptions.forEach(color => {
@@ -231,6 +239,48 @@ async function loadBracelets() {
   }
 }
 
+// When bracelet changes, populate sizes and reset price
+braceletSelect.addEventListener("change", async () => {
+  const braceletId = braceletSelect.value;
+  if (!braceletId) return;
+
+  const docSnap = await getDoc(doc(db, "products_bracelets", braceletId));
+  if (!docSnap.exists()) return;
+
+  currentBraceletData = docSnap.data();
+
+  // Populate size dropdown
+  sizeSelect.innerHTML = '<option value="">Select Size</option>';
+  currentBraceletData.sizeOptions.forEach(size => {
+    const opt = document.createElement("option");
+    opt.value = size;
+    opt.textContent = size;
+    sizeSelect.appendChild(opt);
+  });
+
+  // Reset price display
+  priceDisplay.textContent = "Price: $0.00";
+});
+
+// Update price when size changes
+sizeSelect.addEventListener("change", () => {
+  if (!currentBraceletData) return;
+  const selectedSize = sizeSelect.value;
+  const price = currentBraceletData.price[selectedSize] || 0;
+  priceDisplay.textContent = `Price: $${price.toFixed(2)}`;
+});
+
+// Disable clip color for certain clip types
+clipTypeSelect.addEventListener("change", () => {
+  const type = clipTypeSelect.value;
+  if (type === "Adjustable Knot" || type === "Metal") {
+    clipColorSelect.value = "";
+    clipColorSelect.disabled = true;
+  } else {
+    clipColorSelect.disabled = false;
+  }
+});
+
 // Submit order safely
 async function submitOrder() {
   const name = document.getElementById("braceletName").value.trim();
@@ -239,39 +289,32 @@ async function submitOrder() {
   const size = sizeSelect.value;
   const color1 = color1Select.value;
   const color2 = color2Select.value;
-  const clipType = document.getElementById("clipType").value;
-  const clipColor = document.getElementById("clipColor").value;
+  const clipType = clipTypeSelect.value;
+  const clipColor = clipColorSelect.value;
   const qty = parseInt(document.getElementById("braceletQty").value) || 1;
   const payment = document.getElementById("braceletPayment").value;
 
-  if (!name || !email || !braceletId || !size || !color1 || !color2 || !clipType || !clipColor) {
+  if (!name || !email || !braceletId || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
     return alert("⚠️ Please fill all fields correctly.");
   }
 
+  if (!currentBraceletData) return alert("❌ Bracelet data not loaded.");
+
+  const price = currentBraceletData.price[size] || 0;
+  const total = price * qty;
+
   try {
-    const braceletRef = doc(db, "products_bracelets", braceletId);
-    const braceletSnap = await getDoc(braceletRef);
-    if (!braceletSnap.exists()) return alert("❌ Bracelet not found.");
-
-    const data = braceletSnap.data();
-
-    if (data.stock && qty > data.stock) {
-      return alert(`⚠️ Only ${data.stock} items in stock for this bracelet.`);
-    }
-
-    const total = data.price * qty;
-
     await addDoc(collection(db, "braceletOrders"), {
-      name, email, product: data.type, size, color1, color2,
+      name, email, product: currentBraceletData.type, size, color1, color2,
       clipType, clipColor, qty, total, payment,
       createdAt: new Date(), status: "Pending"
     });
 
     if (payment === "PayPal") {
-      const link = data.paypalLink || "#";
+      const link = currentBraceletData.paypalLink || "#";
       paypalDiv.innerHTML = `
         <p>Order submitted! Total: $${total.toFixed(2)}</p>
-        <p>${data.type} | Size: ${size} | Colors: ${color1}, ${color2} | Clip: ${clipType} (${clipColor}) | Qty: ${qty}</p>
+        <p>${currentBraceletData.type} | Size: ${size} | Colors: ${color1}, ${color2} | Clip: ${clipType} ${clipColor ? `(${clipColor})` : ""} | Qty: ${qty}</p>
         <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>
       `;
       paypalDiv.style.display = "block";
@@ -281,6 +324,9 @@ async function submitOrder() {
     }
 
     form.reset();
+    priceDisplay.textContent = "Price: $0.00";
+    clipColorSelect.disabled = false;
+    currentBraceletData = null;
   } catch (err) {
     console.error("Order submission failed:", err);
     alert("❌ Failed to submit order. Please try again.");
