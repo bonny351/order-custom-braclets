@@ -23,7 +23,7 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
 </style>
 </head>
 <body class="flex flex-col items-center">
-<div class="max-w-6xl w-full">
+<div class="max-w-7xl w-full">
   <h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
 
   <!-- Tabs -->
@@ -33,11 +33,9 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
     <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
   </div>
 
-  <!-- Products Section -->
+  <!-- PRODUCTS -->
   <section class="card">
-    <h2 class="text-xl font-semibold mb-2">Products 
-      <button onclick="addProduct()" class="ml-4 text-sm px-2 py-1 bg-green-600 hover:bg-green-700 rounded">+ Add Product</button>
-    </h2>
+    <h2 class="text-xl font-semibold mb-2 flex justify-between items-center">Products <button onclick="addProduct()">➕ Add Product</button></h2>
     <div class="table-container">
       <table>
         <thead>
@@ -46,17 +44,19 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
             <th>SKU</th>
             <th>Price</th>
             <th>Stock</th>
+            <th>Supplier</th>
+            <th>Payment Link</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="productsTable">
-          <tr><td colspan="5" class="text-center p-4 text-gray-400">Loading...</td></tr>
+          <tr><td colspan="7" class="text-center p-4 text-gray-400">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
-  <!-- Orders Section -->
+  <!-- ORDERS -->
   <section class="card">
     <h2 class="text-xl font-semibold mb-2">Orders</h2>
     <div class="table-container">
@@ -67,12 +67,12 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
             <th>Name</th>
             <th>Email</th>
             <th>Product</th>
-            <th>Size / Color</th>
+            <th>Size</th>
             <th>Qty</th>
             <th>Total</th>
             <th>Address</th>
-            <th>Payment</th>
             <th>Status</th>
+            <th>Payment</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -86,7 +86,7 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -101,12 +101,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentTab = "cookies";
-const tabs = {
-  cookies: document.getElementById("tabCookies"),
-  bracelets: document.getElementById("tabBracelets"),
-  spirit: document.getElementById("tabSpirit")
-};
-
+const tabs = { cookies: document.getElementById("tabCookies"), bracelets: document.getElementById("tabBracelets"), spirit: document.getElementById("tabSpirit") };
 Object.entries(tabs).forEach(([key, el])=>{
   el.addEventListener("click", ()=>{
     currentTab = key;
@@ -120,7 +115,7 @@ const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
 
 async function loadData(){
-  productsTable.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
+  productsTable.innerHTML = "<tr><td colspan='7' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
   ordersTable.innerHTML = "<tr><td colspan='11' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
 
   const prodCol = collection(db, `products_${currentTab}`);
@@ -132,20 +127,18 @@ async function loadData(){
 }
 
 function renderProducts(docs){
-  productsTable.innerHTML = docs.length? "": `<tr><td colspan='5' class='text-center text-gray-400'>No products found</td></tr>`;
+  productsTable.innerHTML = docs.length? "": `<tr><td colspan='7' class='text-center text-gray-400'>No products found</td></tr>`;
   docs.forEach(docSnap=>{
     const d = docSnap.data();
-    const displayName = d.name || d.productName || d.type || "Unnamed Product";
     const tr = document.createElement("tr");
     tr.innerHTML=`
-      <td><input value="${displayName}" id="name-${docSnap.id}"></td>
-      <td><input value="${d.sku||""}" id="sku-${docSnap.id}"></td>
+      <td><input value="${d.name||d.type||''}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku||''}" id="sku-${docSnap.id}"></td>
       <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
       <td><input type="number" value="${d.stock??0}" id="stock-${docSnap.id}"></td>
-      <td class="flex gap-2">
-        <button onclick="saveProduct('${docSnap.id}')">💾</button>
-        <button onclick="deleteProduct('${docSnap.id}')">🗑️</button>
-      </td>
+      <td><input value="${d.supplier||''}" id="supplier-${docSnap.id}"></td>
+      <td><input value="${d.paymentLink||''}" id="pay-${docSnap.id}"></td>
+      <td class="flex gap-2"><button onclick="saveProduct('${docSnap.id}')">💾</button><button onclick="deleteProduct('${docSnap.id}')">🗑️</button></td>
     `;
     productsTable.appendChild(tr);
   });
@@ -161,79 +154,55 @@ function renderOrders(docs){
       <td><input value="${d.name||''}" id="oname-${docSnap.id}"></td>
       <td><input value="${d.email||''}" id="oemail-${docSnap.id}"></td>
       <td><input value="${d.product||''}" id="oproduct-${docSnap.id}"></td>
-      <td><input value="${d.size||d.color1? `${d.size||''} ${d.color1||''} ${d.color2||''}`:''}" id="osize-${docSnap.id}"></td>
+      <td><input value="${d.size||''}" id="osize-${docSnap.id}" placeholder="Size"></td>
       <td><input type="number" value="${d.qty||1}" id="oqty-${docSnap.id}"></td>
       <td><input type="number" value="${d.total||0}" id="ototal-${docSnap.id}"></td>
       <td><input value="${d.address||''}" id="oaddress-${docSnap.id}"></td>
-      <td>
-        <select id="opayment-${docSnap.id}">
-          <option value="PayPal" ${d.payment==='PayPal'?'selected':''}>PayPal</option>
-          <option value="Cash" ${d.payment==='Cash'?'selected':''}>Cash</option>
-        </select>
-      </td>
-      <td>
-        <select id="ostatus-${docSnap.id}">
-          <option value="Pending" ${d.status==='Pending'?'selected':''}>Pending</option>
-          <option value="Completed" ${d.status==='Completed'?'selected':''}>Completed</option>
-          <option value="Cancelled" ${d.status==='Cancelled'?'selected':''}>Cancelled</option>
-        </select>
-      </td>
-      <td class="flex gap-2">
-        <button onclick="saveOrder('${docSnap.id}')">💾</button>
-        <button onclick="deleteOrder('${docSnap.id}')">🗑️</button>
-      </td>
+      <td><select id="ostatus-${docSnap.id}">${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}</select></td>
+      <td><select id="opayment-${docSnap.id}"><option value="PayPal" ${d.payment==="PayPal"?"selected":""}>PayPal</option><option value="Cash" ${d.payment==="Cash"?"selected":""}>Cash</option></select></td>
+      <td class="flex gap-2"><button onclick="saveOrder('${docSnap.id}')">💾</button><button onclick="deleteOrder('${docSnap.id}')">🗑️</button></td>
     `;
     ordersTable.appendChild(tr);
   });
 }
 
-async function saveProduct(id){
-  const name = document.getElementById(`name-${id}`).value;
-  const sku = document.getElementById(`sku-${id}`).value;
-  const price = parseFloat(document.getElementById(`price-${id}`).value);
-  const stock = parseInt(document.getElementById(`stock-${id}`).value);
-  await updateDoc(doc(db, `products_${currentTab}`, id), {name, sku, price, stock});
-  alert("Product updated!");
-}
+window.saveProduct=async id=>{
+  const ref=doc(db, `products_${currentTab}`, id);
+  await updateDoc(ref,{
+    name: document.getElementById(`name-${id}`).value.trim(),
+    sku: document.getElementById(`sku-${id}`).value.trim(),
+    price: parseFloat(document.getElementById(`price-${id}`).value)||0,
+    stock: parseInt(document.getElementById(`stock-${id}`).value)||0,
+    supplier: document.getElementById(`supplier-${id}`).value.trim(),
+    paymentLink: document.getElementById(`pay-${id}`).value.trim()
+  });
+  alert("✅ Product saved!");
+};
 
-async function deleteProduct(id){
-  if(confirm("Delete this product?")){
-    await deleteDoc(doc(db, `products_${currentTab}`, id));
-    loadData();
-  }
-}
+window.saveOrder=async id=>{
+  const ref=doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id);
+  await updateDoc(ref,{
+    name: document.getElementById(`oname-${id}`).value.trim(),
+    email: document.getElementById(`oemail-${id}`).value.trim(),
+    product: document.getElementById(`oproduct-${id}`).value.trim(),
+    size: document.getElementById(`osize-${id}`).value.trim(),
+    qty: parseInt(document.getElementById(`oqty-${id}`).value)||1,
+    total: parseFloat(document.getElementById(`ototal-${id}`).value)||0,
+    address: document.getElementById(`oaddress-${id}`).value.trim(),
+    status: document.getElementById(`ostatus-${id}`).value,
+    payment: document.getElementById(`opayment-${id}`).value
+  });
+  alert("✅ Order updated!");
+};
 
-async function addProduct(){
-  const name = prompt("Product name:");
-  if(!name) return;
-  await addDoc(collection(db, `products_${currentTab}`), {name, sku:"", price:0, stock:0});
+window.deleteProduct=async id=>{ await deleteDoc(doc(db, `products_${currentTab}`, id)); loadData(); };
+window.deleteOrder=async id=>{ await deleteDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id)); loadData(); };
+
+window.addProduct = async ()=>{
+  const ref = await addDoc(collection(db, `products_${currentTab}`), { name:"New Product", sku:"", price:0, stock:0, supplier:"", paymentLink:"" });
   loadData();
-}
+};
 
-async function saveOrder(id){
-  const name = document.getElementById(`oname-${id}`).value;
-  const email = document.getElementById(`oemail-${id}`).value;
-  const product = document.getElementById(`oproduct-${id}`).value;
-  const size = document.getElementById(`osize-${id}`).value;
-  const qty = parseInt(document.getElementById(`oqty-${id}`).value);
-  const total = parseFloat(document.getElementById(`ototal-${id}`).value);
-  const address = document.getElementById(`oaddress-${id}`).value;
-  const payment = document.getElementById(`opayment-${id}`).value;
-  const status = document.getElementById(`ostatus-${id}`).value;
-
-  await updateDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id), 
-    {name,email,product,size,qty,total,address,payment,status});
-  alert("Order updated!");
-}
-
-async function deleteOrder(id){
-  if(confirm("Delete this order?")){
-    await deleteDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id));
-    loadData();
-  }
-}
-
-// Initial load
 loadData();
 </script>
 </body>
