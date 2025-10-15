@@ -161,45 +161,56 @@ const color2Select = document.getElementById("color2");
 
 async function loadBracelets() {
   const snapshot = await getDocs(collection(db, "products_bracelets"));
+
+  // Clear previous options
   braceletSelect.innerHTML = '<option value="">Select Bracelet</option>';
   sizeSelect.innerHTML = '<option value="">Select Size</option>';
   color1Select.innerHTML = '<option value="">Select Color 1</option>';
   color2Select.innerHTML = '<option value="">Select Color 2</option>';
 
+  const sizesSet = new Set();
+  const colorsSet = new Set();
+
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
+
+    // Bracelet selection
     const opt = document.createElement("option");
     opt.value = docSnap.id;
     opt.textContent = data.type + " - $" + data.price + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
     opt.disabled = !data.stock || data.stock === 0;
     braceletSelect.appendChild(opt);
 
-    // Fill sizes
-    if (data.size) {
+    // Sizes (unique)
+    if (data.size && !sizesSet.has(data.size)) {
+      sizesSet.add(data.size);
       const sizeOpt = document.createElement("option");
       sizeOpt.value = data.size;
       sizeOpt.textContent = data.size;
       sizeSelect.appendChild(sizeOpt);
     }
 
-    // Fill colors
+    // Colors (unique)
     if (data.colorOptions) {
       data.colorOptions.forEach(color => {
-        const c1 = document.createElement("option");
-        c1.value = color;
-        c1.textContent = color;
-        color1Select.appendChild(c1);
+        if (!colorsSet.has(color)) {
+          colorsSet.add(color);
+          const c1 = document.createElement("option");
+          c1.value = color;
+          c1.textContent = color;
+          color1Select.appendChild(c1);
 
-        const c2 = document.createElement("option");
-        c2.value = color;
-        c2.textContent = color;
-        color2Select.appendChild(c2);
+          const c2 = document.createElement("option");
+          c2.value = color;
+          c2.textContent = color;
+          color2Select.appendChild(c2);
+        }
       });
     }
   });
 }
 
-await loadBracelets();
+loadBracelets();
 
 async function submitOrder() {
   const name = document.getElementById("braceletName").value.trim();
@@ -212,7 +223,7 @@ async function submitOrder() {
   const payment = document.getElementById("braceletPayment").value;
 
   if (!name || !email || !braceletId || !size || !color1 || !color2) {
-    return alert("⚠️ Please fill all fields.");
+    return alert("⚠️ Please fill all fields correctly.");
   }
 
   const braceletRef = doc(db, "products_bracelets", braceletId);
@@ -220,27 +231,47 @@ async function submitOrder() {
   if (!braceletSnap.exists()) return alert("❌ Bracelet not found.");
 
   const data = braceletSnap.data();
-  const total = data.price * qty;
 
-  await addDoc(collection(db, "braceletOrders"), {
-    name, email, product: data.type, size, color1, color2, qty, total, payment, createdAt: new Date(), status: "Pending"
-  });
-
-  const paypalDiv = document.getElementById("paypalContainer");
-  if (payment === "PayPal") {
-    const link = data.paypalLink || "#";
-    paypalDiv.innerHTML = `
-      <p>Order submitted! Total: $${total.toFixed(2)}</p>
-      <p>${data.type} | Size: ${size} | Colors: ${color1}, ${color2} | Quantity: ${qty}</p>
-      <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>
-    `;
-    paypalDiv.style.display = "block";
-  } else {
-    paypalDiv.style.display = "none";
-    alert(`✅ Order submitted! Total: $${total.toFixed(2)} | Payment: Cash`);
+  if (data.stock && qty > data.stock) {
+    return alert(`⚠️ Only ${data.stock} items in stock for this bracelet.`);
   }
 
-  document.getElementById("braceletForm").reset();
+  const total = data.price * qty;
+
+  try {
+    await addDoc(collection(db, "braceletOrders"), {
+      name,
+      email,
+      product: data.type,
+      size,
+      color1,
+      color2,
+      qty,
+      total,
+      payment,
+      createdAt: new Date(),
+      status: "Pending"
+    });
+
+    const paypalDiv = document.getElementById("paypalContainer");
+    if (payment === "PayPal") {
+      const link = data.paypalLink || "#";
+      paypalDiv.innerHTML = `
+        <p>Order submitted! Total: $${total.toFixed(2)}</p>
+        <p>${data.type} | Size: ${size} | Colors: ${color1}, ${color2} | Quantity: ${qty}</p>
+        <a href="${link}" target="_blank" class="paypal-btn">Pay with PayPal</a>
+      `;
+      paypalDiv.style.display = "block";
+    } else {
+      paypalDiv.style.display = "none";
+      alert(`✅ Order submitted! Total: $${total.toFixed(2)} | Payment: Cash`);
+    }
+
+    document.getElementById("braceletForm").reset();
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to submit order. Please try again.");
+  }
 }
 </script>
 </body>
