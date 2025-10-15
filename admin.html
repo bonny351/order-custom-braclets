@@ -33,6 +33,26 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
     <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
   </div>
 
+  <!-- Add Product & Fake Order Buttons -->
+  <div class="flex gap-4 mb-6 justify-center">
+    <button id="addProductBtn">➕ Add Product</button>
+    <button id="addFakeOrderBtn">🧪 Add Fake Order</button>
+  </div>
+
+  <!-- Inline Add Product Form -->
+  <section id="addProductForm" class="card hidden">
+    <h2 class="text-xl font-semibold mb-2">Add New Product</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <input type="text" id="newName" placeholder="Name / Type" />
+      <input type="text" id="newSKU" placeholder="SKU" />
+      <input type="number" id="newPrice" placeholder="Price" />
+      <input type="number" id="newStock" placeholder="Stock" />
+      <input type="text" id="newSupplier" placeholder="Supplier" />
+      <input type="text" id="newPaymentLink" placeholder="Payment Link" />
+    </div>
+    <button id="saveNewProductBtn" class="mt-4">💾 Save Product</button>
+  </section>
+
   <!-- PRODUCTS -->
   <section class="card">
     <h2 class="text-xl font-semibold mb-2">Products</h2>
@@ -45,11 +65,12 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
             <th>Price</th>
             <th>Stock</th>
             <th>Supplier</th>
+            <th>Payment Link</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="productsTable">
-          <tr><td colspan="6" class="text-center p-4 text-gray-400">Loading...</td></tr>
+          <tr><td colspan="7" class="text-center p-4 text-gray-400">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -71,11 +92,12 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
             <th>Total</th>
             <th>Address</th>
             <th>Status</th>
+            <th>Payment</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="ordersTable">
-          <tr><td colspan="10" class="text-center p-4 text-gray-400">Loading...</td></tr>
+          <tr><td colspan="11" class="text-center p-4 text-gray-400">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -84,7 +106,7 @@ button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -114,73 +136,124 @@ Object.entries(tabs).forEach(([key, el])=>{
 
 const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
+const addProductBtn = document.getElementById("addProductBtn");
+const addFakeOrderBtn = document.getElementById("addFakeOrderBtn");
+const addProductForm = document.getElementById("addProductForm");
+const saveNewProductBtn = document.getElementById("saveNewProductBtn");
+
+// Toggle Add Product form
+addProductBtn.addEventListener("click", ()=> addProductForm.classList.toggle("hidden") );
+
+// Save new product
+saveNewProductBtn.addEventListener("click", async ()=>{
+  const name = document.getElementById("newName").value.trim();
+  const sku = document.getElementById("newSKU").value.trim();
+  const price = parseFloat(document.getElementById("newPrice").value) || 0;
+  const stock = parseInt(document.getElementById("newStock").value) || 0;
+  const supplier = document.getElementById("newSupplier").value.trim();
+  const paymentLink = document.getElementById("newPaymentLink").value.trim();
+  if(!name){ alert("Enter product name!"); return; }
+
+  await addDoc(collection(db, `products_${currentTab}`), { name, sku, price, stock, supplier, paymentLink });
+  alert("✅ Product added!");
+  addProductForm.classList.add("hidden");
+  loadData();
+});
+
+// Add Fake Order
+addFakeOrderBtn.addEventListener("click", async ()=>{
+  const fakeOrder = {
+    name: "Test Customer",
+    email: "test@example.com",
+    product: "Sample Product",
+    size: "M",
+    qty: 1,
+    total: 19.99,
+    address: "123 Test St",
+    status: "Pending",
+    paymentLink: "https://example.com/fake-payment"
+  };
+  await addDoc(collection(db, currentTab==="spirit"?"spiritOrders":currentTab+"Orders"), fakeOrder);
+  alert("✅ Fake order added!");
+  loadData();
+});
 
 async function loadData(){
-  productsTable.innerHTML = "<tr><td colspan='6' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
-  ordersTable.innerHTML = "<tr><td colspan='10' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
+  productsTable.innerHTML = "<tr><td colspan='7' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
+  ordersTable.innerHTML = "<tr><td colspan='11' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
 
-  const prodCol = collection(db, `products_${currentTab}`);
-  const orderCol = collection(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`);
+  const prodSnap = await getDocs(collection(db, `products_${currentTab}`));
+  const orderSnap = await getDocs(collection(db, currentTab==="spirit"?"spiritOrders":currentTab+"Orders"));
 
-  const [prodSnap, orderSnap] = await Promise.all([getDocs(prodCol), getDocs(orderCol)]);
   renderProducts(prodSnap.docs);
   renderOrders(orderSnap.docs);
 }
 
 function renderProducts(docs){
-  productsTable.innerHTML = docs.length? "": `<tr><td colspan='6' class='text-center text-gray-400'>No products found</td></tr>`;
+  productsTable.innerHTML = docs.length ? "" : "<tr><td colspan='7' class='text-center text-gray-400'>No products found</td></tr>";
   docs.forEach(docSnap=>{
     const d = docSnap.data();
-    const displayName = d.name || d.productName || d.type || "Unnamed Product"; // fallback
     const tr = document.createElement("tr");
-    tr.innerHTML=`
-      <td><input value="${displayName}" id="name-${docSnap.id}"></td>
-      <td><input value="${d.sku||""}" id="sku-${docSnap.id}"></td>
+    tr.innerHTML = `
+      <td><input value="${d.name||''}" id="name-${docSnap.id}"></td>
+      <td><input value="${d.sku||''}" id="sku-${docSnap.id}"></td>
       <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
-      <td><input type="number" value="${d.stock??0}" id="stock-${docSnap.id}"></td>
-      <td><input value="${d.supplier||""}" id="supplier-${docSnap.id}"></td>
-      <td class="flex gap-2"><button onclick="saveProduct('${docSnap.id}')">💾</button><button onclick="deleteProduct('${docSnap.id}')">🗑️</button></td>
+      <td><input type="number" value="${d.stock||0}" id="stock-${docSnap.id}"></td>
+      <td><input value="${d.supplier||''}" id="supplier-${docSnap.id}"></td>
+      <td><input value="${d.paymentLink||''}" id="paymentLink-${docSnap.id}"></td>
+      <td class="flex gap-2">
+        <button onclick="saveProduct('${docSnap.id}')">💾</button>
+        <button onclick="deleteProduct('${docSnap.id}')">🗑️</button>
+      </td>
     `;
     productsTable.appendChild(tr);
   });
 }
 
 function renderOrders(docs){
-  ordersTable.innerHTML = docs.length? "": `<tr><td colspan='10' class='text-center text-gray-400'>No orders found</td></tr>`;
+  ordersTable.innerHTML = docs.length ? "" : "<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>";
   docs.forEach((docSnap,i)=>{
     const d = docSnap.data();
-    const displayName = d.name || d.customerName || "Unnamed";
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
       <td>#${i+1}</td>
-      <td><input value="${displayName}" id="oname-${docSnap.id}"></td>
-      <td><input value="${d.email||""}" id="oemail-${docSnap.id}"></td>
-      <td><input value="${d.product||""}" id="oproduct-${docSnap.id}"></td>
-      <td><input value="${d.size||""}" id="osize-${docSnap.id}" placeholder="Size"></td>
+      <td><input value="${d.name||''}" id="oname-${docSnap.id}"></td>
+      <td><input value="${d.email||''}" id="oemail-${docSnap.id}"></td>
+      <td><input value="${d.product||''}" id="oproduct-${docSnap.id}"></td>
+      <td><input value="${d.size||''}" id="osize-${docSnap.id}"></td>
       <td><input type="number" value="${d.qty||1}" id="oqty-${docSnap.id}"></td>
       <td><input type="number" value="${d.total||0}" id="ototal-${docSnap.id}"></td>
       <td><input value="${d.address||''}" id="oaddress-${docSnap.id}"></td>
-      <td><select id="ostatus-${docSnap.id}">${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}</select></td>
-      <td class="flex gap-2"><button onclick="saveOrder('${docSnap.id}')">💾</button><button onclick="deleteOrder('${docSnap.id}')">🗑️</button></td>
+      <td>
+        <select id="ostatus-${docSnap.id}">
+          ${["Pending","Processing","Completed","Cancelled"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join("")}
+        </select>
+      </td>
+      <td>${d.paymentLink ? `<a href="${d.paymentLink}" target="_blank" class="text-blue-400 underline">Pay Here</a>` : "<span class='text-gray-400 italic'>No link</span>"}</td>
+      <td class="flex gap-2">
+        <button onclick="saveOrder('${docSnap.id}')">💾</button>
+        <button onclick="deleteOrder('${docSnap.id}')">🗑️</button>
+      </td>
     `;
     ordersTable.appendChild(tr);
   });
 }
 
-window.saveProduct=async id=>{
-  const ref=doc(db, `products_${currentTab}`, id);
+window.saveProduct = async id=>{
+  const ref = doc(db, `products_${currentTab}`, id);
   await updateDoc(ref,{
     name: document.getElementById(`name-${id}`).value.trim(),
     sku: document.getElementById(`sku-${id}`).value.trim(),
     price: parseFloat(document.getElementById(`price-${id}`).value)||0,
     stock: parseInt(document.getElementById(`stock-${id}`).value)||0,
-    supplier: document.getElementById(`supplier-${id}`).value.trim()
+    supplier: document.getElementById(`supplier-${id}`).value.trim(),
+    paymentLink: document.getElementById(`paymentLink-${id}`).value.trim()
   });
   alert("✅ Product saved!");
 };
 
-window.saveOrder=async id=>{
-  const ref=doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id);
+window.saveOrder = async id=>{
+  const ref = doc(db, currentTab==="spirit"?"spiritOrders":currentTab+"Orders", id);
   await updateDoc(ref,{
     name: document.getElementById(`oname-${id}`).value.trim(),
     email: document.getElementById(`oemail-${id}`).value.trim(),
@@ -194,8 +267,8 @@ window.saveOrder=async id=>{
   alert("✅ Order updated!");
 };
 
-window.deleteProduct=async id=>{ await deleteDoc(doc(db, `products_${currentTab}`, id)); loadData(); };
-window.deleteOrder=async id=>{ await deleteDoc(doc(db, `${currentTab==="spirit"?"spiritOrders":currentTab+"Orders"}`, id)); loadData(); };
+window.deleteProduct = async id=>{ await deleteDoc(doc(db, `products_${currentTab}`, id)); loadData(); };
+window.deleteOrder = async id=>{ await deleteDoc(doc(db, currentTab==="spirit"?"spiritOrders":currentTab+"Orders", id)); loadData(); };
 
 loadData();
 </script>
