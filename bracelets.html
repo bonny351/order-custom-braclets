@@ -119,8 +119,11 @@ button:hover {
   <label>Name</label>
   <input id="braceletName" type="text" required />
 
+  <label>Phone Number</label>
+  <input id="braceletPhone" type="tel" placeholder="e.g., 123-456-7890" />
+
   <label>Email</label>
-  <input id="braceletEmail" type="email" required />
+  <input id="braceletEmail" type="email" placeholder="e.g., you@example.com" />
 
   <label>Choose Bracelet</label>
   <select id="braceletSelect" required></select>
@@ -196,7 +199,7 @@ const form = document.getElementById("braceletForm");
 
 let currentBraceletData = null;
 
-// Load bracelets safely
+// Load bracelets
 async function loadBracelets() {
   try {
     const snapshot = await getDocs(collection(db, "products_bracelets"));
@@ -210,7 +213,6 @@ async function loadBracelets() {
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       const opt = document.createElement("option");
-      // Show lowest price as hint
       const minPrice = typeof data.price === "object" ? Math.min(...Object.values(data.price)) : data.price;
       opt.value = docSnap.id;
       opt.textContent = data.type + " - $" + minPrice + (data.stock ? ` (${data.stock} in stock)` : " - Out of stock");
@@ -240,7 +242,7 @@ async function loadBracelets() {
   }
 }
 
-// Populate sizes & reset price when bracelet changes
+// Populate sizes & reset price
 braceletSelect.addEventListener("change", async () => {
   const braceletId = braceletSelect.value;
   if (!braceletId) return;
@@ -250,7 +252,6 @@ braceletSelect.addEventListener("change", async () => {
 
   currentBraceletData = docSnap.data();
 
-  // Populate size dropdown
   sizeSelect.innerHTML = '<option value="">Select Size</option>';
   currentBraceletData.sizeOptions.forEach(size => {
     const opt = document.createElement("option");
@@ -262,7 +263,7 @@ braceletSelect.addEventListener("change", async () => {
   priceDisplay.textContent = "Price: $0.00";
 });
 
-// Update price when size changes
+// Update price
 sizeSelect.addEventListener("change", () => {
   if (!currentBraceletData) return;
   const selectedSize = sizeSelect.value;
@@ -270,7 +271,7 @@ sizeSelect.addEventListener("change", () => {
   priceDisplay.textContent = `Price: $${price.toFixed(2)}`;
 });
 
-// Disable clip color for certain clip types
+// Disable clip color for certain types
 clipTypeSelect.addEventListener("change", () => {
   const type = clipTypeSelect.value;
   if (type === "Adjustable Knot" || type === "Metal") {
@@ -284,6 +285,7 @@ clipTypeSelect.addEventListener("change", () => {
 // Submit order
 async function submitOrder() {
   const name = document.getElementById("braceletName").value.trim();
+  const phone = document.getElementById("braceletPhone").value.trim();
   const email = document.getElementById("braceletEmail").value.trim();
   const braceletId = braceletSelect.value;
   const size = sizeSelect.value;
@@ -294,20 +296,32 @@ async function submitOrder() {
   const qty = parseInt(document.getElementById("braceletQty").value) || 1;
   const payment = document.getElementById("braceletPayment").value;
 
-  if (!name || !email || !braceletId || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
-    return alert("⚠️ Please fill all fields correctly.");
+  // Require name + bracelet + size + colors + clip, AND either phone OR email
+  if (!name || (!phone && !email) || !braceletId || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
+    return alert("⚠️ Please fill all required fields. Provide either phone number or email.");
   }
 
   if (!currentBraceletData) return alert("❌ Bracelet data not loaded.");
 
-  const price = currentBraceletData.price[size] || 0; // price depends only on size
+  const price = currentBraceletData.price[size] || 0;
   const total = price * qty;
 
   try {
     await addDoc(collection(db, "braceletOrders"), {
-      name, email, product: currentBraceletData.type, size, color1, color2,
-      clipType, clipColor, qty, total, payment,
-      createdAt: new Date(), status: "Pending"
+      name,
+      phone: phone || null,
+      email: email || null,
+      product: currentBraceletData.type,
+      size,
+      color1,
+      color2,
+      clipType,
+      clipColor,
+      qty,
+      total,
+      payment,
+      createdAt: new Date(),
+      status: "Pending"
     });
 
     if (payment === "PayPal") {
