@@ -3,247 +3,220 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tactics & Treats – Admin Dashboard</title>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+<title>Admin Panel – Tactics & Treats</title>
 <style>
-body { background: linear-gradient(135deg, #1a0000, #330000); color: #f5f5f5; font-family: 'Poppins', sans-serif; min-height: 100vh; padding: 2rem 1rem; }
-h1,h2,h3 { color: #ffdddd; letter-spacing: 0.5px; }
-.card { background: rgba(20,0,0,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); padding: 1.5rem; margin-bottom: 2rem; }
-.tab-btn { cursor: pointer; padding: 10px 20px; font-weight: 600; border-radius: 12px 12px 0 0; background: rgba(128,0,0,0.5); color: #ddd; margin-right: 6px; transition: all 0.3s ease; }
-.tab-btn:hover { background: rgba(255,0,0,0.35); }
-.tab-btn.active { background: #ff0000; color: #fff; box-shadow: 0 3px 12px rgba(255,0,0,0.4); }
-.table-container { overflow-x: auto; border-radius: 10px; }
-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
-th { background: rgba(128,0,0,0.8); color: #fff; font-weight: 600; text-transform: uppercase; padding: 10px; }
-td { background: rgba(255,255,255,0.03); padding: 8px; }
-tr:hover td { background: rgba(255,0,0,0.1); }
-input, select { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px 8px; border-radius: 6px; width: 100%; }
-button { background: linear-gradient(90deg,#b00,#e00); color:white; border:none; border-radius:8px; padding:6px 12px; font-weight:600; transition: all 0.3s; }
-button:hover { transform: translateY(-1px); background: linear-gradient(90deg,#e00,#ff3333); }
+body { font-family: "Poppins", sans-serif; background:#111; color:white; padding:20px;}
+h1,h2 { color:#ff0000; text-align:center; }
+section { margin-bottom:40px; }
+table { width:100%; border-collapse:collapse; margin-top:10px;}
+th,td { padding:8px; border:1px solid #ff0000;}
+th { background:#222; color:#ffb347; }
+tr:nth-child(even) { background:#222; }
+input, select, textarea, button { padding:8px; margin:5px 0; border-radius:5px; border:none; font-size:14px;}
+button { background:#ff0000; color:white; font-weight:bold; cursor:pointer; transition:0.2s;}
+button:hover { background:darkred;}
+.message { color:#ffb347; font-weight:bold; text-align:center; margin-top:10px;}
+.flex { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.flex input, .flex select { flex:1; }
+.tabs { display:flex; justify-content:center; margin-bottom:15px; gap:10px; }
+.tab { padding:10px 20px; cursor:pointer; border-radius:5px; background:#222; color:#fff; font-weight:bold;}
+.tab.active { background:#ff0000; color:#fff;}
 </style>
 </head>
-<body class="flex flex-col items-center">
-<div class="max-w-7xl w-full">
-  <h1 class="text-4xl font-bold text-center mb-10 tracking-wide text-red-400">Admin Dashboard – Tactics & Treats</h1>
+<body>
 
-  <!-- Tabs -->
-  <div class="flex justify-center mb-6">
-    <div id="tabCookies" class="tab-btn active">🍪 Cookies</div>
-    <div id="tabBracelets" class="tab-btn">🧵 Bracelets</div>
-    <div id="tabSpirit" class="tab-btn">👕 Spirit Wear</div>
-  </div>
+<h1>Admin Panel – Tactics & Treats</h1>
 
-  <!-- Products Section -->
-  <section class="card">
-    <div class="flex justify-between items-center mb-2">
-      <h2 class="text-xl font-semibold">Products</h2>
-      <button onclick="addProduct()">➕ Add Product</button>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Name / Type</th>
-            <th>SKU</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Supplier</th>
-            <th>Size</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="productsTable">
-          <tr><td colspan="7" class="text-center p-4 text-gray-400">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- Orders Section -->
-  <section class="card">
-    <div class="flex justify-between items-center mb-2">
-      <h2 class="text-xl font-semibold">Orders</h2>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Product</th>
-            <th>Size</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th>Address</th>
-            <th>Status</th>
-            <th>Payment</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="ordersTable">
-          <tr><td colspan="11" class="text-center p-4 text-gray-400">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+<div class="tabs">
+  <div class="tab active" data-category="bracelets">🧵 Bracelets</div>
+  <div class="tab" data-category="cookies">🍪 Cookies</div>
+  <div class="tab" data-category="spirit">👕 Spirit Wear</div>
 </div>
+
+<section id="productManager">
+<h2>Manage Products</h2>
+<form id="productForm">
+  <div class="flex">
+    <input id="productId" type="text" placeholder="Product ID (for editing only)">
+    <input id="productType" type="text" placeholder="Product Name / Type" required>
+    <input id="productPrice" type="text" placeholder="Price (number or JSON for sizes)" required>
+  </div>
+  <div class="flex">
+    <input id="productStock" type="number" placeholder="Stock" required>
+    <input id="productSizes" type="text" placeholder="Sizes (comma separated)">
+    <input id="productColors" type="text" placeholder="Colors (comma separated)">
+  </div>
+  <div class="flex">
+    <button type="button" id="addProductBtn">Add Product</button>
+    <button type="button" id="updateProductBtn">Update Product</button>
+    <button type="button" id="deleteProductBtn">Delete Product</button>
+    <button type="button" id="reAddBraceletsBtn">🔄 Re-add All Bracelets</button>
+  </div>
+  <p id="productMsg" class="message"></p>
+</form>
+
+<table id="productTable">
+<tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Colors</th></tr>
+</table>
+</section>
+
+<section id="orderManager">
+<h2>Orders</h2>
+<table id="ordersTable">
+<tr>
+<th>Category</th><th>Name</th><th>Email</th><th>Product</th><th>Size</th><th>Qty</th><th>Total</th><th>Status</th>
+</tr>
+</table>
+<p id="orderMsg" class="message"></p>
+</section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-  authDomain: "bracelets-and-color.firebaseapp.com",
-  projectId: "bracelets-and-color",
-  storageBucket: "bracelets-and-color.appspot.com",
-  messagingSenderId: "382292570673",
-  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+  apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain:"bracelets-and-color.firebaseapp.com",
+  projectId:"bracelets-and-color",
+  storageBucket:"bracelets-and-color.appspot.com",
+  messagingSenderId:"382292570673",
+  appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let currentTab = "cookies";
-const tabs = {
-  cookies: document.getElementById("tabCookies"),
-  bracelets: document.getElementById("tabBracelets"),
-  spirit: document.getElementById("tabSpirit")
-};
+// --- DOM Elements ---
+const tabs = document.querySelectorAll(".tab");
+let currentCategory = "bracelets";
 
-const prodCollections = {
-  cookies: "products_cookies",
+const productIdInput = document.getElementById("productId");
+const productTypeInput = document.getElementById("productType");
+const productPriceInput = document.getElementById("productPrice");
+const productStockInput = document.getElementById("productStock");
+const productSizesInput = document.getElementById("productSizes");
+const productColorsInput = document.getElementById("productColors");
+const productMsg = document.getElementById("productMsg");
+const productTable = document.getElementById("productTable");
+const ordersTable = document.getElementById("ordersTable");
+
+// --- Collections ---
+const productCollections = {
   bracelets: "products_bracelets",
+  cookies: "products_cookies",
   spirit: "products_spirit"
 };
-
 const orderCollections = {
-  cookies: "cookieOrders",
   bracelets: "braceletOrders",
+  cookies: "cookieOrders",
   spirit: "spiritOrders"
 };
 
-Object.entries(tabs).forEach(([key, el])=>{
-  el.addEventListener("click", ()=>{
-    currentTab = key;
-    Object.values(tabs).forEach(t=>t.classList.remove("active"));
-    el.classList.add("active");
-    loadData();
+// --- Tabs ---
+tabs.forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    currentCategory = tab.dataset.category;
+    tabs.forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    loadProducts();
+    loadOrders();
   });
 });
 
-const productsTable = document.getElementById("productsTable");
-const ordersTable = document.getElementById("ordersTable");
-
-async function loadData(){
-  productsTable.innerHTML = "<tr><td colspan='7' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
-  ordersTable.innerHTML = "<tr><td colspan='11' class='text-center p-4 text-gray-400'>Loading...</td></tr>";
-
-  const prodSnap = await getDocs(collection(db, prodCollections[currentTab]));
-  const orderSnap = await getDocs(collection(db, orderCollections[currentTab]));
-
-  renderProducts(prodSnap.docs);
-  renderOrders(orderSnap.docs);
-}
-
-function renderProducts(docs){
-  productsTable.innerHTML = docs.length? "": `<tr><td colspan='7' class='text-center text-gray-400'>No products found</td></tr>`;
-  docs.forEach(docSnap=>{
-    const d = docSnap.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML=`
-      <td><input value="${d.name||d.type||''}" id="name-${docSnap.id}"></td>
-      <td><input value="${d.sku||''}" id="sku-${docSnap.id}"></td>
-      <td><input type="number" value="${d.price||0}" id="price-${docSnap.id}"></td>
-      <td><input type="number" value="${d.stock||0}" id="stock-${docSnap.id}"></td>
-      <td><input value="${d.supplier||''}" id="supplier-${docSnap.id}"></td>
-      <td><input value="${d.size||''}" id="size-${docSnap.id}"></td>
-      <td class="flex gap-2"><button onclick="saveProduct('${docSnap.id}')">💾</button><button onclick="deleteProduct('${docSnap.id}')">🗑️</button></td>
-    `;
-    productsTable.appendChild(tr);
+// --- Load Products ---
+async function loadProducts(){
+  productTable.innerHTML='<tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Colors</th></tr>';
+  const snap = await getDocs(collection(db, productCollections[currentCategory]));
+  snap.forEach(docSnap=>{
+    const data=docSnap.data();
+    const row=productTable.insertRow();
+    row.insertCell(0).textContent=docSnap.id;
+    row.insertCell(1).textContent=data.type;
+    row.insertCell(2).textContent=JSON.stringify(data.price);
+    row.insertCell(3).textContent=data.stock;
+    row.insertCell(4).textContent=(data.sizeOptions||[]).join(",");
+    row.insertCell(5).textContent=(data.colorOptions||[]).join(",");
   });
 }
 
-function renderOrders(docs){
-  ordersTable.innerHTML = docs.length? "": `<tr><td colspan='11' class='text-center text-gray-400'>No orders found</td></tr>`;
-  docs.forEach((docSnap,index)=>{
-    const d = docSnap.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML=`
-      <td>${index+1}</td>
-      <td><input value="${d.name||''}" id="orderName-${docSnap.id}"></td>
-      <td><input value="${d.email||''}" id="orderEmail-${docSnap.id}"></td>
-      <td><input value="${d.product||''}" id="orderProduct-${docSnap.id}"></td>
-      <td><input value="${d.size||''}" id="orderSize-${docSnap.id}"></td>
-      <td><input type="number" value="${d.quantity||d.qty||0}" id="orderQty-${docSnap.id}"></td>
-      <td><input type="number" value="${d.total||0}" id="orderTotal-${docSnap.id}"></td>
-      <td><input value="${d.address||''}" id="orderAddress-${docSnap.id}"></td>
-      <td><input value="${d.status||''}" id="orderStatus-${docSnap.id}"></td>
-      <td>
-        <select id="orderPayment-${docSnap.id}">
-          <option value="Cash" ${d.payment==='Cash'?'selected':''}>Cash</option>
-          <option value="PayPal" ${d.payment==='PayPal'?'selected':''}>PayPal</option>
-        </select>
-      </td>
-      <td class="flex gap-2"><button onclick="saveOrder('${docSnap.id}')">💾</button><button onclick="deleteOrder('${docSnap.id}')">🗑️</button></td>
-    `;
-    ordersTable.appendChild(tr);
-  });
-}
-
-// Product actions
-async function saveProduct(id){
-  const data = {
-    name: document.getElementById(`name-${id}`).value,
-    sku: document.getElementById(`sku-${id}`).value,
-    price: parseFloat(document.getElementById(`price-${id}`).value),
-    stock: parseInt(document.getElementById(`stock-${id}`).value),
-    supplier: document.getElementById(`supplier-${id}`).value,
-    size: document.getElementById(`size-${id}`).value
-  };
-  await updateDoc(doc(db, prodCollections[currentTab], id), data);
-  loadData();
-}
-
-async function deleteProduct(id){
-  if(confirm("Delete this product?")){
-    await deleteDoc(doc(db, prodCollections[currentTab], id));
-    loadData();
+// --- Load Orders ---
+async function loadOrders(){
+  ordersTable.innerHTML='<tr><th>Category</th><th>Name</th><th>Email</th><th>Product</th><th>Size</th><th>Qty</th><th>Total</th><th>Status</th></tr>';
+  for(const cat of Object.keys(orderCollections)){
+    const snap = await getDocs(collection(db, orderCollections[cat]));
+    snap.forEach(docSnap=>{
+      const data = docSnap.data();
+      const row = ordersTable.insertRow();
+      row.insertCell(0).textContent = cat;
+      row.insertCell(1).textContent = data.name;
+      row.insertCell(2).textContent = data.email;
+      row.insertCell(3).textContent = data.product;
+      row.insertCell(4).textContent = data.size || "-";
+      row.insertCell(5).textContent = data.qty;
+      row.insertCell(6).textContent = `$${data.total.toFixed(2)}`;
+      row.insertCell(7).textContent = data.status || "Pending";
+    });
   }
 }
 
-async function addProduct(){
-  const data = { name:"New Product", sku:"", price:0, stock:0, supplier:"", size:"" };
-  await addDoc(collection(db, prodCollections[currentTab]), data);
-  loadData();
+// --- Product Actions ---
+async function addOrUpdateProduct(update=false){
+  try{
+    const id = update ? productIdInput.value.trim() : productTypeInput.value.trim().toLowerCase().replace(/\s+/g,'-');
+    if(!id) { productMsg.textContent="⚠️ Product ID required"; return; }
+    let price = productPriceInput.value.trim();
+    try { price = JSON.parse(price); } catch(e){ price = parseFloat(price);}
+    await setDoc(doc(db, productCollections[currentCategory], id), {
+      type: productTypeInput.value.trim(),
+      price,
+      stock: parseInt(productStockInput.value),
+      sizeOptions: productSizesInput.value.split(",").map(s=>s.trim()).filter(s=>s),
+      colorOptions: productColorsInput.value.split(",").map(c=>c.trim()).filter(c=>c)
+    });
+    productMsg.textContent = update ? "✅ Product updated!" : "✅ Product added!";
+    loadProducts();
+  }catch(err){ console.error(err); productMsg.textContent="❌ Error saving product";}
 }
 
-// Order actions
-async function saveOrder(id){
-  const data = {
-    name: document.getElementById(`orderName-${id}`).value,
-    email: document.getElementById(`orderEmail-${id}`).value,
-    product: document.getElementById(`orderProduct-${id}`).value,
-    size: document.getElementById(`orderSize-${id}`).value,
-    quantity: parseInt(document.getElementById(`orderQty-${id}`).value),
-    total: parseFloat(document.getElementById(`orderTotal-${id}`).value),
-    address: document.getElementById(`orderAddress-${id}`).value,
-    status: document.getElementById(`orderStatus-${id}`).value,
-    payment: document.getElementById(`orderPayment-${id}`).value
-  };
-  await updateDoc(doc(db, orderCollections[currentTab], id), data);
-  loadData();
+async function deleteProduct(){
+  const id = productIdInput.value.trim();
+  if(!id){productMsg.textContent="⚠️ Enter Product ID to delete"; return;}
+  try{
+    await deleteDoc(doc(db, productCollections[currentCategory], id));
+    productMsg.textContent="✅ Product deleted!";
+    loadProducts();
+  }catch(err){console.error(err); productMsg.textContent="❌ Error deleting product";}
 }
 
-async function deleteOrder(id){
-  if(confirm("Delete this order?")){
-    await deleteDoc(doc(db, orderCollections[currentTab], id));
-    loadData();
-  }
+// --- Re-add all bracelets ---
+const allBracelets = [
+  {type:"Cobra", price:{"5\"":4.00,"6\"":4.75,"7\"":5.50,"8\"":6.50,"9\"":7.25,"10\"":8.00,"11\"":8.75,"12\"":9.50,"13\"":10.50,"14\"":11.25,"15\"":12.00,"16\"":12.75,"17\"":13.50,"18\"":14.50,"19\"":15.25,"20\"":16.00,"21\"":16.75,"22\"":17.50,"23\"":18.50,"24\"":19.25,"25\"":20.00,"26\"":20.75,"27\"":21.50,"28\"":22.50,"29\"":23.25,"30\"":24.00}, stock:10, sizeOptions:["5\"","6\"","7\"","8\"","9\"","10\"","11\"","12\"","13\"","14\"","15\"","16\"","17\"","18\"","19\"","20\"","21\"","22\"","23\"","24\"","25\"","26\"","27\"","28\"","29\"","30\""], colorOptions:["Red","Blue","Green","Black","Yellow"]},
+  {type:"King Cobra", price:{"5\"":5.25,"6\"":6.25,"7\"":7.25,"8\"":8.50,"9\"":9.50,"10\"":10.50,"11\"":11.50,"12\"":12.50,"13\"":13.75,"14\"":14.75,"15\"":15.75,"16\"":16.75,"17\"":17.75,"18\"":19.00,"19\"":20.00,"20\"":21.00,"21\"":22.00,"22\"":23.00,"23\"":24.25,"24\"":25.25,"25\"":26.25,"26\"":27.25,"27\"":28.25,"28\"":29.50,"29\"":30.50,"30\"":31.50}, stock:10, sizeOptions:["5\"","6\"","7\"","8\"","9\"","10\"","11\"","12\"","13\"","14\"","15\"","16\"","17\"","18\"","19\"","20\"","21\"","22\"","23\"","24\"","25\"","26\"","27\"","28\"","29\"","30\""], colorOptions:["Red","Blue","Green","Black","Yellow"]},
+  {type:"Fishtail", price:{"5\"":3.75,"6\"":4.50,"7\"":5.25,"8\"":6.00,"9\"":6.75,"10\"":7.50,"11\"":8.25,"12\"":9.00,"13\"":9.75,"14\"":10.50,"15\"":11.25,"16\"":12.00,"17\"":12.75,"18\"":13.50,"19\"":14.25,"20\"":15.00,"21\"":15.75,"22\"":16.50,"23\"":17.25,"24\"":18.00,"25\"":18.75,"26\"":19.50,"27\"":20.25,"28\"":21.00,"29\"":21.75,"30\"":22.50}, stock:10, sizeOptions:["5\"","6\"","7\"","8\"","9\"","10\"","11\"","12\"","13\"","14\"","15\"","16\"","17\"","18\"","19\"","20\"","21\"","22\"","23\"","24\"","25\"","26\"","27\"","28\"","29\"","30\""], colorOptions:["Red","Blue","Green","Black","Yellow"]},
+  {type:"Solomon / Trilobite", price:{"5\"":4.25,"6\"":5.00,"7\"":6.00,"8\"":6.75,"9\"":7.75,"10\"":8.50,"11\"":9.25,"12\"":10.25,"13\"":11.00,"14\"":12.00,"15\"":12.75,"16\"":13.50,"17\"":14.50,"18\"":15.25,"19\"":16.25,"20\"":17.00,"21\"":17.75,"22\"":18.75,"23\"":19.50,"24\"":20.50,"25\"":21.25,"26\"":22.00,"27\"":23.00,"28\"":23.75,"29\"":24.75,"30\"":25.50}, stock:10, sizeOptions:["5\"","6\"","7\"","8\"","9\"","10\"","11\"","12\"","13\"","14\"","15\"","16\"","17\"","18\"","19\"","20\"","21\"","22\"","23\"","24\"","25\"","26\"","27\"","28\"","29\"","30\""], colorOptions:["Red","Blue","Green","Black","Yellow"]}
+];
+
+async function reAddAllBracelets() {
+  if(!confirm("⚠️ This will overwrite/add all bracelet products. Continue?")) return;
+  try {
+    for(const b of allBracelets){
+      const id = b.type.toLowerCase().replace(/\s+/g,'-');
+      await setDoc(doc(db, productCollections["bracelets"], id), b);
+    }
+    alert("✅ All bracelets re-added!");
+    loadProducts();
+  } catch(e) { console.error(e); alert("❌ Error re-adding bracelets"); }
 }
 
-// Initial load
-loadData();
+// --- Event Listeners ---
+document.getElementById("addProductBtn").addEventListener("click", ()=>addOrUpdateProduct(false));
+document.getElementById("updateProductBtn").addEventListener("click", ()=>addOrUpdateProduct(true));
+document.getElementById("deleteProductBtn").addEventListener("click", deleteProduct);
+document.getElementById("reAddBraceletsBtn").addEventListener("click", reAddAllBracelets);
+
+// --- Initialize ---
+loadProducts();
+loadOrders();
 </script>
 </body>
 </html>
