@@ -74,9 +74,6 @@ button:hover { background: darkred; }
   <select id="cookieSelect" required></select>
   <span id="stockStatus"></span>
 
-  <label>Size</label>
-  <select id="cookieSize" required></select>
-
   <label>Quantity</label>
   <input id="cookieQty" type="number" min="1" value="1" required />
 
@@ -102,7 +99,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const cookieSelect = document.getElementById("cookieSelect");
-const cookieSize = document.getElementById("cookieSize");
 const stockStatus = document.getElementById("stockStatus");
 const orderMsg = document.getElementById("orderMsg");
 
@@ -118,7 +114,6 @@ onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
 // --- LIVE COOKIES ---
 onSnapshot(collection(db, "products_cookies"), snapshot => {
   cookieSelect.innerHTML = '<option value="">Select Cookie</option>';
-  cookieSize.innerHTML = '<option value="">Select Size</option>';
 
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
@@ -137,16 +132,6 @@ cookieSelect.addEventListener("change", async () => {
   const docSnap = await getDoc(doc(db, "products_cookies", id));
   if(!docSnap.exists()) return;
   currentCookieData = docSnap.data();
-
-  cookieSize.innerHTML = '<option value="">Select Size</option>';
-  if(currentCookieData.size) {
-    currentCookieData.size.forEach(sz => {
-      const opt = document.createElement("option");
-      opt.value = sz;
-      opt.textContent = sz;
-      cookieSize.appendChild(opt);
-    });
-  }
 
   // STOCK STATUS
   if(currentCookieData.stock >= 10){
@@ -167,10 +152,9 @@ async function submitCookieOrder() {
   const phone = document.getElementById("cookiePhone").value.trim();
   const email = document.getElementById("cookieEmail").value.trim();
   const cookieId = cookieSelect.value;
-  const size = cookieSize.value;
   const qty = parseInt(document.getElementById("cookieQty").value) || 1;
 
-  if(!name || (!phone && !email) || !cookieId || !size) return alert("⚠️ Fill all required fields.");
+  if(!name || (!phone && !email) || !cookieId) return alert("⚠️ Fill all required fields.");
 
   const cookieRef = doc(db, "products_cookies", cookieId);
   const cookieSnap = await getDoc(cookieRef);
@@ -182,7 +166,7 @@ async function submitCookieOrder() {
   try {
     await addDoc(collection(db, "cookieOrders"), {
       name, phone: phone || null, email: email || null,
-      product: data.name, size, qty, total,
+      product: data.name, qty, total,
       createdAt: new Date(), status: "Pending"
     });
     orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
