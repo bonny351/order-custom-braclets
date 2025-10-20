@@ -33,6 +33,9 @@ input[type=number] { width:70px; }
 label { cursor:pointer; margin-right:6px; }
 #maintenanceOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
   background:#111; color:#ff0000; font-size:24px; display:flex; justify-content:center; align-items:center; z-index:9999; text-align:center;}
+span.day { display:inline-block; padding:4px 8px; margin:2px; border-radius:4px; color:white; }
+span.scheduled { background:red; }
+span.unscheduled { background:#444; }
 </style>
 </head>
 <body>
@@ -48,9 +51,14 @@ label { cursor:pointer; margin-right:6px; }
 <p id="tableMsg" class="message"></p>
 <table id="dynamicTable"></table>
 <div id="actionButtons" class="flex"></div>
+
+<hr style="border-color:#ff4444;">
+
 <button id="toggleMaintenanceBtn">⚠️ Toggle Under Construction</button>
 <p id="maintenanceMsg" class="message"></p>
+
 <div id="maintenanceScheduleDiv" style="text-align:center; margin-top:10px;"></div>
+<div id="maintenanceDaysDiv" style="text-align:center; margin-top:10px;"></div>
 </section>
 
 <div id="maintenanceOverlay">🛠️ Site is currently under maintenance. Please check back later.</div>
@@ -90,14 +98,17 @@ const actionButtonsDiv = document.getElementById("actionButtons");
 const toggleBtn = document.getElementById("toggleMaintenanceBtn");
 const maintenanceMsg = document.getElementById("maintenanceMsg");
 const maintenanceScheduleDiv = document.getElementById("maintenanceScheduleDiv");
+const maintenanceDaysDiv = document.getElementById("maintenanceDaysDiv");
 const maintenanceOverlay = document.getElementById("maintenanceOverlay");
 
 let currentCategory = "";
 let currentCollection = "";
 const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const dayCheckboxes = [];
+const maintenanceDoc = doc(db,"siteSettings","maintenance");
 
-const maintenanceDoc=doc(db,"siteSettings","maintenance");
+// ---------- Admin page flag ----------
+const isAdminPage = true; // overlay never shows
 
 // ---------- Tabs ----------
 Object.keys(allCollections).forEach(cat=>{
@@ -130,11 +141,83 @@ function loadCollectionTabs(){
   collectionTabsDiv.children[0].click();
 }
 
-// ---------- Load Table ----------
+// ---------- Maintenance ----------
+async function loadMaintenanceStatus(){
+  try{
+    const docSnap = await getDoc(maintenanceDoc);
+    const data = docSnap.exists()?docSnap.data():{enabled:false, scheduledDays:[]};
+    maintenanceMsg.textContent = data.enabled?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
+    loadMaintenanceSchedule(data.scheduledDays||[]);
+    displayScheduledDays(data.scheduledDays||[]);
+    checkScheduledMaintenance(data);
+  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error"; }
+}
+
+function displayScheduledDays(scheduledDays){
+  maintenanceDaysDiv.innerHTML="<strong>Scheduled Maintenance Days:</strong><br>";
+  days.forEach((day,i)=>{
+    const span = document.createElement("span");
+    span.className = scheduledDays.includes(i) ? "day scheduled" : "day unscheduled";
+    span.textContent = day;
+    maintenanceDaysDiv.appendChild(span);
+  });
+}
+
+function loadMaintenanceSchedule(scheduledDays){
+  maintenanceScheduleDiv.innerHTML="<strong>Schedule Maintenance:</strong><br>";
+  days.forEach((day,i)=>{
+    const label=document.createElement("label");
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=i; cb.checked=scheduledDays.includes(i);
+    cb.addEventListener("change", ()=> displayScheduledDays(dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value))));
+    dayCheckboxes[i]=cb; label.appendChild(cb); label.appendChild(document.createTextNode(day)); maintenanceScheduleDiv.appendChild(label);
+  });
+  const saveBtn=document.createElement("button"); saveBtn.textContent="💾 Save Schedule";
+  saveBtn.addEventListener("click", saveSchedule);
+  maintenanceScheduleDiv.appendChild(saveBtn);
+}
+
+async function saveSchedule(){
+  const selectedDays = dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value));
+  try{
+    await setDoc(maintenanceDoc,{enabled:true, scheduledDays:selectedDays},{merge:true});
+    alert("✅ Maintenance schedule saved! Site is now UNDER CONSTRUCTION.");
+    displayScheduledDays(selectedDays);
+    loadMaintenanceStatus();
+  }catch(err){ console.error(err); alert("❌ Error"); }
+}
+
+function checkScheduledMaintenance(data){
+  const today = new Date().getDay();
+  const underMaintenance = data.enabled || (data.scheduledDays && data.scheduledDays.includes(today));
+  maintenanceMsg.textContent = underMaintenance ? "🛠️ Site is UNDER CONSTRUCTION (Scheduled)" : "✅ Site is LIVE";
+  maintenanceOverlay.style.display = (!isAdminPage && underMaintenance) ? "flex" : "none";
+}
+
+// ---------- Toggle Maintenance ----------
+toggleBtn.addEventListener("click", async ()=>{
+  try{
+    const docSnap = await getDoc(maintenanceDoc);
+    const current = docSnap.exists() ? docSnap.data().enabled : false;
+    const scheduledDays = docSnap.exists() ? docSnap.data().scheduledDays || [] : [];
+    await setDoc(maintenanceDoc, { enabled: !current, scheduledDays }, { merge: true });
+    maintenanceMsg.textContent = !current ? "🛠️ Site is UNDER CONSTRUCTION" : "✅ Site is LIVE";
+    alert(`✅ Maintenance is now ${!current ? "ACTIVE" : "OFFLINE"}`);
+    loadMaintenanceStatus();
+  }catch(err){
+    console.error(err);
+    maintenanceMsg.textContent="❌ Error toggling status";
+  }
+});
+
+// ---------- INITIAL ----------
+loadMaintenanceStatus();
+
+// ---------- TABLE LOGIC ----------
 async function loadTable(){
   tableTitle.textContent=currentCollection;
   tableMsg.textContent="⏳ Loading...";
-  dynamicTable.innerHTML=""; actionButtonsDiv.innerHTML="";
+  dynamicTable.innerHTML="";
+  actionButtonsDiv.innerHTML="";
 
   const snap = await getDocs(collection(db, currentCollection));
   if(snap.empty){ tableMsg.textContent="No documents found"; return; }
@@ -147,89 +230,82 @@ async function loadTable(){
   const keys = Array.from(keysSet);
 
   const headerRow = dynamicTable.insertRow();
-  const thId = document.createElement("th"); thId.textContent="ID"; headerRow.appendChild(thId);
+  headerRow.insertCell(0).textContent="ID";
   keys.forEach(k=>{ const th=document.createElement("th"); th.textContent=k; headerRow.appendChild(th); });
-  if(currentCategory==="Products"){ const th = document.createElement("th"); th.textContent="Restock Boxes"; headerRow.appendChild(th); }
+
+  if(currentCategory==="Products"){
+    const th = document.createElement("th"); th.textContent="Restock Boxes"; headerRow.appendChild(th);
+  }
 
   const now = Date.now();
-
   for(const docSnap of snap.docs){
     const data = docSnap.data();
     const row = dynamicTable.insertRow();
     row.dataset.id = docSnap.id;
-    row.insertCell().textContent=docSnap.id;
+    row.insertCell(0).textContent = docSnap.id;
 
     keys.forEach(key=>{
       const cell = row.insertCell();
       let value = data[key] ?? "";
+      if(Array.isArray(value)) value = value.join(",");
+      else if(typeof value === "object" && value!==null) value = JSON.stringify(value);
+      cell.textContent=value;
+      cell.contentEditable=true;
 
-      if(currentCategory==="Orders" && key==="status"){
-        const select = document.createElement("select");
-        ["Pending","Completed","Cancelled"].forEach(opt=>{
-          const optionEl = document.createElement("option"); optionEl.value=opt; optionEl.textContent=opt;
-          if(value.toLowerCase()===opt.toLowerCase()) optionEl.selected=true;
-          select.appendChild(optionEl);
-        });
-        cell.appendChild(select);
-        colorStatus(cell, select.value);
-        select.addEventListener("change", async ()=>{
-          try{
-            await setDoc(doc(db,currentCollection,row.dataset.id), {...data, [key]:select.value});
-            tableMsg.textContent=`✅ Status updated!`;
-            colorStatus(cell, select.value);
-          }catch(err){ console.error(err); tableMsg.textContent="❌ Error updating status";}
-        });
-      } else {
-        if(Array.isArray(value)) value=value.join(",");
-        else if(typeof value==="object" && value!==null) value=JSON.stringify(value);
-        cell.textContent=value;
-        cell.contentEditable=true;
-        cell.addEventListener("blur", async ()=>{
-          let newValue=cell.textContent.trim();
-          if(typeof data[key]==="number") newValue=parseFloat(newValue)||0;
-          else if(Array.isArray(data[key])) newValue=newValue.split(",").map(s=>s.trim()).filter(s=>s);
-          else if(typeof data[key]==="object" && data[key]!==null){
-            try{ newValue=JSON.parse(newValue);}catch(e){ newValue=data[key]; }
-          }
-          try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data,[key]:newValue}); tableMsg.textContent=`✅ ${key} updated!`; }catch(err){ console.error(err); tableMsg.textContent=`❌ Error updating ${key}`;}
-        });
-      }
+      cell.addEventListener("blur", async ()=>{
+        let newValue = cell.textContent.trim();
+        if(key==="phone"){ newValue=newValue.replace(/[^\d]/g,""); if(newValue.length===10) newValue=`(${newValue.slice(0,3)}) ${newValue.slice(3,6)}-${newValue.slice(6)}`; }
+
+        if(key==="stock" || key==="itemsPerBox"){
+          let numValue=parseInt(newValue)||0;
+          const updatedData={...data,[key]:numValue};
+          if(key==="stock"){ updatedData.stockStatus = numValue<1?"Out of Stock":"In Stock"; cell.textContent = numValue<1?"Out of Stock":numValue; if(numValue<1) cell.classList.add("out-of-stock"); else cell.classList.remove("out-of-stock"); }
+          else{ cell.textContent=numValue; }
+          try{ await setDoc(doc(db,currentCollection,row.dataset.id), updatedData); tableMsg.textContent=`✅ ${key} updated!`; loadTable(); }catch(e){ console.error(e); tableMsg.textContent=`❌ Error updating ${key}`;}
+          return;
+        }
+
+        if(typeof data[key]==="number") newValue=parseFloat(newValue)||0;
+        else if(Array.isArray(data[key])) newValue=newValue.split(",").map(s=>s.trim()).filter(s=>s);
+        else if(typeof data[key]==="object" && data[key]!==null){ try{ newValue=JSON.parse(newValue);}catch(e){ newValue=data[key]; } }
+
+        if(currentCategory==="Orders"){
+          const email = key==="email"?newValue:(data.email||"");
+          const phone = key==="phone"?newValue:(data.phone||"");
+          if(!email && !phone){ alert("⚠️ Must provide email or phone"); return; }
+        }
+
+        try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data,[key]:newValue}); tableMsg.textContent=`✅ ${key} updated!`; }catch(err){ console.error(err); tableMsg.textContent=`❌ Error updating ${key}`;}
+      });
     });
 
-    // ---------- Restock ----------
     if(currentCategory==="Products"){
       const restockCell=row.insertCell();
       const boxesInput=document.createElement("input"); boxesInput.type="number"; boxesInput.min=0; boxesInput.placeholder="Boxes to add"; restockCell.appendChild(boxesInput);
       const restockBtn=document.createElement("button"); restockBtn.textContent="Restock"; restockCell.appendChild(restockBtn);
       restockBtn.addEventListener("click", async ()=>{
-        const boxes=parseInt(boxesInput.value)||0; if(boxes<=0){ alert("Enter a valid number"); return; }
+        const boxes=parseInt(boxesInput.value)||0; if(boxes<=0){ alert("Enter a valid number of boxes"); return; }
         const itemsPerBox=parseInt(data.itemsPerBox)||1;
         const newStock=(data.stock||0)+(boxes*itemsPerBox);
-        try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data, stock:newStock, stockStatus:newStock<1?"Out of Stock":"In Stock"});
-          boxesInput.value=""; alert(`✅ Restocked ${boxes*itemsPerBox} items`); loadTable(); }catch(err){ console.error(err); alert("❌ Error restocking");}
+        try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data, stock:newStock, stockStatus:newStock<1?"Out of Stock":"In Stock"}); boxesInput.value=""; alert(`✅ Restocked ${boxes*itemsPerBox} items (${boxes} boxes)`); loadTable(); }catch(err){ console.error(err); alert("❌ Error restocking"); }
       });
     }
 
-    if(currentCategory==="Orders" && data.timestamp){ if(now-new Date(data.timestamp).getTime()<24*60*60*1000) row.classList.add("recent-order"); }
+    if(currentCategory==="Orders" && data.timestamp){
+      const orderTime = new Date(data.timestamp).getTime();
+      if(now - orderTime < 24*60*60*1000) row.classList.add("recent-order");
+    }
+    if(currentCategory==="Orders" && data.status){
+      const statusCell = [...row.cells].find(c=>c.textContent===data.status || c.textContent==='status');
+      if(statusCell){ statusCell.classList.add(data.status.toLowerCase()==="completed"?"status-completed":"status-pending"); }
+    }
   }
 
-  addDeleteButtons(); addNewButtons(); addSearch();
-}
-
-// ---------- Color Status ----------
-function colorStatus(cell,status){
-  cell.classList.remove("status-pending","status-completed","status-cancelled");
-  if(status.toLowerCase()==="pending") cell.classList.add("status-pending");
-  else if(status.toLowerCase()==="completed") cell.classList.add("status-completed");
-  else if(status.toLowerCase()==="cancelled") cell.classList.add("status-cancelled");
-}
-
-// ---------- Delete Buttons ----------
-function addDeleteButtons(){
-  if(currentCategory==="Orders"||currentCategory==="Products"){
+  // Delete buttons
+  if(currentCategory==="Orders" || currentCategory==="Products"){
     const checkboxTh=document.createElement("th"); checkboxTh.textContent="Select"; dynamicTable.rows[0].insertBefore(checkboxTh,dynamicTable.rows[0].cells[0]);
     [...dynamicTable.rows].slice(1).forEach(row=>{ const cell=row.insertCell(0); const cb=document.createElement("input"); cb.type="checkbox"; cell.appendChild(cb); });
-    const delBtn=document.createElement("button"); delBtn.textContent=currentCategory==="Orders"?"🗑 Delete Selected Orders":"🗑 Delete Selected Products";
+    const delBtn=document.createElement("button"); delBtn.textContent = currentCategory==="Orders"?"🗑 Delete Selected Orders":"🗑 Delete Selected Products";
     delBtn.addEventListener("click", async ()=>{
       const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.cells[0].firstChild.checked);
       if(selectedRows.length===0){ alert("No items selected."); return; }
@@ -239,95 +315,9 @@ function addDeleteButtons(){
     });
     actionButtonsDiv.appendChild(delBtn);
   }
+
+  searchInput.oninput=()=>{ const term=searchInput.value.toLowerCase(); [...dynamicTable.rows].forEach((row,i)=>{ if(i===0) return; row.style.display=row.textContent.toLowerCase().includes(term)?"":"none"; }); };
 }
-
-// ---------- Add New Buttons ----------
-function addNewButtons(){
-  [...actionButtonsDiv.querySelectorAll('.add-btn')].forEach(btn=>btn.remove());
-  if(currentCategory==="Products"){
-    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Product"; addBtn.classList.add("add-btn");
-    addBtn.addEventListener("click", async ()=>{
-      const name=prompt("Enter product name:"); if(!name) return alert("Name required");
-      const price=parseFloat(prompt("Enter price:"))||0;
-      const stock=parseInt(prompt("Stock:"))||0;
-      const itemsPerBox=parseInt(prompt("Items per box:"))||1;
-      const newDoc={name,price,stock,stockStatus:stock<1?"Out of Stock":"In Stock",itemsPerBox};
-      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New product added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error");}
-    });
-    actionButtonsDiv.appendChild(addBtn);
-  }
-  if(currentCategory==="Orders"){
-    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Order"; addBtn.classList.add("add-btn");
-    addBtn.addEventListener("click", async ()=>{
-      const name=prompt("Customer Name:"); if(!name) return alert("Required");
-      const email=prompt("Email (or leave blank):")||"";
-      const phone=prompt("Phone (or leave blank):")||"";
-      if(!email&&!phone){ alert("Email or phone required"); return; }
-      const status=prompt("Status (Pending/Completed/Cancelled):","Pending")||"Pending";
-      const newDoc={customerName:name,email,phone,status,timestamp:Date.now()};
-      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New order added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error"); }
-    });
-    actionButtonsDiv.appendChild(addBtn);
-  }
-}
-
-// ---------- Search ----------
-function addSearch(){ searchInput.oninput=()=>{ const term=searchInput.value.toLowerCase(); [...dynamicTable.rows].forEach((row,i)=>{if(i===0)return; row.style.display=row.textContent.toLowerCase().includes(term)?"":"none";}); }}
-
-// ---------- Maintenance ----------
-async function loadMaintenanceStatus(){
-  try{
-    const docSnap=await getDoc(maintenanceDoc);
-    const data=docSnap.exists()?docSnap.data():{enabled:false,scheduledDays:[]};
-    maintenanceMsg.textContent=data.enabled?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-    loadMaintenanceSchedule(data.scheduledDays||[]);
-    checkScheduledMaintenance(data);
-  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error"; }
-}
-
-function loadMaintenanceSchedule(scheduledDays){
-  maintenanceScheduleDiv.innerHTML="<strong>Schedule Maintenance:</strong><br>";
-  days.forEach((day,i)=>{
-    const label=document.createElement("label");
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=i; cb.checked=scheduledDays.includes(i);
-    dayCheckboxes[i]=cb; label.appendChild(cb); label.appendChild(document.createTextNode(day));
-    maintenanceScheduleDiv.appendChild(label);
-  });
-  const saveBtn=document.createElement("button"); saveBtn.textContent="💾 Save Schedule";
-  saveBtn.addEventListener("click", saveSchedule);
-  maintenanceScheduleDiv.appendChild(saveBtn);
-}
-
-async function saveSchedule(){
-  const selectedDays=dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value));
-  try{
-    // Automatically set site under construction
-    await setDoc(maintenanceDoc,{enabled:true,scheduledDays:selectedDays});
-    alert("✅ Maintenance schedule saved! Site is now UNDER CONSTRUCTION.");
-    loadMaintenanceStatus();
-  }catch(err){ console.error(err); alert("❌ Error"); }
-}
-
-function checkScheduledMaintenance(data){
-  const today=new Date().getDay();
-  const underMaintenance=data.enabled || (data.scheduledDays && data.scheduledDays.includes(today));
-  maintenanceMsg.textContent=underMaintenance?"🛠️ Site is UNDER CONSTRUCTION (Scheduled)":"✅ Site is LIVE";
-  maintenanceOverlay.style.display=underMaintenance?"flex":"none";
-}
-
-// ---------- Toggle Maintenance ----------
-toggleBtn.addEventListener("click", async ()=>{
-  try{
-    const docSnap=await getDoc(maintenanceDoc);
-    const current=docSnap.exists()?docSnap.data().enabled:false;
-    await setDoc(maintenanceDoc,{enabled:!current, scheduledDays:docSnap.exists()?docSnap.data().scheduledDays||[]:[]});
-    maintenanceMsg.textContent=!current?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-    alert(`Site is now ${!current?"UNDER CONSTRUCTION":"LIVE"}`);
-    loadMaintenanceStatus();
-  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error toggling status";}
-});
-
-loadMaintenanceStatus();
 </script>
 </body>
 </html>
