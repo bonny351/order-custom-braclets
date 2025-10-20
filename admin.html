@@ -131,15 +131,25 @@ async function loadTable(){
   const keysSet = new Set();
   snap.forEach(docSnap=>Object.keys(docSnap.data()).forEach(k=>keysSet.add(k)));
   if(currentCategory==="Orders") keysSet.add("phone");
-  if(currentCategory==="Products") keysSet.add("stockStatus");
+  if(currentCategory==="Products") {
+    keysSet.add("stockStatus");
+    keysSet.add("itemsPerBox"); // <- persistent editable field
+  }
   const keys = Array.from(keysSet);
 
   const headerRow = dynamicTable.insertRow();
   headerRow.insertCell(0).textContent="ID";
   keys.forEach(k=>{ const th=document.createElement("th"); th.textContent=k; headerRow.appendChild(th); });
 
+  // Add extra column for Restock
+  if(currentCategory==="Products"){
+    const th = document.createElement("th");
+    th.textContent = "Restock Boxes";
+    headerRow.appendChild(th);
+  }
+
   const now = Date.now();
-  snap.forEach(docSnap=>{
+  for(const docSnap of snap.docs){
     const data = docSnap.data();
     const row = dynamicTable.insertRow();
     row.dataset.id = docSnap.id;
@@ -161,29 +171,26 @@ async function loadTable(){
           if(newValue.length===10) newValue=`(${newValue.slice(0,3)}) ${newValue.slice(3,6)}-${newValue.slice(6)}`;
         }
 
-        if(key==="stock"){
-          let stockNum = parseInt(newValue)||0;
-          let updatedData = {...data, stock: stockNum};
-          if(stockNum>10){
-            if(typeof data.price==="number") updatedData.price = parseFloat(data.price)+0.50;
-            else if(typeof data.price==="object"){
-              Object.keys(updatedData.price).forEach(size=>{
-                updatedData.price[size] = parseFloat(updatedData.price[size])+0.50;
-              });
-            }
+        if(key==="stock" || key==="itemsPerBox"){
+          let numValue = parseInt(newValue)||0;
+          const updatedData = {...data, [key]: numValue};
+          if(key==="stock"){
+            updatedData.stockStatus = numValue<1?"Out of Stock":"In Stock";
+            cell.textContent = numValue<1?"Out of Stock":numValue;
+            if(numValue<1) cell.classList.add("out-of-stock"); else cell.classList.remove("out-of-stock");
+          } else {
+            // itemsPerBox just store it, nothing else
+            cell.textContent = numValue;
           }
-          updatedData.stockStatus = stockNum<1?"Out of Stock":"In Stock";
-          cell.textContent = stockNum<1?"Out of Stock":stockNum;
-          if(stockNum<1) cell.classList.add("out-of-stock"); else cell.classList.remove("out-of-stock");
           try{
-            await setDoc(doc(db,currentCollection,row.dataset.id),updatedData);
-            tableMsg.textContent="✅ Stock updated!";
+            await setDoc(doc(db,currentCollection,row.dataset.id), updatedData);
+            tableMsg.textContent=`✅ ${key} updated!`;
             loadTable();
-          }catch(e){ console.error(e); tableMsg.textContent="❌ Error updating stock";}
+          }catch(e){ console.error(e); tableMsg.textContent=`❌ Error updating ${key}`;}
           return;
         }
 
-        else if(typeof data[key]==="number") newValue=parseFloat(newValue)||0;
+        if(typeof data[key]==="number") newValue=parseFloat(newValue)||0;
         else if(Array.isArray(data[key])) newValue=newValue.split(",").map(s=>s.trim()).filter(s=>s);
         else if(typeof data[key]==="object" && data[key]!==null){
           try{ newValue=JSON.parse(newValue);}catch(e){ newValue=data[key]; }
@@ -202,6 +209,42 @@ async function loadTable(){
       });
     });
 
+    // ---------- Add Restock input/button for Products ----------
+    if(currentCategory==="Products"){
+      const restockCell = row.insertCell();
+      const boxesInput = document.createElement("input");
+      boxesInput.type = "number";
+      boxesInput.min = 0;
+      boxesInput.placeholder = "Boxes to add";
+      boxesInput.style.width = "80px";
+      restockCell.appendChild(boxesInput);
+
+      const restockBtn = document.createElement("button");
+      restockBtn.textContent = "Restock";
+      restockCell.appendChild(restockBtn);
+
+      restockBtn.addEventListener("click", async ()=>{
+        const boxes = parseInt(boxesInput.value)||0;
+        if(boxes<=0){ alert("Enter a valid number of boxes"); return; }
+
+        const itemsPerBox = parseInt(data.itemsPerBox)||1;
+        const currentStock = data.stock||0;
+        const addedStock = boxes * itemsPerBox;
+        const newStock = currentStock + addedStock;
+
+        try{
+          await setDoc(doc(db,currentCollection,row.dataset.id), {
+            ...data,
+            stock: newStock,
+            stockStatus: newStock<1?"Out of Stock":"In Stock"
+          });
+          boxesInput.value = "";
+          alert(`✅ Restocked ${addedStock} items (${boxes} boxes)`);
+          loadTable();
+        }catch(err){ console.error(err); alert("❌ Error restocking"); }
+      });
+    }
+
     if(currentCategory==="Orders" && data.timestamp){
       const orderTime = new Date(data.timestamp).getTime();
       if(now - orderTime < 24*60*60*1000) row.classList.add("recent-order");
@@ -212,9 +255,9 @@ async function loadTable(){
         statusCell.classList.add(data.status.toLowerCase()==="completed"?"status-completed":"status-pending");
       }
     }
-  });
+  }
 
-  // Add checkboxes + delete selected for Products & Orders
+  // ---------- Delete buttons ----------
   if(currentCategory==="Orders" || currentCategory==="Products"){
     const checkboxTh = document.createElement("th"); checkboxTh.textContent="Select";
     dynamicTable.rows[0].insertBefore(checkboxTh, dynamicTable.rows[0].cells[0]);
@@ -237,7 +280,7 @@ async function loadTable(){
     actionButtonsDiv.appendChild(delBtn);
   }
 
-  // Add Search
+  // ---------- Search ----------
   searchInput.oninput=()=>{
     const term=searchInput.value.toLowerCase();
     [...dynamicTable.rows].forEach((row,i)=>{if(i===0) return; row.style.display=row.textContent.toLowerCase().includes(term)?"":"none";});
