@@ -30,6 +30,7 @@ button:hover { background:darkred; box-shadow:0 0 8px #ff0000; }
 .flex { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
 select { padding:4px 6px; border-radius:5px; border:none; background:#222; color:white; }
 input[type=number] { width:70px; }
+label { cursor:pointer; }
 </style>
 </head>
 <body>
@@ -47,13 +48,14 @@ input[type=number] { width:70px; }
 <div id="actionButtons" class="flex"></div>
 <button id="toggleMaintenanceBtn">⚠️ Toggle Under Construction</button>
 <p id="maintenanceMsg" class="message"></p>
+<div id="maintenanceScheduleDiv" style="text-align:center; margin-top:10px;"></div>
 </section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// Firebase config
+// ---------- Firebase ----------
 const firebaseConfig = {
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain:"bracelets-and-color.firebaseapp.com",
@@ -65,7 +67,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Collections
+// ---------- Collections ----------
 const allCollections = {
   "Products": ["products", "products_bracelets", "products_cookies", "products_spirit"],
   "Orders": ["braceletOrders", "cookieOrders", "spiritOrders"],
@@ -73,7 +75,7 @@ const allCollections = {
   "Settings": ["_meta", "metadata", "siteSettings", "adminSettings", "colors", "braceletColors"]
 };
 
-// DOM
+// ---------- DOM ----------
 const mainTabsDiv = document.getElementById("mainTabs");
 const collectionTabsDiv = document.getElementById("collectionTabs");
 const tableTitle = document.getElementById("tableTitle");
@@ -83,11 +85,12 @@ const tableMsg = document.getElementById("tableMsg");
 const actionButtonsDiv = document.getElementById("actionButtons");
 const toggleBtn = document.getElementById("toggleMaintenanceBtn");
 const maintenanceMsg = document.getElementById("maintenanceMsg");
+const maintenanceScheduleDiv = document.getElementById("maintenanceScheduleDiv");
 
 let currentCategory = "";
 let currentCollection = "";
 
-// Main tabs
+// ---------- Tabs ----------
 Object.keys(allCollections).forEach(cat=>{
   const tab = document.createElement("div");
   tab.className="tab";
@@ -102,7 +105,7 @@ Object.keys(allCollections).forEach(cat=>{
 });
 mainTabsDiv.children[0].click();
 
-// Sub-tabs
+// ---------- Sub-tabs ----------
 function loadCollectionTabs(){
   collectionTabsDiv.innerHTML="";
   allCollections[currentCategory].forEach(coll=>{
@@ -120,7 +123,7 @@ function loadCollectionTabs(){
   collectionTabsDiv.children[0].click();
 }
 
-// Load table
+// ---------- Load Table ----------
 async function loadTable(){
   tableTitle.textContent=currentCollection;
   tableMsg.textContent="⏳ Loading...";
@@ -237,6 +240,9 @@ async function loadTable(){
     actionButtonsDiv.appendChild(delBtn);
   }
 
+  // Add New Product / Order buttons
+  addNewButtons();
+
   // Search
   searchInput.oninput=()=>{
     const term=searchInput.value.toLowerCase();
@@ -244,32 +250,97 @@ async function loadTable(){
   };
 }
 
-// Maintenance toggle
-const maintenanceDoc=doc(db,"siteSettings","maintenance");
-async function loadMaintenanceStatus(){
-  try{
-    const docSnap=await getDoc(maintenanceDoc);
-    const data=docSnap.exists()?docSnap.data():{enabled:false};
-    maintenanceMsg.textContent=data.enabled?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error loading status";}
-}
-loadMaintenanceStatus();
-toggleBtn.addEventListener("click", async ()=>{
-  try{
-    const docSnap=await getDoc(maintenanceDoc);
-    const current=docSnap.exists()?docSnap.data().enabled:false;
-    await setDoc(maintenanceDoc,{enabled:!current});
-    maintenanceMsg.textContent=!current?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-    alert(`Site is now ${!current?"UNDER CONSTRUCTION":"LIVE"}`);
-  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error toggling status";}
-});
-
-// Helper: color status
+// ---------- Status Coloring ----------
 function colorStatus(cell, val){
   cell.classList.remove("status-pending","status-completed","status-cancelled");
   if(val.toLowerCase()==="pending") cell.classList.add("status-pending");
   else if(val.toLowerCase()==="completed") cell.classList.add("status-completed");
   else if(val.toLowerCase()==="cancelled") cell.classList.add("status-cancelled");
+}
+
+// ---------- Maintenance Toggle ----------
+const maintenanceDoc = doc(db,"siteSettings","maintenance");
+async function loadMaintenanceStatus(){
+  try{
+    const docSnap = await getDoc(maintenanceDoc);
+    const data = docSnap.exists()?docSnap.data():{enabled:false, scheduledDays:[]};
+    maintenanceMsg.textContent = data.enabled ? "🛠️ Site is UNDER CONSTRUCTION" : "✅ Site is LIVE";
+    loadMaintenanceSchedule(data.scheduledDays||[]);
+  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error loading status";}
+}
+loadMaintenanceStatus();
+
+toggleBtn.addEventListener("click", async ()=>{
+  try{
+    const docSnap=await getDoc(maintenanceDoc);
+    const current=docSnap.exists()?docSnap.data().enabled:false;
+    await setDoc(maintenanceDoc,{enabled:!current, scheduledDays:docSnap.exists()?docSnap.data().scheduledDays:[]});
+    maintenanceMsg.textContent=!current?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
+    alert(`Site is now ${!current?"UNDER CONSTRUCTION":"LIVE"}`);
+  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error toggling status";}
+});
+
+// ---------- Maintenance Scheduler ----------
+const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const dayCheckboxes = [];
+function loadMaintenanceSchedule(scheduledDays=[]){
+  maintenanceScheduleDiv.innerHTML="<strong>Schedule Maintenance:</strong><br>";
+  days.forEach((day,i)=>{
+    const label = document.createElement("label"); label.style.marginRight="8px";
+    const cb = document.createElement("input"); cb.type="checkbox"; cb.value=i; cb.checked=scheduledDays.includes(i); dayCheckboxes[i]=cb;
+    label.appendChild(cb); label.appendChild(document.createTextNode(day));
+    maintenanceScheduleDiv.appendChild(label);
+  });
+  const saveBtn=document.createElement("button"); saveBtn.textContent="💾 Save Schedule"; saveBtn.addEventListener("click", saveSchedule);
+  maintenanceScheduleDiv.appendChild(saveBtn);
+  checkScheduledMaintenance(scheduledDays);
+}
+async function saveSchedule(){
+  const selectedDays=dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value));
+  try{
+    const docSnap=await getDoc(maintenanceDoc);
+    const enabled=docSnap.exists()?docSnap.data().enabled:false;
+    await setDoc(maintenanceDoc,{enabled, scheduledDays:selectedDays});
+    alert("✅ Maintenance schedule saved!");
+    checkScheduledMaintenance(selectedDays);
+  }catch(err){ console.error(err); alert("❌ Error saving schedule");}
+}
+function checkScheduledMaintenance(scheduledDays){
+  const today=new Date().getDay();
+  if(scheduledDays.includes(today)) maintenanceMsg.textContent="🛠️ Site is UNDER CONSTRUCTION (Scheduled)";
+  else maintenanceMsg.textContent="✅ Site is LIVE";
+}
+
+// ---------- Add New Product/Order ----------
+function addNewButtons(){
+  [...actionButtonsDiv.querySelectorAll('.add-btn')].forEach(btn=>btn.remove());
+
+  if(currentCategory==="Products"){
+    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Product"; addBtn.classList.add("add-btn");
+    addBtn.addEventListener("click", async ()=>{
+      const name=prompt("Enter product name:"); if(!name) return alert("Name is required.");
+      const price=parseFloat(prompt("Enter price:"))||0;
+      const stock=parseInt(prompt("Enter initial stock:"))||0;
+      const itemsPerBox=parseInt(prompt("Items per box:"))||1;
+      const newDoc={name,price,stock,stockStatus:stock<1?"Out of Stock":"In Stock",itemsPerBox};
+      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New product added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error adding product."); }
+    });
+    actionButtonsDiv.appendChild(addBtn);
+  }
+
+  if(currentCategory==="Orders"){
+    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Order"; addBtn.classList.add("add-btn");
+    addBtn.addEventListener("click", async ()=>{
+      const customerName=prompt("Enter customer name:"); if(!customerName) return alert("Name is required.");
+      const email=prompt("Enter email (leave blank if using phone):")||"";
+      const phone=prompt("Enter phone (leave blank if using email):")||"";
+      if(!email && !phone) return alert("Email or phone required.");
+      const status=prompt("Enter status (Pending/Completed/Cancelled)","Pending");
+      const newDoc={customerName,email,phone,status:status||"Pending",timestamp:Date.now()};
+      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New order added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error adding order.");}
+    });
+    actionButtonsDiv.appendChild(addBtn);
+  }
 }
 </script>
 </body>
