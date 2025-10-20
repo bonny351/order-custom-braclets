@@ -97,6 +97,8 @@ let currentCollection = "";
 const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const dayCheckboxes = [];
 
+const maintenanceDoc=doc(db,"siteSettings","maintenance");
+
 // ---------- Tabs ----------
 Object.keys(allCollections).forEach(cat=>{
   const tab = document.createElement("div");
@@ -161,7 +163,6 @@ async function loadTable(){
       const cell = row.insertCell();
       let value = data[key] ?? "";
 
-      // Status dropdown
       if(currentCategory==="Orders" && key==="status"){
         const select = document.createElement("select");
         ["Pending","Completed","Cancelled"].forEach(opt=>{
@@ -173,53 +174,43 @@ async function loadTable(){
         colorStatus(cell, select.value);
         select.addEventListener("change", async ()=>{
           try{
-            await setDoc(doc(db,currentCollection,row.dataset.id), {...data,[key]:select.value});
+            await setDoc(doc(db,currentCollection,row.dataset.id), {...data, [key]:select.value});
+            tableMsg.textContent=`✅ Status updated!`;
             colorStatus(cell, select.value);
-            tableMsg.textContent="✅ Status updated!";
-          }catch(err){ console.error(err); tableMsg.textContent="❌ Error updating status"; }
+          }catch(err){ console.error(err); tableMsg.textContent="❌ Error updating status";}
         });
       } else {
         if(Array.isArray(value)) value=value.join(",");
         else if(typeof value==="object" && value!==null) value=JSON.stringify(value);
-        cell.textContent=value; cell.contentEditable=true;
-
+        cell.textContent=value;
+        cell.contentEditable=true;
         cell.addEventListener("blur", async ()=>{
           let newValue=cell.textContent.trim();
-          if(key==="phone"){ newValue=newValue.replace(/[^\d]/g,""); if(newValue.length===10) newValue=`(${newValue.slice(0,3)}) ${newValue.slice(3,6)}-${newValue.slice(6)}`;}
-          if(key==="stock" || key==="itemsPerBox"){
-            let numValue=parseInt(newValue)||0;
-            const updatedData={...data,[key]:numValue};
-            if(key==="stock"){ updatedData.stockStatus = numValue<1?"Out of Stock":"In Stock"; cell.textContent=numValue<1?"Out of Stock":numValue; if(numValue<1) cell.classList.add("out-of-stock"); else cell.classList.remove("out-of-stock");}
-            else{cell.textContent=numValue;}
-            try{ await setDoc(doc(db,currentCollection,row.dataset.id), updatedData); tableMsg.textContent=`✅ ${key} updated!`; loadTable(); } catch(e){ console.error(e); tableMsg.textContent=`❌ Error updating ${key}`;}
-            return;
-          }
           if(typeof data[key]==="number") newValue=parseFloat(newValue)||0;
           else if(Array.isArray(data[key])) newValue=newValue.split(",").map(s=>s.trim()).filter(s=>s);
-          else if(typeof data[key]==="object" && data[key]!==null){ try{ newValue=JSON.parse(newValue);}catch(e){ newValue=data[key];} }
-          if(currentCategory==="Orders"){ const email = key==="email"?newValue:(data.email||""); const phone = key==="phone"?newValue:(data.phone||""); if(!email && !phone){ alert("⚠️ Must provide email or phone"); return; }}
+          else if(typeof data[key]==="object" && data[key]!==null){
+            try{ newValue=JSON.parse(newValue);}catch(e){ newValue=data[key]; }
+          }
           try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data,[key]:newValue}); tableMsg.textContent=`✅ ${key} updated!`; }catch(err){ console.error(err); tableMsg.textContent=`❌ Error updating ${key}`;}
         });
       }
     });
 
+    // ---------- Restock ----------
     if(currentCategory==="Products"){
-      const restockCell = row.insertCell();
-      const boxesInput = document.createElement("input"); boxesInput.type="number"; boxesInput.min=0; boxesInput.placeholder="Boxes to add"; restockCell.appendChild(boxesInput);
-      const restockBtn = document.createElement("button"); restockBtn.textContent="Restock"; restockCell.appendChild(restockBtn);
+      const restockCell=row.insertCell();
+      const boxesInput=document.createElement("input"); boxesInput.type="number"; boxesInput.min=0; boxesInput.placeholder="Boxes to add"; restockCell.appendChild(boxesInput);
+      const restockBtn=document.createElement("button"); restockBtn.textContent="Restock"; restockCell.appendChild(restockBtn);
       restockBtn.addEventListener("click", async ()=>{
-        const boxes=parseInt(boxesInput.value)||0; if(boxes<=0){ alert("Enter a valid number of boxes"); return; }
+        const boxes=parseInt(boxesInput.value)||0; if(boxes<=0){ alert("Enter a valid number"); return; }
         const itemsPerBox=parseInt(data.itemsPerBox)||1;
         const newStock=(data.stock||0)+(boxes*itemsPerBox);
-        try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data, stock:newStock, stockStatus:newStock<1?"Out of Stock":"In Stock"}); boxesInput.value=""; alert(`✅ Restocked ${boxes*itemsPerBox} items`); loadTable(); }catch(err){ console.error(err); alert("❌ Error restocking");}
+        try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data, stock:newStock, stockStatus:newStock<1?"Out of Stock":"In Stock"});
+          boxesInput.value=""; alert(`✅ Restocked ${boxes*itemsPerBox} items`); loadTable(); }catch(err){ console.error(err); alert("❌ Error restocking");}
       });
     }
 
     if(currentCategory==="Orders" && data.timestamp){ if(now-new Date(data.timestamp).getTime()<24*60*60*1000) row.classList.add("recent-order"); }
-    if(currentCategory==="Orders" && data.status){
-      const statusCell=[...row.cells].find(c=>c.textContent===data.status || c.textContent==='status');
-      if(statusCell) colorStatus(statusCell,data.status);
-    }
   }
 
   addDeleteButtons(); addNewButtons(); addSearch();
@@ -281,13 +272,9 @@ function addNewButtons(){
 }
 
 // ---------- Search ----------
-function addSearch(){
-  searchInput.oninput=()=>{ const term=searchInput.value.toLowerCase(); [...dynamicTable.rows].forEach((row,i)=>{if(i===0)return; row.style.display=row.textContent.toLowerCase().includes(term)?"":"none";}); }
-}
+function addSearch(){ searchInput.oninput=()=>{ const term=searchInput.value.toLowerCase(); [...dynamicTable.rows].forEach((row,i)=>{if(i===0)return; row.style.display=row.textContent.toLowerCase().includes(term)?"":"none";}); }}
 
 // ---------- Maintenance ----------
-const maintenanceDoc=doc(db,"siteSettings","maintenance");
-
 async function loadMaintenanceStatus(){
   try{
     const docSnap=await getDoc(maintenanceDoc);
@@ -302,21 +289,22 @@ function loadMaintenanceSchedule(scheduledDays){
   maintenanceScheduleDiv.innerHTML="<strong>Schedule Maintenance:</strong><br>";
   days.forEach((day,i)=>{
     const label=document.createElement("label");
-    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=i; cb.checked=scheduledDays.includes(i); dayCheckboxes[i]=cb;
-    label.appendChild(cb); label.appendChild(document.createTextNode(day));
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=i; cb.checked=scheduledDays.includes(i);
+    dayCheckboxes[i]=cb; label.appendChild(cb); label.appendChild(document.createTextNode(day));
     maintenanceScheduleDiv.appendChild(label);
   });
-  const saveBtn=document.createElement("button"); saveBtn.textContent="💾 Save Schedule"; saveBtn.addEventListener("click", saveSchedule);
+  const saveBtn=document.createElement("button"); saveBtn.textContent="💾 Save Schedule";
+  saveBtn.addEventListener("click", saveSchedule);
   maintenanceScheduleDiv.appendChild(saveBtn);
 }
 
 async function saveSchedule(){
   const selectedDays=dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value));
   try{
-    const docSnap=await getDoc(maintenanceDoc);
-    const enabled=docSnap.exists()?docSnap.data().enabled:false;
-    await setDoc(maintenanceDoc,{enabled,scheduledDays:selectedDays});
-    alert("✅ Maintenance schedule saved!"); checkScheduledMaintenance({enabled,scheduledDays:selectedDays});
+    // Automatically set site under construction
+    await setDoc(maintenanceDoc,{enabled:true,scheduledDays:selectedDays});
+    alert("✅ Maintenance schedule saved! Site is now UNDER CONSTRUCTION.");
+    loadMaintenanceStatus();
   }catch(err){ console.error(err); alert("❌ Error"); }
 }
 
@@ -324,9 +312,7 @@ function checkScheduledMaintenance(data){
   const today=new Date().getDay();
   const underMaintenance=data.enabled || (data.scheduledDays && data.scheduledDays.includes(today));
   maintenanceMsg.textContent=underMaintenance?"🛠️ Site is UNDER CONSTRUCTION (Scheduled)":"✅ Site is LIVE";
-
-  const isAdmin = true; // always true in admin panel
-  maintenanceOverlay.style.display=(underMaintenance && !isAdmin)?"flex":"none";
+  maintenanceOverlay.style.display=underMaintenance?"flex":"none";
 }
 
 // ---------- Toggle Maintenance ----------
