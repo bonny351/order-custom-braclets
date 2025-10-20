@@ -16,7 +16,6 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
-    position: relative;
     text-align: center;
   }
   body::before {
@@ -66,7 +65,39 @@
   <div class="button-container">
     <a href="cookies.html">🍪 Cookie Orders</a>
     <a href="bracelets.html">🧿 Bracelet Orders</a>
-     <a href="spiritwear.html">spiritwear</a>
+    <a href="spiritwear.html">👕 Spirit Wear</a>
   </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+    authDomain:"bracelets-and-color.firebaseapp.com",
+    projectId:"bracelets-and-color",
+    storageBucket:"bracelets-and-color.appspot.com",
+    messagingSenderId:"382292570673",
+    appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function checkSiteStatus() {
+    try {
+      const docRef = doc(db, "siteSettings", "maintenance");
+      const docSnap = await getDoc(docRef);
+      if(docSnap.exists() && docSnap.data().enabled){
+        // Redirect to under-construction page
+        window.location.href = "under-construction.html";
+      }
+    } catch(err){
+      console.error("Error checking site status:", err);
+    }
+  }
+
+  checkSiteStatus();
+</script>
 </body>
 </html>
