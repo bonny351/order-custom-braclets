@@ -78,9 +78,7 @@ button:hover { background: darkred; }
   </select>
 
   <label>Size</label>
-  <select id="braceletSize" required>
-    <option value="">Select Size</option>
-  </select>
+  <select id="braceletSize" required></select>
 
   <p id="priceDisplay">Price: $0.00</p>
 
@@ -173,53 +171,44 @@ const priceTable = {
   30:{Cobra:24.00, "King Cobra":31.50, Fishtail:22.50, "Solomon/Trilobite":25.50}
 };
 
-// --- Populate color options from Firestore ---
-onSnapshot(collection(db, "products_bracelets"), snapshot => {
-  const colorsSet = new Set();
-  color1Select.innerHTML = '<option value="">Select Color 1</option>';
-  color2Select.innerHTML = '<option value="">Select Color 2</option>';
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    if(data.colorOptions){
-      data.colorOptions.forEach(color=>{
-        if(!colorsSet.has(color)){
-          colorsSet.add(color);
-          const c1 = document.createElement("option"); c1.value=color; c1.textContent=color; color1Select.appendChild(c1);
-          const c2 = document.createElement("option"); c2.value=color; c2.textContent=color; color2Select.appendChild(c2);
-        }
-      });
-    }
-  });
-});
+// --- Populate sizes on page load ---
+for(let s=5; s<=30; s++){
+  const opt = document.createElement("option");
+  opt.value = s;
+  opt.textContent = s + " in";
+  sizeSelect.appendChild(opt);
+}
 
-// --- Populate sizes when bracelet type is selected ---
-knotSelect.addEventListener("change", () => {
-  sizeSelect.innerHTML = '<option value="">Select Size</option>';
-  for(let s=5; s<=30; s++){
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s + " in";
-    sizeSelect.appendChild(opt);
-  }
-  priceDisplay.textContent = "Price: $0.00";
+// --- Default colors ---
+const defaultColors = ["Red","Blue","Green","Yellow","Black"];
+defaultColors.forEach(color => {
+  const c1 = document.createElement("option"); c1.value=color; c1.textContent=color; color1Select.appendChild(c1);
+  const c2 = document.createElement("option"); c2.value=color; c2.textContent=color; color2Select.appendChild(c2);
 });
 
 // --- Update price ---
 function updatePrice(){
   const size = parseInt(sizeSelect.value);
   const braceletType = knotSelect.value;
-  if(!size || !braceletType || !priceTable[size]){
+  const clipType = clipTypeSelect.value;
+
+  if(!size || !braceletType || !priceTable[size]) {
     priceDisplay.textContent = "Price: $0.00";
     return;
   }
-  const basePrice = priceTable[size][braceletType] || 0;
+
+  let basePrice = priceTable[size][braceletType] || 0;
+  if(clipType === "Metal") basePrice += 1;
+
   priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
 }
 
+// Event listeners to update price dynamically
 sizeSelect.addEventListener("change", updatePrice);
 knotSelect.addEventListener("change", updatePrice);
+clipTypeSelect.addEventListener("change", updatePrice);
 
-// --- Clip logic ---
+// --- Clip color logic ---
 clipTypeSelect.addEventListener("change", ()=>{
   const type = clipTypeSelect.value;
   clipColorSelect.disabled = (type==="Adjustable Knot" || type==="Metal");
@@ -243,7 +232,8 @@ async function submitOrder(){
     return alert("⚠️ Fill all required fields. Provide phone or email.");
   }
 
-  const basePrice = priceTable[size][braceletType] || 0;
+  let basePrice = priceTable[size][braceletType] || 0;
+  if(clipType === "Metal") basePrice += 1;
   const total = basePrice * qty;
 
   try{
@@ -254,7 +244,9 @@ async function submitOrder(){
       createdAt: new Date(), status: "Pending"
     });
     orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
-    form.reset(); priceDisplay.textContent="Price: $0.00"; clipColorSelect.disabled=false;
+    form.reset();
+    priceDisplay.textContent="Price: $0.00";
+    clipColorSelect.disabled=false;
   }catch(err){
     console.error(err);
     alert("❌ Failed to submit order.");
@@ -262,7 +254,7 @@ async function submitOrder(){
 }
 
 document.getElementById("submitBtn").addEventListener("click", submitOrder);
-
 </script>
 </body>
 </html>
+
