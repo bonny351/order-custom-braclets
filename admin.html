@@ -30,7 +30,9 @@ button:hover { background:darkred; box-shadow:0 0 8px #ff0000; }
 .flex { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
 select { padding:4px 6px; border-radius:5px; border:none; background:#222; color:white; }
 input[type=number] { width:70px; }
-label { cursor:pointer; }
+label { cursor:pointer; margin-right:6px; }
+#maintenanceOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+  background:#111; color:#ff0000; font-size:24px; display:flex; justify-content:center; align-items:center; z-index:9999; text-align:center;}
 </style>
 </head>
 <body>
@@ -50,6 +52,8 @@ label { cursor:pointer; }
 <p id="maintenanceMsg" class="message"></p>
 <div id="maintenanceScheduleDiv" style="text-align:center; margin-top:10px;"></div>
 </section>
+
+<div id="maintenanceOverlay">🛠️ Site is currently under maintenance. Please check back later.</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -86,15 +90,17 @@ const actionButtonsDiv = document.getElementById("actionButtons");
 const toggleBtn = document.getElementById("toggleMaintenanceBtn");
 const maintenanceMsg = document.getElementById("maintenanceMsg");
 const maintenanceScheduleDiv = document.getElementById("maintenanceScheduleDiv");
+const maintenanceOverlay = document.getElementById("maintenanceOverlay");
 
 let currentCategory = "";
 let currentCollection = "";
+const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const dayCheckboxes = [];
 
 // ---------- Tabs ----------
 Object.keys(allCollections).forEach(cat=>{
   const tab = document.createElement("div");
-  tab.className="tab";
-  tab.textContent=cat;
+  tab.className="tab"; tab.textContent=cat;
   tab.addEventListener("click",()=>{
     currentCategory=cat;
     [...mainTabsDiv.children].forEach(t=>t.classList.remove("active"));
@@ -110,8 +116,7 @@ function loadCollectionTabs(){
   collectionTabsDiv.innerHTML="";
   allCollections[currentCategory].forEach(coll=>{
     const subTab = document.createElement("div");
-    subTab.className="subTab";
-    subTab.textContent=coll;
+    subTab.className="subTab"; subTab.textContent=coll;
     subTab.addEventListener("click",()=>{
       currentCollection=coll;
       [...collectionTabsDiv.children].forEach(t=>t.classList.remove("active"));
@@ -127,8 +132,7 @@ function loadCollectionTabs(){
 async function loadTable(){
   tableTitle.textContent=currentCollection;
   tableMsg.textContent="⏳ Loading...";
-  dynamicTable.innerHTML="";
-  actionButtonsDiv.innerHTML="";
+  dynamicTable.innerHTML=""; actionButtonsDiv.innerHTML="";
 
   const snap = await getDocs(collection(db, currentCollection));
   if(snap.empty){ tableMsg.textContent="No documents found"; return; }
@@ -140,7 +144,6 @@ async function loadTable(){
   if(currentCategory==="Products") { keysSet.add("stockStatus"); keysSet.add("itemsPerBox"); }
   const keys = Array.from(keysSet);
 
-  // Header
   const headerRow = dynamicTable.insertRow();
   const thId = document.createElement("th"); thId.textContent="ID"; headerRow.appendChild(thId);
   keys.forEach(k=>{ const th=document.createElement("th"); th.textContent=k; headerRow.appendChild(th); });
@@ -162,9 +165,7 @@ async function loadTable(){
       if(currentCategory==="Orders" && key==="status"){
         const select = document.createElement("select");
         ["Pending","Completed","Cancelled"].forEach(opt=>{
-          const optionEl = document.createElement("option");
-          optionEl.value=opt;
-          optionEl.textContent=opt;
+          const optionEl = document.createElement("option"); optionEl.value=opt; optionEl.textContent=opt;
           if(value.toLowerCase()===opt.toLowerCase()) optionEl.selected=true;
           select.appendChild(optionEl);
         });
@@ -180,8 +181,7 @@ async function loadTable(){
       } else {
         if(Array.isArray(value)) value=value.join(",");
         else if(typeof value==="object" && value!==null) value=JSON.stringify(value);
-        cell.textContent=value;
-        cell.contentEditable=true;
+        cell.textContent=value; cell.contentEditable=true;
 
         cell.addEventListener("blur", async ()=>{
           let newValue=cell.textContent.trim();
@@ -203,145 +203,145 @@ async function loadTable(){
       }
     });
 
-    // Restock for products
     if(currentCategory==="Products"){
-      const restockCell=row.insertCell();
-      const boxesInput=document.createElement("input"); boxesInput.type="number"; boxesInput.min=0; boxesInput.placeholder="Boxes"; restockCell.appendChild(boxesInput);
-      const restockBtn=document.createElement("button"); restockBtn.textContent="Restock"; restockCell.appendChild(restockBtn);
+      const restockCell = row.insertCell();
+      const boxesInput = document.createElement("input"); boxesInput.type="number"; boxesInput.min=0; boxesInput.placeholder="Boxes to add"; restockCell.appendChild(boxesInput);
+      const restockBtn = document.createElement("button"); restockBtn.textContent="Restock"; restockCell.appendChild(restockBtn);
       restockBtn.addEventListener("click", async ()=>{
-        const boxes=parseInt(boxesInput.value)||0;
-        if(boxes<=0){ alert("Enter a valid number of boxes"); return;}
+        const boxes=parseInt(boxesInput.value)||0; if(boxes<=0){ alert("Enter a valid number of boxes"); return; }
         const itemsPerBox=parseInt(data.itemsPerBox)||1;
-        const newStock=(parseInt(data.stock)||0)+boxes*itemsPerBox;
-        try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data, stock:newStock, stockStatus:newStock<1?"Out of Stock":"In Stock"}); boxesInput.value=""; alert(`✅ Restocked ${boxes*itemsPerBox} items`); loadTable();}catch(e){ console.error(e); alert("❌ Error restocking"); }
+        const newStock=(data.stock||0)+(boxes*itemsPerBox);
+        try{ await setDoc(doc(db,currentCollection,row.dataset.id), {...data, stock:newStock, stockStatus:newStock<1?"Out of Stock":"In Stock"}); boxesInput.value=""; alert(`✅ Restocked ${boxes*itemsPerBox} items`); loadTable(); }catch(err){ console.error(err); alert("❌ Error restocking");}
       });
     }
 
-    // Recent orders
-    if(currentCategory==="Orders" && data.timestamp){
-      const orderTime=new Date(data.timestamp).getTime();
-      if(now-orderTime<24*60*60*1000) row.classList.add("recent-order");
+    if(currentCategory==="Orders" && data.timestamp){ if(now-new Date(data.timestamp).getTime()<24*60*60*1000) row.classList.add("recent-order"); }
+    if(currentCategory==="Orders" && data.status){
+      const statusCell=[...row.cells].find(c=>c.textContent===data.status || c.textContent==='status');
+      if(statusCell) colorStatus(statusCell,data.status);
     }
   }
 
-  // Delete buttons
-  if(currentCategory==="Orders" || currentCategory==="Products"){
+  addDeleteButtons(); addNewButtons(); addSearch();
+}
+
+// ---------- Color Status ----------
+function colorStatus(cell,status){
+  cell.classList.remove("status-pending","status-completed","status-cancelled");
+  if(status.toLowerCase()==="pending") cell.classList.add("status-pending");
+  else if(status.toLowerCase()==="completed") cell.classList.add("status-completed");
+  else if(status.toLowerCase()==="cancelled") cell.classList.add("status-cancelled");
+}
+
+// ---------- Delete Buttons ----------
+function addDeleteButtons(){
+  if(currentCategory==="Orders"||currentCategory==="Products"){
     const checkboxTh=document.createElement("th"); checkboxTh.textContent="Select"; dynamicTable.rows[0].insertBefore(checkboxTh,dynamicTable.rows[0].cells[0]);
     [...dynamicTable.rows].slice(1).forEach(row=>{ const cell=row.insertCell(0); const cb=document.createElement("input"); cb.type="checkbox"; cell.appendChild(cb); });
-    const delBtn=document.createElement("button");
-    delBtn.textContent=currentCategory==="Orders"?"🗑 Delete Selected Orders":"🗑 Delete Selected Products";
+    const delBtn=document.createElement("button"); delBtn.textContent=currentCategory==="Orders"?"🗑 Delete Selected Orders":"🗑 Delete Selected Products";
     delBtn.addEventListener("click", async ()=>{
       const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.cells[0].firstChild.checked);
-      if(selectedRows.length===0){ alert("No items selected."); return;}
+      if(selectedRows.length===0){ alert("No items selected."); return; }
       if(!confirm(`⚠️ Delete ${selectedRows.length} item(s)?`)) return;
       for(const row of selectedRows){ try{ await deleteDoc(doc(db,currentCollection,row.dataset.id)); }catch(e){ console.error(e);} }
       loadTable();
     });
     actionButtonsDiv.appendChild(delBtn);
   }
-
-  // Add New Product / Order buttons
-  addNewButtons();
-
-  // Search
-  searchInput.oninput=()=>{
-    const term=searchInput.value.toLowerCase();
-    [...dynamicTable.rows].forEach((row,i)=>{ if(i===0) return; row.style.display=row.textContent.toLowerCase().includes(term)?"":"none"; });
-  };
 }
 
-// ---------- Status Coloring ----------
-function colorStatus(cell, val){
-  cell.classList.remove("status-pending","status-completed","status-cancelled");
-  if(val.toLowerCase()==="pending") cell.classList.add("status-pending");
-  else if(val.toLowerCase()==="completed") cell.classList.add("status-completed");
-  else if(val.toLowerCase()==="cancelled") cell.classList.add("status-cancelled");
+// ---------- Add New Buttons ----------
+function addNewButtons(){
+  [...actionButtonsDiv.querySelectorAll('.add-btn')].forEach(btn=>btn.remove());
+  if(currentCategory==="Products"){
+    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Product"; addBtn.classList.add("add-btn");
+    addBtn.addEventListener("click", async ()=>{
+      const name=prompt("Enter product name:"); if(!name) return alert("Name required");
+      const price=parseFloat(prompt("Enter price:"))||0;
+      const stock=parseInt(prompt("Stock:"))||0;
+      const itemsPerBox=parseInt(prompt("Items per box:"))||1;
+      const newDoc={name,price,stock,stockStatus:stock<1?"Out of Stock":"In Stock",itemsPerBox};
+      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New product added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error");}
+    });
+    actionButtonsDiv.appendChild(addBtn);
+  }
+  if(currentCategory==="Orders"){
+    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Order"; addBtn.classList.add("add-btn");
+    addBtn.addEventListener("click", async ()=>{
+      const name=prompt("Customer Name:"); if(!name) return alert("Required");
+      const email=prompt("Email (or leave blank):")||"";
+      const phone=prompt("Phone (or leave blank):")||"";
+      if(!email&&!phone){ alert("Email or phone required"); return; }
+      const status=prompt("Status (Pending/Completed/Cancelled):","Pending")||"Pending";
+      const newDoc={customerName:name,email,phone,status,timestamp:Date.now()};
+      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New order added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error"); }
+    });
+    actionButtonsDiv.appendChild(addBtn);
+  }
 }
 
-// ---------- Maintenance Toggle ----------
-const maintenanceDoc = doc(db,"siteSettings","maintenance");
+// ---------- Search ----------
+function addSearch(){
+  searchInput.oninput=()=>{ const term=searchInput.value.toLowerCase(); [...dynamicTable.rows].forEach((row,i)=>{if(i===0)return; row.style.display=row.textContent.toLowerCase().includes(term)?"":"none";}); }
+}
+
+// ---------- Maintenance ----------
+const maintenanceDoc=doc(db,"siteSettings","maintenance");
+
 async function loadMaintenanceStatus(){
   try{
-    const docSnap = await getDoc(maintenanceDoc);
-    const data = docSnap.exists()?docSnap.data():{enabled:false, scheduledDays:[]};
-    maintenanceMsg.textContent = data.enabled ? "🛠️ Site is UNDER CONSTRUCTION" : "✅ Site is LIVE";
-    loadMaintenanceSchedule(data.scheduledDays||[]);
-  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error loading status";}
-}
-loadMaintenanceStatus();
-
-toggleBtn.addEventListener("click", async ()=>{
-  try{
     const docSnap=await getDoc(maintenanceDoc);
-    const current=docSnap.exists()?docSnap.data().enabled:false;
-    await setDoc(maintenanceDoc,{enabled:!current, scheduledDays:docSnap.exists()?docSnap.data().scheduledDays:[]});
-    maintenanceMsg.textContent=!current?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-    alert(`Site is now ${!current?"UNDER CONSTRUCTION":"LIVE"}`);
-  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error toggling status";}
-});
+    const data=docSnap.exists()?docSnap.data():{enabled:false,scheduledDays:[]};
+    maintenanceMsg.textContent=data.enabled?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
+    loadMaintenanceSchedule(data.scheduledDays||[]);
+    checkScheduledMaintenance(data);
+  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error"; }
+}
 
-// ---------- Maintenance Scheduler ----------
-const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-const dayCheckboxes = [];
-function loadMaintenanceSchedule(scheduledDays=[]){
+function loadMaintenanceSchedule(scheduledDays){
   maintenanceScheduleDiv.innerHTML="<strong>Schedule Maintenance:</strong><br>";
   days.forEach((day,i)=>{
-    const label = document.createElement("label"); label.style.marginRight="8px";
-    const cb = document.createElement("input"); cb.type="checkbox"; cb.value=i; cb.checked=scheduledDays.includes(i); dayCheckboxes[i]=cb;
+    const label=document.createElement("label");
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.value=i; cb.checked=scheduledDays.includes(i); dayCheckboxes[i]=cb;
     label.appendChild(cb); label.appendChild(document.createTextNode(day));
     maintenanceScheduleDiv.appendChild(label);
   });
   const saveBtn=document.createElement("button"); saveBtn.textContent="💾 Save Schedule"; saveBtn.addEventListener("click", saveSchedule);
   maintenanceScheduleDiv.appendChild(saveBtn);
-  checkScheduledMaintenance(scheduledDays);
 }
+
 async function saveSchedule(){
   const selectedDays=dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value));
   try{
     const docSnap=await getDoc(maintenanceDoc);
     const enabled=docSnap.exists()?docSnap.data().enabled:false;
-    await setDoc(maintenanceDoc,{enabled, scheduledDays:selectedDays});
-    alert("✅ Maintenance schedule saved!");
-    checkScheduledMaintenance(selectedDays);
-  }catch(err){ console.error(err); alert("❌ Error saving schedule");}
+    await setDoc(maintenanceDoc,{enabled,scheduledDays:selectedDays});
+    alert("✅ Maintenance schedule saved!"); checkScheduledMaintenance({enabled,scheduledDays:selectedDays});
+  }catch(err){ console.error(err); alert("❌ Error"); }
 }
-function checkScheduledMaintenance(scheduledDays){
+
+function checkScheduledMaintenance(data){
   const today=new Date().getDay();
-  if(scheduledDays.includes(today)) maintenanceMsg.textContent="🛠️ Site is UNDER CONSTRUCTION (Scheduled)";
-  else maintenanceMsg.textContent="✅ Site is LIVE";
+  const underMaintenance=data.enabled || (data.scheduledDays && data.scheduledDays.includes(today));
+  maintenanceMsg.textContent=underMaintenance?"🛠️ Site is UNDER CONSTRUCTION (Scheduled)":"✅ Site is LIVE";
+
+  const isAdmin = true; // always true in admin panel
+  maintenanceOverlay.style.display=(underMaintenance && !isAdmin)?"flex":"none";
 }
 
-// ---------- Add New Product/Order ----------
-function addNewButtons(){
-  [...actionButtonsDiv.querySelectorAll('.add-btn')].forEach(btn=>btn.remove());
+// ---------- Toggle Maintenance ----------
+toggleBtn.addEventListener("click", async ()=>{
+  try{
+    const docSnap=await getDoc(maintenanceDoc);
+    const current=docSnap.exists()?docSnap.data().enabled:false;
+    await setDoc(maintenanceDoc,{enabled:!current, scheduledDays:docSnap.exists()?docSnap.data().scheduledDays||[]:[]});
+    maintenanceMsg.textContent=!current?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
+    alert(`Site is now ${!current?"UNDER CONSTRUCTION":"LIVE"}`);
+    loadMaintenanceStatus();
+  }catch(err){ console.error(err); maintenanceMsg.textContent="❌ Error toggling status";}
+});
 
-  if(currentCategory==="Products"){
-    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Product"; addBtn.classList.add("add-btn");
-    addBtn.addEventListener("click", async ()=>{
-      const name=prompt("Enter product name:"); if(!name) return alert("Name is required.");
-      const price=parseFloat(prompt("Enter price:"))||0;
-      const stock=parseInt(prompt("Enter initial stock:"))||0;
-      const itemsPerBox=parseInt(prompt("Items per box:"))||1;
-      const newDoc={name,price,stock,stockStatus:stock<1?"Out of Stock":"In Stock",itemsPerBox};
-      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New product added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error adding product."); }
-    });
-    actionButtonsDiv.appendChild(addBtn);
-  }
-
-  if(currentCategory==="Orders"){
-    const addBtn=document.createElement("button"); addBtn.textContent="➕ Add New Order"; addBtn.classList.add("add-btn");
-    addBtn.addEventListener("click", async ()=>{
-      const customerName=prompt("Enter customer name:"); if(!customerName) return alert("Name is required.");
-      const email=prompt("Enter email (leave blank if using phone):")||"";
-      const phone=prompt("Enter phone (leave blank if using email):")||"";
-      if(!email && !phone) return alert("Email or phone required.");
-      const status=prompt("Enter status (Pending/Completed/Cancelled)","Pending");
-      const newDoc={customerName,email,phone,status:status||"Pending",timestamp:Date.now()};
-      try{ const newRef=doc(collection(db,currentCollection)); await setDoc(newRef,newDoc); tableMsg.textContent="✅ New order added!"; loadTable(); }catch(err){ console.error(err); alert("❌ Error adding order.");}
-    });
-    actionButtonsDiv.appendChild(addBtn);
-  }
-}
+loadMaintenanceStatus();
 </script>
 </body>
 </html>
