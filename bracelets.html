@@ -68,20 +68,18 @@ button:hover { background: darkred; }
   <label>Email</label>
   <input id="braceletEmail" type="email">
 
-  <label>Choose Bracelet</label>
-  <select id="braceletSelect" required></select>
-  <span id="stockStatus" class="low-stock"></span>
-
-  <label>Size</label>
-  <select id="braceletSize" required></select>
-
-  <label>Knot Type</label>
+  <label>Bracelet Type</label>
   <select id="knotType" required>
-    <option value="">Select Knot Type</option>
+    <option value="">Select Bracelet</option>
     <option value="Cobra">Cobra</option>
     <option value="King Cobra">King Cobra</option>
     <option value="Fishtail">Fishtail</option>
     <option value="Solomon/Trilobite">Solomon / Trilobite</option>
+  </select>
+
+  <label>Size</label>
+  <select id="braceletSize" required>
+    <option value="">Select Size</option>
   </select>
 
   <p id="priceDisplay">Price: $0.00</p>
@@ -120,8 +118,9 @@ button:hover { background: darkred; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+// --- Firebase config ---
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -134,9 +133,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const braceletSelect = document.getElementById("braceletSelect");
-const sizeSelect = document.getElementById("braceletSize");
 const knotSelect = document.getElementById("knotType");
+const sizeSelect = document.getElementById("braceletSize");
 const color1Select = document.getElementById("color1");
 const color2Select = document.getElementById("color2");
 const clipTypeSelect = document.getElementById("clipType");
@@ -144,9 +142,6 @@ const clipColorSelect = document.getElementById("clipColor");
 const priceDisplay = document.getElementById("priceDisplay");
 const form = document.getElementById("braceletForm");
 const orderMsg = document.getElementById("orderMsg");
-const stockStatus = document.getElementById("stockStatus");
-
-let currentBraceletData = null;
 
 // --- Price Table ---
 const priceTable = {
@@ -178,32 +173,13 @@ const priceTable = {
   30:{Cobra:24.00, "King Cobra":31.50, Fishtail:22.50, "Solomon/Trilobite":25.50}
 };
 
-// --- SITE STATUS ---
-onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
-  if(docSnap.exists() && docSnap.data().enabled){
-    window.location.href = "under-construction.html";
-  }
-});
-
-// --- LIVE BRACELETS ---
+// --- Populate color options from Firestore ---
 onSnapshot(collection(db, "products_bracelets"), snapshot => {
   const colorsSet = new Set();
-  braceletSelect.innerHTML = '<option value="">Select Bracelet</option>';
   color1Select.innerHTML = '<option value="">Select Color 1</option>';
   color2Select.innerHTML = '<option value="">Select Color 2</option>';
-
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
-    const opt = document.createElement("option");
-    opt.value = docSnap.id;
-    opt.textContent = data.type;
-
-    if(data.stock <= 0){
-      opt.disabled = true;
-    }
-
-    braceletSelect.appendChild(opt);
-
     if(data.colorOptions){
       data.colorOptions.forEach(color=>{
         if(!colorsSet.has(color)){
@@ -216,15 +192,8 @@ onSnapshot(collection(db, "products_bracelets"), snapshot => {
   });
 });
 
-// --- HANDLE BRACELET CHANGE ---
-braceletSelect.addEventListener("change", async () => {
-  const id = braceletSelect.value;
-  if(!id) return;
-  const docSnap = await getDoc(doc(db, "products_bracelets", id));
-  if(!docSnap.exists()) return;
-  currentBraceletData = docSnap.data();
-
-  // Populate sizes 5–30
+// --- Populate sizes when bracelet type is selected ---
+knotSelect.addEventListener("change", () => {
   sizeSelect.innerHTML = '<option value="">Select Size</option>';
   for(let s=5; s<=30; s++){
     const opt = document.createElement("option");
@@ -232,74 +201,60 @@ braceletSelect.addEventListener("change", async () => {
     opt.textContent = s + " in";
     sizeSelect.appendChild(opt);
   }
-
-  // STOCK STATUS
-  if(currentBraceletData.stock >= 10){
-    stockStatus.textContent = "In Stock";
-    stockStatus.className = "low-stock";
-  } else if(currentBraceletData.stock > 0){
-    stockStatus.textContent = "Low Stock!";
-    stockStatus.className = "low-stock";
-  } else {
-    stockStatus.textContent = "Out of Stock";
-    stockStatus.className = "out-of-stock";
-  }
-
   priceDisplay.textContent = "Price: $0.00";
 });
 
-// --- UPDATE PRICE ---
+// --- Update price ---
 function updatePrice(){
   const size = parseInt(sizeSelect.value);
-  const knot = knotSelect.value;
-  if(!size || !knot || !priceTable[size]){
+  const braceletType = knotSelect.value;
+  if(!size || !braceletType || !priceTable[size]){
     priceDisplay.textContent = "Price: $0.00";
     return;
   }
-  const basePrice = priceTable[size][knot] || 0;
+  const basePrice = priceTable[size][braceletType] || 0;
   priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
 }
 
 sizeSelect.addEventListener("change", updatePrice);
 knotSelect.addEventListener("change", updatePrice);
 
-// --- CLIP LOGIC ---
+// --- Clip logic ---
 clipTypeSelect.addEventListener("change", ()=>{
   const type = clipTypeSelect.value;
   clipColorSelect.disabled = (type==="Adjustable Knot" || type==="Metal");
   if(clipColorSelect.disabled) clipColorSelect.value="";
 });
 
-// --- SUBMIT ORDER ---
+// --- Submit order ---
 async function submitOrder(){
   const name = document.getElementById("braceletName").value.trim();
   const phone = document.getElementById("braceletPhone").value.trim();
   const email = document.getElementById("braceletEmail").value.trim();
-  const braceletId = braceletSelect.value;
+  const braceletType = knotSelect.value;
   const size = sizeSelect.value;
-  const knot = knotSelect.value;
   const color1 = color1Select.value;
   const color2 = color2Select.value;
   const clipType = clipTypeSelect.value;
   const clipColor = clipColorSelect.value;
   const qty = parseInt(document.getElementById("braceletQty").value) || 1;
 
-  if(!name || (!phone && !email) || !braceletId || !size || !knot || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)){
+  if(!name || (!phone && !email) || !braceletType || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)){
     return alert("⚠️ Fill all required fields. Provide phone or email.");
   }
 
-  const basePrice = priceTable[size][knot] || 0;
+  const basePrice = priceTable[size][braceletType] || 0;
   const total = basePrice * qty;
 
   try{
     await addDoc(collection(db, "braceletOrders"), {
       name, phone: phone||null, email: email||null,
-      product: currentBraceletData.type, size, knot,
-      color1, color2, clipType, clipColor, qty, total,
+      product: braceletType, size, color1, color2,
+      clipType, clipColor, qty, total,
       createdAt: new Date(), status: "Pending"
     });
     orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
-    form.reset(); priceDisplay.textContent="Price: $0.00"; clipColorSelect.disabled=false; currentBraceletData=null;
+    form.reset(); priceDisplay.textContent="Price: $0.00"; clipColorSelect.disabled=false;
   }catch(err){
     console.error(err);
     alert("❌ Failed to submit order.");
