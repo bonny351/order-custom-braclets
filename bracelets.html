@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bracelets – Tactics & Treats Preorder</title>
 <style>
@@ -26,15 +26,8 @@ nav a {
   text-decoration: none;
   transition: 0.2s;
 }
-nav a:hover {
-  color: #ff0000;
-  text-shadow: 0 0 6px #ff0000;
-}
-h1 {
-  text-align: center;
-  color: #ff0000;
-  margin-bottom: 30px;
-}
+nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
 form {
   background: #111;
   border-radius: 16px;
@@ -43,43 +36,16 @@ form {
   max-width: 500px;
   box-shadow: 0 0 15px #ff0000;
 }
-label {
-  display: block;
-  margin-top: 10px;
-  font-weight: 500;
-  color: white;
-}
+label { display: block; margin-top: 10px; font-weight: 500; color: white; }
 input, select, button {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  margin-top: 5px;
-  font-size: 14px;
+  width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px;
 }
-select:disabled {
-  background: #555;
-  color: #aaa;
-  cursor: not-allowed;
-}
-button {
-  margin-top: 20px;
-  padding: 12px;
-  background: #ff0000;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-button:hover {
-  background: darkred;
-}
-#priceDisplay {
-  margin-top: 5px;
-  font-weight: bold;
-  color: #ffb347;
-}
+select:disabled { background: #555; color: #aaa; cursor: not-allowed; }
+button { margin-top: 20px; padding: 12px; background: #ff0000; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+button:hover { background: darkred; }
+#priceDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; }
+.low-stock { color: #ffa500; font-weight: bold; }
+.out-of-stock { color: #ff0000; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -104,6 +70,7 @@ button:hover {
 
   <label>Choose Bracelet</label>
   <select id="braceletSelect" required></select>
+  <span id="stockStatus" class="low-stock"></span>
 
   <label>Size</label>
   <select id="braceletSize" required></select>
@@ -153,7 +120,7 @@ button:hover {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, getDoc, doc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -177,41 +144,50 @@ const clipColorSelect = document.getElementById("clipColor");
 const priceDisplay = document.getElementById("priceDisplay");
 const form = document.getElementById("braceletForm");
 const orderMsg = document.getElementById("orderMsg");
+const stockStatus = document.getElementById("stockStatus");
 
 let currentBraceletData = null;
 
-async function loadBracelets() {
-  const snapshot = await getDocs(collection(db, "products_bracelets"));
+// --- SITE STATUS ---
+onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
+  if(docSnap.exists() && docSnap.data().enabled){
+    window.location.href = "under-construction.html";
+  }
+});
+
+// --- LIVE BRACELETS ---
+onSnapshot(collection(db, "products_bracelets"), snapshot => {
+  const colorsSet = new Set();
   braceletSelect.innerHTML = '<option value="">Select Bracelet</option>';
   sizeSelect.innerHTML = '<option value="">Select Size</option>';
   color1Select.innerHTML = '<option value="">Select Color 1</option>';
   color2Select.innerHTML = '<option value="">Select Color 2</option>';
-  const colorsSet = new Set();
 
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const opt = document.createElement("option");
     opt.value = docSnap.id;
-    const minPrice = Object.values(data.price).reduce((min, sizes) => {
-      const sizeMin = Math.min(...Object.values(sizes));
-      return sizeMin < min ? sizeMin : min;
-    }, Infinity);
-    opt.textContent = `${data.type} - $${minPrice.toFixed(2)}`;
-    opt.disabled = !data.stock || data.stock === 0;
+    opt.textContent = data.type;
+
+    if(data.stock <= 0){
+      opt.disabled = true;
+    }
+
     braceletSelect.appendChild(opt);
 
-    if (data.colorOptions) {
-      data.colorOptions.forEach(color => {
-        if (!colorsSet.has(color)) {
+    if(data.colorOptions){
+      data.colorOptions.forEach(color=>{
+        if(!colorsSet.has(color)){
           colorsSet.add(color);
-          const c1 = document.createElement("option"); c1.value = color; c1.textContent = color; color1Select.appendChild(c1);
-          const c2 = document.createElement("option"); c2.value = color; c2.textContent = color; color2Select.appendChild(c2);
+          const c1 = document.createElement("option"); c1.value=color; c1.textContent=color; color1Select.appendChild(c1);
+          const c2 = document.createElement("option"); c2.value=color; c2.textContent=color; color2Select.appendChild(c2);
         }
       });
     }
   });
-}
+});
 
+// --- HANDLE BRACELET CHANGE ---
 braceletSelect.addEventListener("change", async () => {
   const id = braceletSelect.value;
   if(!id) return;
@@ -220,35 +196,52 @@ braceletSelect.addEventListener("change", async () => {
   currentBraceletData = docSnap.data();
 
   sizeSelect.innerHTML = '<option value="">Select Size</option>';
-  Object.keys(currentBraceletData.price).forEach(size => {
+  Object.keys(currentBraceletData.price).forEach(size=>{
     const opt = document.createElement("option");
     opt.value = size;
     opt.textContent = size;
     sizeSelect.appendChild(opt);
   });
 
+  // STOCK STATUS
+  if(currentBraceletData.stock >= 10){
+    stockStatus.textContent = "In Stock";
+    stockStatus.className = "low-stock";
+  } else if(currentBraceletData.stock > 0){
+    stockStatus.textContent = "Low Stock!";
+    stockStatus.className = "low-stock";
+  } else {
+    stockStatus.textContent = "Out of Stock";
+    stockStatus.className = "out-of-stock";
+  }
+
   priceDisplay.textContent = "Price: $0.00";
 });
 
-function updatePrice() {
-  if (!currentBraceletData) return;
+// --- UPDATE PRICE ---
+function updatePrice(){
+  if(!currentBraceletData) return;
   const size = sizeSelect.value;
   const knot = knotSelect.value;
-  if (!size || !knot) { priceDisplay.textContent = "Price: $0.00"; return; }
-  const price = currentBraceletData.price[size]?.[knot] || 0;
-  priceDisplay.textContent = `Price: $${price.toFixed(2)}`;
+  if(!size || !knot){ priceDisplay.textContent = "Price: $0.00"; return; }
+  const basePrice = currentBraceletData.price[size]?.[knot] || 0;
+  let extra = 0;
+  if(currentBraceletData.stock < 10) extra = 0.50; // low stock surcharge
+  priceDisplay.textContent = `Price: $${(basePrice + extra).toFixed(2)}`;
 }
 
 sizeSelect.addEventListener("change", updatePrice);
 knotSelect.addEventListener("change", updatePrice);
 
-clipTypeSelect.addEventListener("change", () => {
+// --- CLIP LOGIC ---
+clipTypeSelect.addEventListener("change", ()=>{
   const type = clipTypeSelect.value;
-  clipColorSelect.disabled = (type === "Adjustable Knot" || type === "Metal");
-  if(clipColorSelect.disabled) clipColorSelect.value = "";
+  clipColorSelect.disabled = (type==="Adjustable Knot" || type==="Metal");
+  if(clipColorSelect.disabled) clipColorSelect.value="";
 });
 
-async function submitOrder() {
+// --- SUBMIT ORDER ---
+async function submitOrder(){
   const name = document.getElementById("braceletName").value.trim();
   const phone = document.getElementById("braceletPhone").value.trim();
   const email = document.getElementById("braceletEmail").value.trim();
@@ -261,26 +254,24 @@ async function submitOrder() {
   const clipColor = clipColorSelect.value;
   const qty = parseInt(document.getElementById("braceletQty").value) || 1;
 
-  if(!name || (!phone && !email) || !braceletId || !size || !knot || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
-    return alert("⚠️ Please fill all required fields. Provide either phone number or email.");
+  if(!name || (!phone && !email) || !braceletId || !size || !knot || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)){
+    return alert("⚠️ Fill all required fields. Provide phone or email.");
   }
 
-  const price = currentBraceletData.price[size]?.[knot] || 0;
-  const total = price * qty;
+  const basePrice = currentBraceletData.price[size]?.[knot] || 0;
+  const extra = currentBraceletData.stock < 10 ? 0.50 : 0;
+  const total = (basePrice + extra) * qty;
 
-  try {
+  try{
     await addDoc(collection(db, "braceletOrders"), {
-      name, phone: phone || null, email: email || null,
+      name, phone: phone||null, email: email||null,
       product: currentBraceletData.type, size, knot,
       color1, color2, clipType, clipColor, qty, total,
       createdAt: new Date(), status: "Pending"
     });
     orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
-    form.reset();
-    priceDisplay.textContent = "Price: $0.00";
-    clipColorSelect.disabled = false;
-    currentBraceletData = null;
-  } catch(err) {
+    form.reset(); priceDisplay.textContent="Price: $0.00"; clipColorSelect.disabled=false; currentBraceletData=null;
+  }catch(err){
     console.error(err);
     alert("❌ Failed to submit order.");
   }
@@ -288,7 +279,6 @@ async function submitOrder() {
 
 document.getElementById("submitBtn").addEventListener("click", submitOrder);
 
-loadBracelets();
 </script>
 </body>
 </html>
