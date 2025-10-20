@@ -3,82 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel – Tactics & Treats</title>
+<title>Dynamic Admin Panel – Tactics & Treats</title>
 <style>
-/* ---------- Base Styles ---------- */
-body { font-family:"Poppins",sans-serif; background:#111; color:white; margin:0; padding:20px;}
+body { font-family:"Poppins",sans-serif; background:#111; color:white; margin:0; padding:20px; }
 h1,h2 { text-align:center; color:#ff0000; margin-bottom:20px; }
 section { background:#181818; padding:20px; border-radius:12px; box-shadow:0 0 12px rgba(255,0,0,0.2); margin-bottom:30px; transition:opacity 0.3s; }
-.flex { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
-.flex input, .flex select { flex:1; padding:8px; border-radius:5px; border:none; font-size:14px;}
-button { padding:10px 16px; background:#ff0000; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:0.2s; }
-button:hover { background:darkred; box-shadow:0 0 8px #ff0000; }
-.message { color:#ffb347; font-weight:bold; text-align:center; margin-top:10px;}
-.tabs { display:flex; justify-content:center; margin-bottom:15px; gap:10px; }
-.tab { padding:10px 20px; cursor:pointer; border-radius:5px; background:#222; color:#fff; font-weight:bold; transition:0.2s; }
-.tab.active { background:#ff0000; color:#fff; box-shadow:0 0 8px #ff0000; }
-.tab:hover { background:#ff4444; }
+.tabs, .subTabs { display:flex; justify-content:center; margin-bottom:15px; gap:10px; flex-wrap:wrap; }
+.tab, .subTab { padding:10px 20px; cursor:pointer; border-radius:5px; background:#222; color:#fff; font-weight:bold; transition:0.2s; }
+.tab.active, .subTab.active { background:#ff0000; color:#fff; box-shadow:0 0 8px #ff0000; }
+.tab:hover, .subTab:hover { background:#ff4444; }
 table { width:100%; border-collapse:collapse; margin-top:10px; display:block; overflow-x:auto; white-space:nowrap; }
 th,td { padding:10px; border:1px solid #ff0000; text-align:center; }
 th { background:#222; color:#ffb347; position:sticky; top:0; z-index:1; }
 tr:nth-child(even) { background:#222; }
 tr:hover { background:#333; transition:0.2s; }
-#searchProduct { width:100%; max-width:400px; margin:10px auto; display:block; padding:8px; border-radius:5px; border:none; font-size:14px; }
+td:focus { outline:2px solid #ff0000; background:#222; }
+#searchInput { width:100%; max-width:400px; margin:10px auto; display:block; padding:8px; border-radius:5px; border:none; font-size:14px; }
+button { padding:8px 12px; margin:5px; background:#ff0000; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:0.2s; }
+button:hover { background:darkred; box-shadow:0 0 8px #ff0000; }
+.message { color:#ffb347; font-weight:bold; text-align:center; margin-top:10px;}
 </style>
 </head>
 <body>
 
-<h1>Admin Panel – Tactics & Treats</h1>
+<h1>Dynamic Admin Panel – Tactics & Treats</h1>
 
-<div class="tabs">
-  <div class="tab active" data-category="bracelets">🧵 Bracelets</div>
-  <div class="tab" data-category="cookies">🍪 Cookies</div>
-  <div class="tab" data-category="spirit">👕 Spirit Wear</div>
-</div>
+<div class="tabs" id="mainTabs"></div>
+<div class="subTabs" id="collectionTabs"></div>
 
-<section id="productManager">
-<h2>Manage Products</h2>
-<input type="text" id="searchProduct" placeholder="🔍 Search products...">
-<form id="productForm">
-  <div class="flex">
-    <input id="productId" type="text" placeholder="Product ID (for editing only)">
-    <input id="productType" type="text" placeholder="Product Name / Type" required>
-    <input id="productPrice" type="text" placeholder="Price (number or JSON for sizes)" required>
-  </div>
-  <div class="flex">
-    <input id="productStock" type="number" placeholder="Stock" required>
-    <input id="productSizes" type="text" placeholder="Sizes (comma separated)">
-    <input id="productColors" type="text" placeholder="Colors (comma separated)">
-  </div>
-  <div class="flex">
-    <button type="button" id="addProductBtn">Add Product</button>
-    <button type="button" id="updateProductBtn">Update Product</button>
-    <button type="button" id="deleteProductBtn">Delete Product</button>
-    <button type="button" id="reAddBraceletsBtn">🔄 Re-add All Bracelets</button>
-  </div>
-  <p id="productMsg" class="message"></p>
-</form>
-
-<table id="productTable">
-<tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Colors</th></tr>
-</table>
-</section>
-
-<section id="orderManager">
-<h2>Orders</h2>
-<table id="ordersTable">
-<tr>
-<th>Category</th><th>Name</th><th>Email</th><th>Product</th><th>Size</th><th>Qty</th><th>Total</th><th>Status</th>
-</tr>
-</table>
-<p id="orderMsg" class="message"></p>
+<section id="tableSection">
+<h2 id="tableTitle">Loading...</h2>
+<input type="text" id="searchInput" placeholder="🔍 Search...">
+<p id="tableMsg" class="message"></p>
+<table id="dynamicTable"></table>
+<div id="actionButtons" class="flex"></div>
 </section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// Firebase config
+// ---------- Firebase ----------
 const firebaseConfig = {
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain:"bracelets-and-color.firebaseapp.com",
@@ -90,154 +55,156 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- DOM Elements ---
-const tabs = document.querySelectorAll(".tab");
-let currentCategory = "bracelets";
-
-const productIdInput = document.getElementById("productId");
-const productTypeInput = document.getElementById("productType");
-const productPriceInput = document.getElementById("productPrice");
-const productStockInput = document.getElementById("productStock");
-const productSizesInput = document.getElementById("productSizes");
-const productColorsInput = document.getElementById("productColors");
-const productMsg = document.getElementById("productMsg");
-const productTable = document.getElementById("productTable");
-const ordersTable = document.getElementById("ordersTable");
-const searchInput = document.getElementById("searchProduct");
-
-// --- Collections ---
-const productCollections = {
-  bracelets: "products_bracelets",
-  cookies: "products_cookies",
-  spirit: "products_spirit"
-};
-const orderCollections = {
-  bracelets: "braceletOrders",
-  cookies: "cookieOrders",
-  spirit: "spiritOrders"
+// ---------- Collections ----------
+const allCollections = {
+  "Products": ["products", "products_bracelets", "products_cookies", "products_spirit"],
+  "Orders": ["braceletOrders", "cookieOrders", "spiritOrders"],
+  "Users": ["users", "activityLogs"],
+  "Settings": ["_meta", "metadata", "siteSettings", "adminSettings", "colors", "braceletColors"]
 };
 
-// --- Tabs ---
-tabs.forEach(tab=>{
+// ---------- DOM ----------
+const mainTabsDiv = document.getElementById("mainTabs");
+const collectionTabsDiv = document.getElementById("collectionTabs");
+const tableSection = document.getElementById("tableSection");
+const tableTitle = document.getElementById("tableTitle");
+const dynamicTable = document.getElementById("dynamicTable");
+const searchInput = document.getElementById("searchInput");
+const tableMsg = document.getElementById("tableMsg");
+const actionButtonsDiv = document.getElementById("actionButtons");
+
+let currentCategory = "";
+let currentCollection = "";
+
+// ---------- Tabs ----------
+Object.keys(allCollections).forEach(cat=>{
+  const tab = document.createElement("div");
+  tab.className="tab";
+  tab.textContent=cat;
   tab.addEventListener("click",()=>{
-    currentCategory = tab.dataset.category;
-    tabs.forEach(t=>t.classList.remove("active"));
+    currentCategory=cat;
+    [...mainTabsDiv.children].forEach(t=>t.classList.remove("active"));
     tab.classList.add("active");
-    loadProducts();
-    loadOrders();
+    loadCollectionTabs();
   });
+  mainTabsDiv.appendChild(tab);
 });
 
-// --- Load Products ---
-async function loadProducts(){
-  productTable.innerHTML='<tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Colors</th></tr>';
-  const snap = await getDocs(collection(db, productCollections[currentCategory]));
+// Select first category by default
+mainTabsDiv.children[0].click();
+
+// ---------- Sub-tabs ----------
+function loadCollectionTabs(){
+  collectionTabsDiv.innerHTML="";
+  allCollections[currentCategory].forEach(coll=>{
+    const subTab = document.createElement("div");
+    subTab.className="subTab";
+    subTab.textContent=coll;
+    subTab.addEventListener("click",()=>{
+      currentCollection=coll;
+      [...collectionTabsDiv.children].forEach(t=>t.classList.remove("active"));
+      subTab.classList.add("active");
+      loadTable();
+    });
+    collectionTabsDiv.appendChild(subTab);
+  });
+  collectionTabsDiv.children[0].click();
+}
+
+// ---------- Load Table ----------
+async function loadTable(){
+  tableTitle.textContent=currentCollection;
+  tableMsg.textContent="⏳ Loading...";
+  dynamicTable.innerHTML="";
+  actionButtonsDiv.innerHTML="";
+
+  const snap = await getDocs(collection(db, currentCollection));
+  if(snap.empty){ tableMsg.textContent="No documents found"; return; }
+  tableMsg.textContent="";
+
+  // Get all keys dynamically
+  const keysSet = new Set();
   snap.forEach(docSnap=>{
-    const data=docSnap.data();
-    const row=productTable.insertRow();
-    row.insertCell(0).textContent=docSnap.id;
-    row.insertCell(1).textContent=data.type;
-    row.insertCell(2).textContent=JSON.stringify(data.price);
-    row.insertCell(3).textContent=data.stock;
-    row.insertCell(4).textContent=(data.sizeOptions||[]).join(",");
-    row.insertCell(5).textContent=(data.colorOptions||[]).join(",");
+    Object.keys(docSnap.data()).forEach(k=>keysSet.add(k));
   });
-}
-
-// --- Search Products ---
-searchInput.addEventListener("input", e=>{
-  const term = e.target.value.toLowerCase();
-  [...productTable.rows].forEach((row,i)=>{
-    if(i===0) return;
-    row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+  const keys = Array.from(keysSet);
+  
+  // Table header
+  const thead = dynamicTable.insertRow();
+  thead.insertCell(0).textContent="ID";
+  keys.forEach(k=>{
+    const th = document.createElement("th");
+    th.textContent=k;
+    thead.appendChild(th);
   });
-});
 
-// --- Inline edit by clicking row ---
-productTable.addEventListener("click", e => {
-  const row = e.target.closest("tr");
-  if (!row || row.rowIndex===0) return;
-  productIdInput.value = row.cells[0].textContent;
-  productTypeInput.value = row.cells[1].textContent;
-  productPriceInput.value = row.cells[2].textContent;
-  productStockInput.value = row.cells[3].textContent;
-  productSizesInput.value = row.cells[4].textContent;
-  productColorsInput.value = row.cells[5].textContent;
-});
+  // Table rows
+  snap.forEach(docSnap=>{
+    const data = docSnap.data();
+    const row = dynamicTable.insertRow();
+    row.dataset.id = docSnap.id;
+    row.insertCell(0).textContent = docSnap.id;
 
-// --- Load Orders ---
-async function loadOrders(){
-  ordersTable.innerHTML='<tr><th>Category</th><th>Name</th><th>Email</th><th>Product</th><th>Size</th><th>Qty</th><th>Total</th><th>Status</th></tr>';
-  for(const cat of Object.keys(orderCollections)){
-    const snap = await getDocs(collection(db, orderCollections[cat]));
-    snap.forEach(docSnap=>{
-      const data = docSnap.data();
-      const row = ordersTable.insertRow();
-      row.insertCell(0).textContent = cat;
-      row.insertCell(1).textContent = data.name;
-      row.insertCell(2).textContent = data.email;
-      row.insertCell(3).textContent = data.product;
-      row.insertCell(4).textContent = data.size || "-";
-      row.insertCell(5).textContent = data.qty;
-      row.insertCell(6).textContent = `$${data.total.toFixed(2)}`;
-      row.insertCell(7).innerHTML = `<span style="color:${data.status==='Completed'?'#0f0':'#ffb347'}">${data.status||"Pending"}</span>`;
+    keys.forEach(key=>{
+      const cell = row.insertCell();
+      let value = data[key];
+      if(Array.isArray(value)) value = value.join(",");
+      else if(typeof value === "object" && value!==null) value = JSON.stringify(value);
+      cell.textContent=value;
+      cell.contentEditable=true;
+
+      // Save on blur
+      cell.addEventListener("blur", async ()=>{
+        let newValue = cell.textContent.trim();
+        if(typeof data[key] === "number") newValue = parseFloat(newValue) || 0;
+        else if(Array.isArray(data[key])) newValue = newValue.split(",").map(s=>s.trim()).filter(s=>s);
+        else if(typeof data[key] === "object" && data[key]!==null){
+          try{ newValue = JSON.parse(newValue); } catch(e){ newValue = data[key]; }
+        }
+        try{
+          await setDoc(doc(db, currentCollection, row.dataset.id), {...data, [key]:newValue});
+          tableMsg.textContent=`✅ ${key} updated!`;
+        }catch(err){ console.error(err); tableMsg.textContent=`❌ Error updating ${key}`; }
+      });
     });
+  });
+
+  // Add "Add" and "Delete" buttons for collections except Orders
+  if(!currentCategory.includes("Orders")){
+    const addBtn = document.createElement("button");
+    addBtn.textContent="➕ Add Document";
+    addBtn.addEventListener("click", async ()=>{
+      const newId = prompt("Enter new document ID:");
+      if(!newId) return;
+      try{
+        await setDoc(doc(db,currentCollection,newId), {});
+        loadTable();
+      }catch(e){console.error(e); tableMsg.textContent="❌ Error adding document";}
+    });
+    const delBtn = document.createElement("button");
+    delBtn.textContent="🗑 Delete Document";
+    delBtn.addEventListener("click", async ()=>{
+      const delId = prompt("Enter document ID to delete:");
+      if(!delId) return;
+      if(!confirm("⚠️ Are you sure?")) return;
+      try{
+        await deleteDoc(doc(db,currentCollection,delId));
+        loadTable();
+      }catch(e){console.error(e); tableMsg.textContent="❌ Error deleting document";}
+    });
+    actionButtonsDiv.appendChild(addBtn);
+    actionButtonsDiv.appendChild(delBtn);
   }
-}
 
-// --- Product Actions ---
-async function addOrUpdateProduct(update=false){
-  try{
-    const id = update ? productIdInput.value.trim() : productTypeInput.value.trim().toLowerCase().replace(/\s+/g,'-');
-    if(!id) { productMsg.textContent="⚠️ Product ID required"; return; }
-    let price = productPriceInput.value.trim();
-    try { price = JSON.parse(price); } catch(e){ price = parseFloat(price);}
-    await setDoc(doc(db, productCollections[currentCategory], id), {
-      type: productTypeInput.value.trim(),
-      price,
-      stock: parseInt(productStockInput.value),
-      sizeOptions: productSizesInput.value.split(",").map(s=>s.trim()).filter(s=>s),
-      colorOptions: productColorsInput.value.split(",").map(c=>c.trim()).filter(c=>c)
+  // Search/filter
+  searchInput.addEventListener("input", ()=>{
+    const term = searchInput.value.toLowerCase();
+    [...dynamicTable.rows].forEach((row,i)=>{
+      if(i===0) return;
+      row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
     });
-    productMsg.textContent = update ? "✅ Product updated!" : "✅ Product added!";
-    loadProducts();
-  }catch(err){ console.error(err); productMsg.textContent="❌ Error saving product";}
+  });
 }
-
-async function deleteProduct(){
-  const id = productIdInput.value.trim();
-  if(!id){productMsg.textContent="⚠️ Enter Product ID to delete"; return;}
-  if(!confirm("⚠️ Are you sure you want to delete this product?")) return;
-  try{
-    await deleteDoc(doc(db, productCollections[currentCategory], id));
-    productMsg.textContent="✅ Product deleted!";
-    loadProducts();
-  }catch(err){console.error(err); productMsg.textContent="❌ Error deleting product";}
-}
-
-// --- Re-add all bracelets ---
-const allBracelets = [ /* Keep your previous bracelet objects here */ ];
-async function reAddAllBracelets() {
-  if(!confirm("⚠️ This will overwrite/add all bracelet products. Continue?")) return;
-  try {
-    for(const b of allBracelets){
-      const id = b.type.toLowerCase().replace(/\s+/g,'-');
-      await setDoc(doc(db, productCollections["bracelets"], id), b);
-    }
-    alert("✅ All bracelets re-added!");
-    loadProducts();
-  } catch(e) { console.error(e); alert("❌ Error re-adding bracelets"); }
-}
-
-// --- Event Listeners ---
-document.getElementById("addProductBtn").addEventListener("click", ()=>addOrUpdateProduct(false));
-document.getElementById("updateProductBtn").addEventListener("click", ()=>addOrUpdateProduct(true));
-document.getElementById("deleteProductBtn").addEventListener("click", deleteProduct);
-document.getElementById("reAddBraceletsBtn").addEventListener("click", reAddAllBracelets);
-
-// --- Initialize ---
-loadProducts();
-loadOrders();
 </script>
 </body>
 </html>
