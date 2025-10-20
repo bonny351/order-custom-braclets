@@ -1,210 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dynamic Admin Panel – Tactics & Treats</title>
+<title>Cookies – Tactics & Treats Preorder</title>
 <style>
-body { font-family:"Poppins",sans-serif; background:#111; color:white; margin:0; padding:20px; }
-h1,h2 { text-align:center; color:#ff0000; margin-bottom:20px; }
-section { background:#181818; padding:20px; border-radius:12px; box-shadow:0 0 12px rgba(255,0,0,0.2); margin-bottom:30px; transition:opacity 0.3s; }
-.tabs, .subTabs { display:flex; justify-content:center; margin-bottom:15px; gap:10px; flex-wrap:wrap; }
-.tab, .subTab { padding:10px 20px; cursor:pointer; border-radius:5px; background:#222; color:#fff; font-weight:bold; transition:0.2s; }
-.tab.active, .subTab.active { background:#ff0000; color:#fff; box-shadow:0 0 8px #ff0000; }
-.tab:hover, .subTab:hover { background:#ff4444; }
-table { width:100%; border-collapse:collapse; margin-top:10px; display:block; overflow-x:auto; white-space:nowrap; }
-th,td { padding:10px; border:1px solid #ff0000; text-align:center; }
-th { background:#222; color:#ffb347; position:sticky; top:0; z-index:1; }
-tr:nth-child(even) { background:#222; }
-tr:hover { background:#333; transition:0.2s; }
-td:focus { outline:2px solid #ff0000; background:#222; }
-#searchInput { width:100%; max-width:400px; margin:10px auto; display:block; padding:8px; border-radius:5px; border:none; font-size:14px; }
-button { padding:8px 12px; margin:5px; background:#ff0000; color:white; font-weight:bold; border:none; border-radius:8px; cursor:pointer; transition:0.2s; }
-button:hover { background:darkred; box-shadow:0 0 8px #ff0000; }
-.message { color:#ffb347; font-weight:bold; text-align:center; margin-top:10px;}
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
+nav {
+  text-align: center;
+  background: #111;
+  padding: 10px 0;
+  border-bottom: 2px solid #ff0000;
+  box-shadow: 0 0 10px #ff0000;
+}
+nav a {
+  color: white;
+  margin: 0 15px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
+}
+nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
+form {
+  background: #111;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  box-shadow: 0 0 15px #ff0000;
+}
+label { display: block; margin-top: 10px; font-weight: 500; color: white; }
+input, select, button {
+  width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px;
+}
+button {
+  margin-top: 20px; padding: 12px; background: #ff0000; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s;
+}
+button:hover { background: darkred; }
+#stockStatus { margin-top: 5px; font-weight: bold; }
+.low-stock { color: #ffa500; }
+.out-of-stock { color: #ff0000; }
+#orderMsg { text-align:center; color:#ffb347; font-weight:bold; margin-top:15px; }
 </style>
 </head>
 <body>
 
-<h1>Dynamic Admin Panel – Tactics & Treats</h1>
+<nav>
+  <a href="cookies.html" class="text-white underline">Cookies</a>
+  <a href="bracelets.html">Bracelets</a>
+  <a href="spiritwear.html">Spirit Wear</a>
+</nav>
 
-<div class="tabs" id="mainTabs"></div>
-<div class="subTabs" id="collectionTabs"></div>
+<h1>Cookie Preorder</h1>
 
-<section id="tableSection">
-<h2 id="tableTitle">Loading...</h2>
-<input type="text" id="searchInput" placeholder="🔍 Search...">
-<p id="tableMsg" class="message"></p>
-<table id="dynamicTable"></table>
-<div id="actionButtons" class="flex"></div>
-</section>
+<form id="cookieForm">
+  <label>Name</label>
+  <input id="cookieName" type="text" required />
+
+  <label>Phone Number</label>
+  <input id="cookiePhone" type="tel" />
+
+  <label>Email</label>
+  <input id="cookieEmail" type="email" />
+
+  <label>Choose Cookie</label>
+  <select id="cookieSelect" required></select>
+  <span id="stockStatus"></span>
+
+  <label>Size</label>
+  <select id="cookieSize" required></select>
+
+  <label>Quantity</label>
+  <input id="cookieQty" type="number" min="1" value="1" required />
+
+  <button type="button" id="submitBtn">Submit Cookie Order</button>
+</form>
+
+<p id="orderMsg"></p>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// ---------- Firebase ----------
 const firebaseConfig = {
-  apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-  authDomain:"bracelets-and-color.firebaseapp.com",
-  projectId:"bracelets-and-color",
-  storageBucket:"bracelets-and-color.appspot.com",
-  messagingSenderId:"382292570673",
-  appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.appspot.com",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ---------- Collections ----------
-const allCollections = {
-  "Products": ["products", "products_bracelets", "products_cookies", "products_spirit"],
-  "Orders": ["braceletOrders", "cookieOrders", "spiritOrders"],
-  "Users": ["users", "activityLogs"],
-  "Settings": ["_meta", "metadata", "siteSettings", "adminSettings", "colors", "braceletColors"]
-};
+const cookieSelect = document.getElementById("cookieSelect");
+const cookieSize = document.getElementById("cookieSize");
+const stockStatus = document.getElementById("stockStatus");
+const orderMsg = document.getElementById("orderMsg");
 
-// ---------- DOM ----------
-const mainTabsDiv = document.getElementById("mainTabs");
-const collectionTabsDiv = document.getElementById("collectionTabs");
-const tableSection = document.getElementById("tableSection");
-const tableTitle = document.getElementById("tableTitle");
-const dynamicTable = document.getElementById("dynamicTable");
-const searchInput = document.getElementById("searchInput");
-const tableMsg = document.getElementById("tableMsg");
-const actionButtonsDiv = document.getElementById("actionButtons");
+let currentCookieData = null;
 
-let currentCategory = "";
-let currentCollection = "";
-
-// ---------- Tabs ----------
-Object.keys(allCollections).forEach(cat=>{
-  const tab = document.createElement("div");
-  tab.className="tab";
-  tab.textContent=cat;
-  tab.addEventListener("click",()=>{
-    currentCategory=cat;
-    [...mainTabsDiv.children].forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
-    loadCollectionTabs();
-  });
-  mainTabsDiv.appendChild(tab);
+// --- SITE STATUS ---
+onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
+  if(docSnap.exists() && docSnap.data().enabled){
+    window.location.href = "under-construction.html";
+  }
 });
 
-// Select first category by default
-mainTabsDiv.children[0].click();
+// --- LIVE COOKIES ---
+onSnapshot(collection(db, "products_cookies"), snapshot => {
+  cookieSelect.innerHTML = '<option value="">Select Cookie</option>';
+  cookieSize.innerHTML = '<option value="">Select Size</option>';
 
-// ---------- Sub-tabs ----------
-function loadCollectionTabs(){
-  collectionTabsDiv.innerHTML="";
-  allCollections[currentCategory].forEach(coll=>{
-    const subTab = document.createElement("div");
-    subTab.className="subTab";
-    subTab.textContent=coll;
-    subTab.addEventListener("click",()=>{
-      currentCollection=coll;
-      [...collectionTabsDiv.children].forEach(t=>t.classList.remove("active"));
-      subTab.classList.add("active");
-      loadTable();
-    });
-    collectionTabsDiv.appendChild(subTab);
-  });
-  collectionTabsDiv.children[0].click();
-}
-
-// ---------- Load Table ----------
-async function loadTable(){
-  tableTitle.textContent=currentCollection;
-  tableMsg.textContent="⏳ Loading...";
-  dynamicTable.innerHTML="";
-  actionButtonsDiv.innerHTML="";
-
-  const snap = await getDocs(collection(db, currentCollection));
-  if(snap.empty){ tableMsg.textContent="No documents found"; return; }
-  tableMsg.textContent="";
-
-  // Get all keys dynamically
-  const keysSet = new Set();
-  snap.forEach(docSnap=>{
-    Object.keys(docSnap.data()).forEach(k=>keysSet.add(k));
-  });
-  const keys = Array.from(keysSet);
-  
-  // Table header
-  const thead = dynamicTable.insertRow();
-  thead.insertCell(0).textContent="ID";
-  keys.forEach(k=>{
-    const th = document.createElement("th");
-    th.textContent=k;
-    thead.appendChild(th);
-  });
-
-  // Table rows
-  snap.forEach(docSnap=>{
+  snapshot.forEach(docSnap => {
     const data = docSnap.data();
-    const row = dynamicTable.insertRow();
-    row.dataset.id = docSnap.id;
-    row.insertCell(0).textContent = docSnap.id;
-
-    keys.forEach(key=>{
-      const cell = row.insertCell();
-      let value = data[key];
-      if(Array.isArray(value)) value = value.join(",");
-      else if(typeof value === "object" && value!==null) value = JSON.stringify(value);
-      cell.textContent=value;
-      cell.contentEditable=true;
-
-      // Save on blur
-      cell.addEventListener("blur", async ()=>{
-        let newValue = cell.textContent.trim();
-        if(typeof data[key] === "number") newValue = parseFloat(newValue) || 0;
-        else if(Array.isArray(data[key])) newValue = newValue.split(",").map(s=>s.trim()).filter(s=>s);
-        else if(typeof data[key] === "object" && data[key]!==null){
-          try{ newValue = JSON.parse(newValue); } catch(e){ newValue = data[key]; }
-        }
-        try{
-          await setDoc(doc(db, currentCollection, row.dataset.id), {...data, [key]:newValue});
-          tableMsg.textContent=`✅ ${key} updated!`;
-        }catch(err){ console.error(err); tableMsg.textContent=`❌ Error updating ${key}`; }
-      });
-    });
+    const opt = document.createElement("option");
+    opt.value = docSnap.id;
+    opt.textContent = `${data.name} - $${data.price.toFixed(2)}`;
+    opt.disabled = !data.stock || data.stock === 0;
+    cookieSelect.appendChild(opt);
   });
+});
 
-  // Add "Add" and "Delete" buttons for collections except Orders
-  if(!currentCategory.includes("Orders")){
-    const addBtn = document.createElement("button");
-    addBtn.textContent="➕ Add Document";
-    addBtn.addEventListener("click", async ()=>{
-      const newId = prompt("Enter new document ID:");
-      if(!newId) return;
-      try{
-        await setDoc(doc(db,currentCollection,newId), {});
-        loadTable();
-      }catch(e){console.error(e); tableMsg.textContent="❌ Error adding document";}
+// --- HANDLE COOKIE CHANGE ---
+cookieSelect.addEventListener("change", async () => {
+  const id = cookieSelect.value;
+  if(!id) return;
+  const docSnap = await getDoc(doc(db, "products_cookies", id));
+  if(!docSnap.exists()) return;
+  currentCookieData = docSnap.data();
+
+  cookieSize.innerHTML = '<option value="">Select Size</option>';
+  if(currentCookieData.size) {
+    currentCookieData.size.forEach(sz => {
+      const opt = document.createElement("option");
+      opt.value = sz;
+      opt.textContent = sz;
+      cookieSize.appendChild(opt);
     });
-    const delBtn = document.createElement("button");
-    delBtn.textContent="🗑 Delete Document";
-    delBtn.addEventListener("click", async ()=>{
-      const delId = prompt("Enter document ID to delete:");
-      if(!delId) return;
-      if(!confirm("⚠️ Are you sure?")) return;
-      try{
-        await deleteDoc(doc(db,currentCollection,delId));
-        loadTable();
-      }catch(e){console.error(e); tableMsg.textContent="❌ Error deleting document";}
-    });
-    actionButtonsDiv.appendChild(addBtn);
-    actionButtonsDiv.appendChild(delBtn);
   }
 
-  // Search/filter
-  searchInput.addEventListener("input", ()=>{
-    const term = searchInput.value.toLowerCase();
-    [...dynamicTable.rows].forEach((row,i)=>{
-      if(i===0) return;
-      row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+  // STOCK STATUS
+  if(currentCookieData.stock >= 10){
+    stockStatus.textContent = "In Stock";
+    stockStatus.className = "low-stock";
+  } else if(currentCookieData.stock > 0){
+    stockStatus.textContent = "Low Stock!";
+    stockStatus.className = "low-stock";
+  } else {
+    stockStatus.textContent = "Out of Stock";
+    stockStatus.className = "out-of-stock";
+  }
+});
+
+// --- SUBMIT ORDER ---
+async function submitCookieOrder() {
+  const name = document.getElementById("cookieName").value.trim();
+  const phone = document.getElementById("cookiePhone").value.trim();
+  const email = document.getElementById("cookieEmail").value.trim();
+  const cookieId = cookieSelect.value;
+  const size = cookieSize.value;
+  const qty = parseInt(document.getElementById("cookieQty").value) || 1;
+
+  if(!name || (!phone && !email) || !cookieId || !size) return alert("⚠️ Fill all required fields.");
+
+  const cookieRef = doc(db, "products_cookies", cookieId);
+  const cookieSnap = await getDoc(cookieRef);
+  if(!cookieSnap.exists()) return alert("❌ Cookie not found.");
+
+  const data = cookieSnap.data();
+  const total = data.price * qty;
+
+  try {
+    await addDoc(collection(db, "cookieOrders"), {
+      name, phone: phone || null, email: email || null,
+      product: data.name, size, qty, total,
+      createdAt: new Date(), status: "Pending"
     });
-  });
+    orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
+    document.getElementById("cookieForm").reset();
+    stockStatus.textContent = "";
+    currentCookieData = null;
+  } catch(err) {
+    console.error(err);
+    alert("❌ Failed to submit order.");
+  }
 }
+
+document.getElementById("submitBtn").addEventListener("click", submitCookieOrder);
 </script>
 </body>
 </html>
