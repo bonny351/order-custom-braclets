@@ -148,6 +148,36 @@ const stockStatus = document.getElementById("stockStatus");
 
 let currentBraceletData = null;
 
+// --- Price Table ---
+const priceTable = {
+  5:{Cobra:4.00, "King Cobra":5.25, Fishtail:3.75, "Solomon/Trilobite":4.25},
+  6:{Cobra:4.75, "King Cobra":6.25, Fishtail:4.50, "Solomon/Trilobite":5.00},
+  7:{Cobra:5.50, "King Cobra":7.25, Fishtail:5.25, "Solomon/Trilobite":6.00},
+  8:{Cobra:6.50, "King Cobra":8.50, Fishtail:6.00, "Solomon/Trilobite":6.75},
+  9:{Cobra:7.25, "King Cobra":9.50, Fishtail:6.75, "Solomon/Trilobite":7.75},
+  10:{Cobra:8.00, "King Cobra":10.50, Fishtail:7.50, "Solomon/Trilobite":8.50},
+  11:{Cobra:8.75, "King Cobra":11.50, Fishtail:8.25, "Solomon/Trilobite":9.25},
+  12:{Cobra:9.50, "King Cobra":12.50, Fishtail:9.00, "Solomon/Trilobite":10.25},
+  13:{Cobra:10.50, "King Cobra":13.75, Fishtail:9.75, "Solomon/Trilobite":11.00},
+  14:{Cobra:11.25, "King Cobra":14.75, Fishtail:10.50, "Solomon/Trilobite":12.00},
+  15:{Cobra:12.00, "King Cobra":15.75, Fishtail:11.25, "Solomon/Trilobite":12.75},
+  16:{Cobra:12.75, "King Cobra":16.75, Fishtail:12.00, "Solomon/Trilobite":13.50},
+  17:{Cobra:13.50, "King Cobra":17.75, Fishtail:12.75, "Solomon/Trilobite":14.50},
+  18:{Cobra:14.50, "King Cobra":19.00, Fishtail:13.50, "Solomon/Trilobite":15.25},
+  19:{Cobra:15.25, "King Cobra":20.00, Fishtail:14.25, "Solomon/Trilobite":16.25},
+  20:{Cobra:16.00, "King Cobra":21.00, Fishtail:15.00, "Solomon/Trilobite":17.00},
+  21:{Cobra:16.75, "King Cobra":22.00, Fishtail:15.75, "Solomon/Trilobite":17.75},
+  22:{Cobra:17.50, "King Cobra":23.00, Fishtail:16.50, "Solomon/Trilobite":18.75},
+  23:{Cobra:18.50, "King Cobra":24.25, Fishtail:17.25, "Solomon/Trilobite":19.50},
+  24:{Cobra:19.25, "King Cobra":25.25, Fishtail:18.00, "Solomon/Trilobite":20.50},
+  25:{Cobra:20.00, "King Cobra":26.25, Fishtail:18.75, "Solomon/Trilobite":21.25},
+  26:{Cobra:20.75, "King Cobra":27.25, Fishtail:19.50, "Solomon/Trilobite":22.00},
+  27:{Cobra:21.50, "King Cobra":28.25, Fishtail:20.25, "Solomon/Trilobite":23.00},
+  28:{Cobra:22.50, "King Cobra":29.50, Fishtail:21.00, "Solomon/Trilobite":23.75},
+  29:{Cobra:23.25, "King Cobra":30.50, Fishtail:21.75, "Solomon/Trilobite":24.75},
+  30:{Cobra:24.00, "King Cobra":31.50, Fishtail:22.50, "Solomon/Trilobite":25.50}
+};
+
 // --- SITE STATUS ---
 onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
   if(docSnap.exists() && docSnap.data().enabled){
@@ -159,7 +189,6 @@ onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
 onSnapshot(collection(db, "products_bracelets"), snapshot => {
   const colorsSet = new Set();
   braceletSelect.innerHTML = '<option value="">Select Bracelet</option>';
-  sizeSelect.innerHTML = '<option value="">Select Size</option>';
   color1Select.innerHTML = '<option value="">Select Color 1</option>';
   color2Select.innerHTML = '<option value="">Select Color 2</option>';
 
@@ -195,13 +224,14 @@ braceletSelect.addEventListener("change", async () => {
   if(!docSnap.exists()) return;
   currentBraceletData = docSnap.data();
 
+  // Populate sizes 5–30
   sizeSelect.innerHTML = '<option value="">Select Size</option>';
-  Object.keys(currentBraceletData.price).forEach(size=>{
+  for(let s=5; s<=30; s++){
     const opt = document.createElement("option");
-    opt.value = size;
-    opt.textContent = size;
+    opt.value = s;
+    opt.textContent = s + " in";
     sizeSelect.appendChild(opt);
-  });
+  }
 
   // STOCK STATUS
   if(currentBraceletData.stock >= 10){
@@ -220,14 +250,14 @@ braceletSelect.addEventListener("change", async () => {
 
 // --- UPDATE PRICE ---
 function updatePrice(){
-  if(!currentBraceletData) return;
-  const size = sizeSelect.value;
+  const size = parseInt(sizeSelect.value);
   const knot = knotSelect.value;
-  if(!size || !knot){ priceDisplay.textContent = "Price: $0.00"; return; }
-  const basePrice = currentBraceletData.price[size]?.[knot] || 0;
-  let extra = 0;
-  if(currentBraceletData.stock < 10) extra = 0.50; // low stock surcharge
-  priceDisplay.textContent = `Price: $${(basePrice + extra).toFixed(2)}`;
+  if(!size || !knot || !priceTable[size]){
+    priceDisplay.textContent = "Price: $0.00";
+    return;
+  }
+  const basePrice = priceTable[size][knot] || 0;
+  priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
 }
 
 sizeSelect.addEventListener("change", updatePrice);
@@ -258,9 +288,8 @@ async function submitOrder(){
     return alert("⚠️ Fill all required fields. Provide phone or email.");
   }
 
-  const basePrice = currentBraceletData.price[size]?.[knot] || 0;
-  const extra = currentBraceletData.stock < 10 ? 0.50 : 0;
-  const total = (basePrice + extra) * qty;
+  const basePrice = priceTable[size][knot] || 0;
+  const total = basePrice * qty;
 
   try{
     await addDoc(collection(db, "braceletOrders"), {
