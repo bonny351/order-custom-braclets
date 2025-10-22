@@ -116,7 +116,7 @@ button:hover { background: darkred; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // --- Firebase config ---
 const firebaseConfig = {
@@ -141,82 +141,83 @@ const priceDisplay = document.getElementById("priceDisplay");
 const form = document.getElementById("braceletForm");
 const orderMsg = document.getElementById("orderMsg");
 
-// --- Price Table ---
-const priceTable = {
-  5:{Cobra:4.00, "King Cobra":5.25, Fishtail:3.75, "Solomon/Trilobite":4.25},
-  6:{Cobra:4.75, "King Cobra":6.25, Fishtail:4.50, "Solomon/Trilobite":5.00},
-  7:{Cobra:5.50, "King Cobra":7.25, Fishtail:5.25, "Solomon/Trilobite":6.00},
-  8:{Cobra:6.50, "King Cobra":8.50, Fishtail:6.00, "Solomon/Trilobite":6.75},
-  9:{Cobra:7.25, "King Cobra":9.50, Fishtail:6.75, "Solomon/Trilobite":7.75},
-  10:{Cobra:8.00, "King Cobra":10.50, Fishtail:7.50, "Solomon/Trilobite":8.50},
-  11:{Cobra:8.75, "King Cobra":11.50, Fishtail:8.25, "Solomon/Trilobite":9.25},
-  12:{Cobra:9.50, "King Cobra":12.50, Fishtail:9.00, "Solomon/Trilobite":10.25},
-  13:{Cobra:10.50, "King Cobra":13.75, Fishtail:9.75, "Solomon/Trilobite":11.00},
-  14:{Cobra:11.25, "King Cobra":14.75, Fishtail:10.50, "Solomon/Trilobite":12.00},
-  15:{Cobra:12.00, "King Cobra":15.75, Fishtail:11.25, "Solomon/Trilobite":12.75},
-  16:{Cobra:12.75, "King Cobra":16.75, Fishtail:12.00, "Solomon/Trilobite":13.50},
-  17:{Cobra:13.50, "King Cobra":17.75, Fishtail:12.75, "Solomon/Trilobite":14.50},
-  18:{Cobra:14.50, "King Cobra":19.00, Fishtail:13.50, "Solomon/Trilobite":15.25},
-  19:{Cobra:15.25, "King Cobra":20.00, Fishtail:14.25, "Solomon/Trilobite":16.25},
-  20:{Cobra:16.00, "King Cobra":21.00, Fishtail:15.00, "Solomon/Trilobite":17.00},
-  21:{Cobra:16.75, "King Cobra":22.00, Fishtail:15.75, "Solomon/Trilobite":17.75},
-  22:{Cobra:17.50, "King Cobra":23.00, Fishtail:16.50, "Solomon/Trilobite":18.75},
-  23:{Cobra:18.50, "King Cobra":24.25, Fishtail:17.25, "Solomon/Trilobite":19.50},
-  24:{Cobra:19.25, "King Cobra":25.25, Fishtail:18.00, "Solomon/Trilobite":20.50},
-  25:{Cobra:20.00, "King Cobra":26.25, Fishtail:18.75, "Solomon/Trilobite":21.25},
-  26:{Cobra:20.75, "King Cobra":27.25, Fishtail:19.50, "Solomon/Trilobite":22.00},
-  27:{Cobra:21.50, "King Cobra":28.25, Fishtail:20.25, "Solomon/Trilobite":23.00},
-  28:{Cobra:22.50, "King Cobra":29.50, Fishtail:21.00, "Solomon/Trilobite":23.75},
-  29:{Cobra:23.25, "King Cobra":30.50, Fishtail:21.75, "Solomon/Trilobite":24.75},
-  30:{Cobra:24.00, "King Cobra":31.50, Fishtail:22.50, "Solomon/Trilobite":25.50}
-};
+let currentPriceMap = {}; // store Firestore price map
 
-// --- Populate sizes on page load ---
-for(let s=5; s<=30; s++){
-  const opt = document.createElement("option");
-  opt.value = s;
-  opt.textContent = s + " in";
-  sizeSelect.appendChild(opt);
+// --- Load bracelet data (sizes, colors, prices) ---
+function loadBraceletData(braceletType) {
+  if (!braceletType) return;
+
+  const typeKey = braceletType.toLowerCase().replace(/\s+/g, "-"); // "King Cobra" -> "king-cobra"
+  const docRef = doc(db, "products_bracelets", typeKey);
+
+  onSnapshot(docRef, (snap) => {
+    sizeSelect.innerHTML = "";
+    color1Select.innerHTML = "";
+    color2Select.innerHTML = "";
+
+    if (!snap.exists()) {
+      console.warn(`⚠️ No Firestore document for ${typeKey}`);
+      return;
+    }
+
+    const data = snap.data();
+
+    // --- Load sizes ---
+    if (Array.isArray(data.sizeOptions)) {
+      data.sizeOptions.forEach(size => {
+        const opt = document.createElement("option");
+        opt.value = size.replace('"', '');
+        opt.textContent = size;
+        sizeSelect.appendChild(opt);
+      });
+    }
+
+    // --- Load colors ---
+    const colors = data.colorOptions || [];
+    if (colors.length > 0) {
+      colors.forEach(color => {
+        const c1 = document.createElement("option");
+        c1.value = color;
+        c1.textContent = color;
+        color1Select.appendChild(c1);
+
+        const c2 = document.createElement("option");
+        c2.value = color;
+        c2.textContent = color;
+        color2Select.appendChild(c2);
+      });
+    }
+
+    // --- Store prices for this bracelet type ---
+    currentPriceMap = data.price || {};
+    updatePrice();
+  });
 }
 
-// --- Default colors ---
-const defaultColors = ["Red","Blue","Green","Yellow","Black"];
-defaultColors.forEach(color => {
-  const c1 = document.createElement("option"); c1.value=color; c1.textContent=color; color1Select.appendChild(c1);
-  const c2 = document.createElement("option"); c2.value=color; c2.textContent=color; color2Select.appendChild(c2);
-});
-
-// --- Update price ---
-function updatePrice(){
-  const size = parseInt(sizeSelect.value);
-  const braceletType = knotSelect.value;
+// --- Price calculation ---
+function updatePrice() {
+  const size = sizeSelect.value.replace('"', '');
   const clipType = clipTypeSelect.value;
 
-  if(!size || !braceletType || !priceTable[size]) {
-    priceDisplay.textContent = "Price: $0.00";
-    return;
-  }
-
-  let basePrice = priceTable[size][braceletType] || 0;
-  if(clipType === "Metal") basePrice += 1;
+  let basePrice = parseFloat(currentPriceMap[size + '"']) || 0;
+  if (clipType === "Metal") basePrice += 1;
 
   priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
 }
 
-// Event listeners to update price dynamically
+// --- Event listeners ---
+knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
 sizeSelect.addEventListener("change", updatePrice);
-knotSelect.addEventListener("change", updatePrice);
 clipTypeSelect.addEventListener("change", updatePrice);
 
-// --- Clip color logic ---
-clipTypeSelect.addEventListener("change", ()=>{
+clipTypeSelect.addEventListener("change", () => {
   const type = clipTypeSelect.value;
-  clipColorSelect.disabled = (type==="Adjustable Knot" || type==="Metal");
-  if(clipColorSelect.disabled) clipColorSelect.value="";
+  clipColorSelect.disabled = (type === "Adjustable Knot" || type === "Metal");
+  if (clipColorSelect.disabled) clipColorSelect.value = "";
 });
 
 // --- Submit order ---
-async function submitOrder(){
+async function submitOrder() {
   const name = document.getElementById("braceletName").value.trim();
   const phone = document.getElementById("braceletPhone").value.trim();
   const email = document.getElementById("braceletEmail").value.trim();
@@ -228,26 +229,26 @@ async function submitOrder(){
   const clipColor = clipColorSelect.value;
   const qty = parseInt(document.getElementById("braceletQty").value) || 1;
 
-  if(!name || (!phone && !email) || !braceletType || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)){
+  if (!name || (!phone && !email) || !braceletType || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
     return alert("⚠️ Fill all required fields. Provide phone or email.");
   }
 
-  let basePrice = priceTable[size][braceletType] || 0;
-  if(clipType === "Metal") basePrice += 1;
+  let basePrice = parseFloat(currentPriceMap[size + '"']) || 0;
+  if (clipType === "Metal") basePrice += 1;
   const total = basePrice * qty;
 
-  try{
+  try {
     await addDoc(collection(db, "braceletOrders"), {
-      name, phone: phone||null, email: email||null,
+      name, phone: phone || null, email: email || null,
       product: braceletType, size, color1, color2,
       clipType, clipColor, qty, total,
       createdAt: new Date(), status: "Pending"
     });
     orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
     form.reset();
-    priceDisplay.textContent="Price: $0.00";
-    clipColorSelect.disabled=false;
-  }catch(err){
+    priceDisplay.textContent = "Price: $0.00";
+    clipColorSelect.disabled = false;
+  } catch (err) {
     console.error(err);
     alert("❌ Failed to submit order.");
   }
@@ -257,4 +258,3 @@ document.getElementById("submitBtn").addEventListener("click", submitOrder);
 </script>
 </body>
 </html>
-
