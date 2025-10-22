@@ -1,28 +1,225 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <title>Spirit Wear – Tactics & Treats Preorder</title> <style> body { font-family: "Poppins", sans-serif; background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c); color: white; margin: 0; padding: 20px; } nav { text-align: center; background: #111; padding: 10px 0; border-bottom: 2px solid #ff0000; box-shadow: 0 0 10px #ff0000; } nav a { color: white; margin: 0 15px; font-weight: bold; text-decoration: none; transition: 0.2s; } nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; } h1 { text-align: center; color: #ff0000; margin-bottom: 30px; } form { background: #111; border-radius: 16px; padding: 20px; margin: 20px auto; max-width: 500px; box-shadow: 0 0 15px #ff0000; } label { display: block; margin-top: 10px; font-weight: 500; color: white; } input, select, button { width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px; } button { margin-top: 20px; padding: 12px; background: #ff0000; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; } button:hover { background: darkred; } #priceDisplay, #totalDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; } #message { text-align:center; color:#ffb347; font-weight:bold; margin-top:10px; } .out-of-stock { color: #ff5555; font-weight: bold; } .low-stock { color: #ffaa00; font-weight: bold; } </style> </head> <body> <nav> <a href="cookies.html">Cookies</a> <a href="bracelets.html">Bracelets</a> <a href="spiritwear.html">Spirit Wear</a> </nav> <h1>Spirit Wear Preorder</h1> <form id="orderForm"> <label for="name">Name</label> <input id="name" type="text" required />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spirit Wear – Tactics & Treats Preorder</title>
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
+nav {
+  text-align: center;
+  background: #111;
+  padding: 10px 0;
+  border-bottom: 2px solid #ff0000;
+  box-shadow: 0 0 10px #ff0000;
+}
+nav a {
+  color: white;
+  margin: 0 15px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
+}
+nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
+form {
+  background: #111;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  box-shadow: 0 0 15px #ff0000;
+}
+label { display: block; margin-top: 10px; font-weight: 500; color: white; }
+input, select, button {
+  width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px;
+}
+select:disabled { background: #555; color: #aaa; cursor: not-allowed; }
+button { margin-top: 20px; padding: 12px; background: #ff0000; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+button:hover { background: darkred; }
+#priceDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; }
+#totalDisplay { margin-top: 3px; font-weight: bold; color: #00ff99; }
+.low-stock { color: #ffa500; font-weight: bold; }
+.out-of-stock { color: #ff0000; font-weight: bold; }
+</style>
+</head>
+<body>
 
-<label for="email">Email</label>
-<input id="email" type="email" required />
+<nav>
+  <a href="cookies.html">Cookies</a>
+  <a href="bracelets.html">Bracelets</a>
+  <a href="spiritwear.html">Spirit Wear</a>
+</nav>
 
-<label for="productSelect">Choose Item</label>
-<select id="productSelect" required>
-<option value="">Loading...</option>
-</select>
+<h1>Spirit Wear Preorder</h1>
 
-<label for="sizeSelect">Choose Size</label>
-<select id="sizeSelect" required>
-<option value="">Select Size</option>
-<option value="S">Small</option>
-<option value="M">Medium</option>
-<option value="L">Large</option>
-<option value="XL">X-Large</option>
-<option value="2XL">2X-Large</option>
-</select>
+<form id="spiritForm">
+  <label>Name</label>
+  <input id="spiritName" type="text" required>
 
-<label for="quantity">Quantity</label>
-<input id="quantity" type="number" min="1" value="1" required />
+  <label>Email</label>
+  <input id="spiritEmail" type="email" required>
 
-<p id="priceDisplay">Price: $0.00</p> <p id="totalDisplay">Total: $0.00</p>
+  <label>Item</label>
+  <select id="spiritItem" required>
+    <option value="">Loading...</option>
+  </select>
 
-<button type="submit">Submit Preorder</button>
+  <label>Size</label>
+  <select id="spiritSize" required>
+    <option value="">Select Size</option>
+    <option value="S">Small</option>
+    <option value="M">Medium</option>
+    <option value="L">Large</option>
+    <option value="XL">X-Large</option>
+    <option value="2XL">2X-Large</option>
+  </select>
 
-</form> <p id="message"></p> <script type="module"> import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"; import { getFirestore, collection, getDocs, addDoc, runTransaction, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"; // --- Firebase Config --- const firebaseConfig = { apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58", authDomain: "bracelets-and-color.firebaseapp.com", projectId: "bracelets-and-color", storageBucket: "bracelets-and-color.appspot.com", messagingSenderId: "382292570673", appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10", measurementId: "G-BJPQN6S7YB" }; const app = initializeApp(firebaseConfig); const db = getFirestore(app); // ✅ Correct collection names from your original working code const productsCol = collection(db, "spiritProducts"); const ordersCol = collection(db, "spiritOrders"); const select = document.getElementById("productSelect"); const priceDisplay = document.getElementById("priceDisplay"); const totalDisplay = document.getElementById("totalDisplay"); const quantityInput = document.getElementById("quantity"); const message = document.getElementById("message"); let products = {}; let currentPrice = 0; // --- Load products --- async function loadProducts() { try { const snapshot = await getDocs(productsCol); select.innerHTML = `<option value="">Choose Item</option>`; products = {}; snapshot.forEach(docSnap => { const data = docSnap.data(); products[docSnap.id] = data; const option = document.createElement("option"); option.value = docSnap.id; const stockText = data.stock <= 0 ? " (Out of Stock)" : data.stock <= 5 ? " (Low Stock)" : ` (${data.stock} left)`; option.textContent = `${data.name || "Unnamed"} - $${(data.price ?? 0).toFixed(2)}${stockText}`; if (data.stock <= 0) option.disabled = true; select.appendChild(option); }); } catch (err) { console.error(err); message.textContent = "⚠️ Error loading items."; } } await loadProducts(); // --- Totals --- select.addEventListener("change", () => { const selected = products[select.value]; currentPrice = selected ? Number(selected.price) || 0 : 0; updateTotals(); }); quantityInput.addEventListener("input", updateTotals); function updateTotals() { const qty = parseInt(quantityInput.value) || 1; const total = qty * currentPrice; priceDisplay.textContent = `Price: $${currentPrice.toFixed(2)}`; totalDisplay.textContent = `Total: $${total.toFixed(2)}`; } // --- Submit --- document.getElementById("orderForm").addEventListener("submit", async (e) => { e.preventDefault(); message.textContent = ""; const name = document.getElementById("name").value.trim(); const email = document.getElementById("email").value.trim(); const productId = select.value; const size = document.getElementById("sizeSelect").value; const quantity = parseInt(quantityInput.value) || 1; if (!name || !email || !productId || !size) { alert("⚠️ Please fill out all fields."); return; } const selectedProduct = products[productId]; if (!selectedProduct || selectedProduct.stock < quantity) { alert("❌ Not enough stock available."); return; } try { await runTransaction(db, async (transaction) => { const productRef = doc(db, "spiritProducts", productId); const productSnap = await transaction.get(productRef); if (!productSnap.exists()) throw new Error("Product not found"); const data = productSnap.data(); if (data.stock < quantity) throw new Error("Not enough stock available."); const total = quantity * (data.price || 0); transaction.update(productRef, { stock: data.stock - quantity }); await addDoc(ordersCol, { name, email, size, product: data.name, sku: data.sku || "", quantity, total, timestamp: serverTimestamp(), status: "Pending" }); }); message.textContent = "✅ Preorder submitted successfully!"; document.getElementById("orderForm").reset(); priceDisplay.textContent = "Price: $0.00"; totalDisplay.textContent = "Total: $0.00"; await loadProducts(); } catch (error) { console.error(error); alert("❌ " + error.message); } }); </script> </body> </html>
+  <label>Quantity</label>
+  <input id="spiritQty" type="number" min="1" value="1" required>
+
+  <p id="priceDisplay">Price: $0.00</p>
+  <p id="totalDisplay">Total: $0.00</p>
+
+  <button type="button" id="submitBtn">Submit Order</button>
+</form>
+
+<p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, runTransaction, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.appspot.com",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Firestore references
+const productsCol = collection(db, "products_spirit");
+const ordersCol = collection(db, "spiritOrders");
+
+// DOM elements
+const select = document.getElementById("spiritItem");
+const qtyInput = document.getElementById("spiritQty");
+const priceDisplay = document.getElementById("priceDisplay");
+const totalDisplay = document.getElementById("totalDisplay");
+const msg = document.getElementById("orderMsg");
+
+let products = {};
+let currentPrice = 0;
+
+// Load products
+async function loadProducts() {
+  try {
+    const snapshot = await getDocs(productsCol);
+    select.innerHTML = `<option value="">Select Item</option>`;
+    products = {};
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      products[docSnap.id] = data;
+
+      const option = document.createElement("option");
+      option.value = docSnap.id;
+
+      let status = "";
+      if (data.stock <= 0) {
+        option.disabled = true;
+        status = " (Out of Stock)";
+      } else if (data.stock <= 5) {
+        status = " (Low Stock)";
+      } else {
+        status = ` (${data.stock} in stock)`;
+      }
+
+      option.textContent = `${data.name || "Unnamed"} - $${(data.price || 0).toFixed(2)}${status}`;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error(err);
+    select.innerHTML = `<option value="">⚠️ Error loading items</option>`;
+  }
+}
+await loadProducts();
+
+// Update price
+select.addEventListener("change", () => {
+  const product = products[select.value];
+  currentPrice = product ? Number(product.price) || 0 : 0;
+  updateTotals();
+});
+
+qtyInput.addEventListener("input", updateTotals);
+
+function updateTotals() {
+  const qty = parseInt(qtyInput.value) || 1;
+  const total = qty * currentPrice;
+  priceDisplay.textContent = `Price: $${currentPrice.toFixed(2)}`;
+  totalDisplay.textContent = `Total: $${total.toFixed(2)}`;
+}
+
+// Submit order
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const name = document.getElementById("spiritName").value.trim();
+  const email = document.getElementById("spiritEmail").value.trim();
+  const size = document.getElementById("spiritSize").value;
+  const qty = parseInt(qtyInput.value) || 1;
+  const id = select.value;
+
+  if (!name || !email || !size || !id) {
+    return alert("⚠️ Please fill out all required fields.");
+  }
+
+  const selected = products[id];
+  if (!selected) return alert("❌ Item not found.");
+  if (selected.stock < qty) return alert("❌ Not enough stock.");
+
+  try {
+    await runTransaction(db, async (tx) => {
+      const ref = doc(db, "products_spirit", id);
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error("Product not found");
+
+      const data = snap.data();
+      if (data.stock < qty) throw new Error("Not enough stock");
+      tx.update(ref, { stock: data.stock - qty });
+
+      const total = qty * (data.price || 0);
+      await addDoc(ordersCol, {
+        name, email, size, quantity: qty,
+        product: data.name,
+        sku: data.sku || "",
+        total,
+        status: "Pending",
+        timestamp: serverTimestamp()
+      });
+    });
+
+    msg.textContent = "✅ Order submitted successfully!";
+    document.getElementById("spiritForm").reset();
+    updateTotals();
+    await loadProducts();
+  } catch (err) {
+    console.error(err);
+    alert("❌ " + err.message);
+  }
+});
+</script>
+
+</body>
+</html>
