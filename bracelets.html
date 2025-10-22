@@ -1,206 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bracelet Order</title>
-  <script type="module">
-
-    import {
-      initializeApp
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      updateDoc,
-      onSnapshot,
-      increment
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-    // --- 🔥 Your Firebase Config ---
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // --- Form Elements ---
-    const knotSelect = document.getElementById("braceletType");
-    const color1Select = document.getElementById("color1");
-    const color2Select = document.getElementById("color2");
-    const sizeSelect = document.getElementById("size");
-    const stockText = document.getElementById("stock");
-    const priceDisplay = document.getElementById("price");
-    const orderButton = document.getElementById("orderButton");
-
-    // --- Load Bracelet Data (colors, sizes, stock, prices) ---
-    async function loadBraceletData(type) {
-      if (!type) return;
-
-      const typeKey = type.toLowerCase().replace(/\s+/g, "-"); // e.g. "King Cobra" → "king-cobra"
-      const docRef = doc(db, "products_bracelets", typeKey);
-
-      onSnapshot(docRef, (snap) => {
-        if (!snap.exists()) {
-          console.warn(`⚠️ No Firestore document for ${typeKey}`);
-          return;
-        }
-
-        const data = snap.data();
-
-        // --- Colors ---
-        color1Select.innerHTML = "";
-        color2Select.innerHTML = "";
-        (data.colorOptions || []).forEach(color => {
-          const opt1 = document.createElement("option");
-          opt1.value = color;
-          opt1.textContent = color;
-          color1Select.appendChild(opt1);
-
-          const opt2 = document.createElement("option");
-          opt2.value = color;
-          opt2.textContent = color;
-          color2Select.appendChild(opt2);
-        });
-
-        // --- Sizes ---
-        sizeSelect.innerHTML = "";
-        (data.sizeOptions || []).forEach(size => {
-          const opt = document.createElement("option");
-          opt.value = size;
-          opt.textContent = size;
-          sizeSelect.appendChild(opt);
-        });
-
-        // --- Stock ---
-        stockText.textContent = `In Stock: ${data.stock ?? 0}`;
-
-        // --- Price (display smallest size as default) ---
-        const prices = data.price || {};
-        const firstSize = data.sizeOptions ? data.sizeOptions[0] : null;
-        if (firstSize && prices[firstSize]) {
-          priceDisplay.textContent = `$${prices[firstSize].toFixed(2)}`;
-        }
-
-        // Update price on size change
-        sizeSelect.onchange = () => {
-          const size = sizeSelect.value;
-          if (prices[size]) {
-            priceDisplay.textContent = `$${prices[size].toFixed(2)}`;
-          }
-        };
-      });
-    }
-
-    // --- Subtract Stock on Order ---
-    async function submitOrder() {
-      const braceletType = knotSelect.value;
-      const quantity = parseInt(document.getElementById("quantity").value);
-
-      if (!braceletType || !quantity || quantity <= 0) {
-        alert("Please select a bracelet type and valid quantity.");
-        return;
-      }
-
-      const typeKey = braceletType.toLowerCase().replace(/\s+/g, "-");
-      const braceletRef = doc(db, "products_bracelets", typeKey);
-      const snap = await getDoc(braceletRef);
-
-      if (!snap.exists()) {
-        alert("Bracelet type not found in Firestore!");
-        return;
-      }
-
-      const data = snap.data();
-      const currentStock = data.stock || 0;
-
-      if (currentStock < quantity) {
-        alert(`Sorry, only ${currentStock} left in stock.`);
-        return;
-      }
-
-      await updateDoc(braceletRef, {
-        stock: increment(-quantity)
-      });
-
-      alert(`✅ Order placed! ${quantity} subtracted from stock.`);
-    }
-
-    // --- Event Listeners ---
-    knotSelect.addEventListener("change", () => {
-      loadBraceletData(knotSelect.value);
-    });
-
-    orderButton.addEventListener("click", submitOrder);
-
-    // --- Initialize Default Bracelet Type ---
-    window.addEventListener("DOMContentLoaded", () => {
-      loadBraceletData(knotSelect.value);
-    });
-
-  </script>
-
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background: #f8fafc;
-      color: #111;
-      padding: 30px;
-    }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    select, input, button {
-      margin-top: 5px;
-      padding: 8px;
-      width: 100%;
-      max-width: 300px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover { background: #1d4ed8; }
-    .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bracelets – Tactics & Treats Preorder</title>
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
+nav {
+  text-align: center;
+  background: #111;
+  padding: 10px 0;
+  border-bottom: 2px solid #ff0000;
+  box-shadow: 0 0 10px #ff0000;
+}
+nav a {
+  color: white;
+  margin: 0 15px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
+}
+nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
+form {
+  background: #111;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  box-shadow: 0 0 15px #ff0000;
+}
+label { display: block; margin-top: 10px; font-weight: 500; color: white; }
+input, select, button {
+  width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px;
+}
+select:disabled { background: #555; color: #aaa; cursor: not-allowed; }
+button { margin-top: 20px; padding: 12px; background: #ff0000; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+button:hover { background: darkred; }
+#priceDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; }
+.low-stock { color: #ffa500; font-weight: bold; }
+.out-of-stock { color: #ff0000; font-weight: bold; }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Bracelet Order</h1>
 
-    <label for="braceletType">Bracelet Type:</label>
-    <select id="braceletType">
-      <option value="King Cobra">King Cobra</option>
-      <option value="Fishtail">Fishtail</option>
-      <option value="Cobra">Cobra</option>
-    </select>
+<nav>
+  <a href="cookies.html">Cookies</a>
+  <a href="bracelets.html">Bracelets</a>
+  <a href="spiritwear.html">Spirit Wear</a>
+</nav>
 
-    <label for="color1">Color 1:</label>
-    <select id="color1"></select>
+<h1>Bracelet Preorder</h1>
 
-    <label for="color2">Color 2:</label>
-    <select id="color2"></select>
+<form id="braceletForm">
+  <label>Name</label>
+  <input id="braceletName" type="text" required>
 
-    <label for="size">Size:</label>
-    <select id="size"></select>
+  <label>Phone Number</label>
+  <input id="braceletPhone" type="tel">
 
-    <p id="price">Price: --</p>
-    <p id="stock">In Stock: --</p>
+  <label>Email</label>
+  <input id="braceletEmail" type="email">
 
-    <label for="quantity">Quantity:</label>
-    <input type="number" id="quantity" min="1" value="1">
+  <label>Bracelet Type</label>
+  <select id="knotType" required>
+    <option value="">Select Bracelet</option>
+    <option value="Cobra">Cobra</option>
+    <option value="King Cobra">King Cobra</option>
+    <option value="Fishtail">Fishtail</option>
+    <option value="Solomon/Trilobite">Solomon / Trilobite</option>
+  </select>
 
-    <button id="orderButton">Place Order</button>
-  </div>
+  <label>Size</label>
+  <select id="braceletSize" required></select>
+
+  <p id="priceDisplay">Price: $0.00</p>
+
+  <label>Color 1</label>
+  <select id="color1" required></select>
+
+  <label>Color 2</label>
+  <select id="color2" required></select>
+
+  <label>Clip Type</label>
+  <select id="clipType" required>
+    <option value="">Select Clip Type</option>
+    <option value="Plastic">Plastic</option>
+    <option value="Metal">Metal</option>
+    <option value="Adjustable Knot">Adjustable Knot</option>
+  </select>
+
+  <label>Clip Color</label>
+  <select id="clipColor" required>
+    <option value="">Select Clip Color</option>
+    <option value="Black">Black</option>
+    <option value="Silver">Silver</option>
+    <option value="Gold">Gold</option>
+    <option value="Red">Red</option>
+    <option value="Blue">Blue</option>
+  </select>
+
+  <label>Quantity</label>
+  <input id="braceletQty" type="number" min="1" value="1" required>
+
+  <button type="button" id="submitBtn">Submit Bracelet Order</button>
+</form>
+
+<p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+// --- Firebase config ---
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.appspot.com",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const knotSelect = document.getElementById("knotType");
+const sizeSelect = document.getElementById("braceletSize");
+const color1Select = document.getElementById("color1");
+const color2Select = document.getElementById("color2");
+const clipTypeSelect = document.getElementById("clipType");
+const clipColorSelect = document.getElementById("clipColor");
+const priceDisplay = document.getElementById("priceDisplay");
+const form = document.getElementById("braceletForm");
+const orderMsg = document.getElementById("orderMsg");
+
+let currentPriceMap = {}; // store Firestore price map
+
+// --- Load bracelet data (sizes, colors, prices) ---
+function loadBraceletData(braceletType) {
+  if (!braceletType) return;
+
+  const typeKey = braceletType.toLowerCase().replace(/\s+/g, "-"); // "King Cobra" -> "king-cobra"
+  const docRef = doc(db, "products_bracelets", typeKey);
+
+  onSnapshot(docRef, (snap) => {
+    sizeSelect.innerHTML = "";
+    color1Select.innerHTML = "";
+    color2Select.innerHTML = "";
+
+    if (!snap.exists()) {
+      console.warn(`⚠️ No Firestore document for ${typeKey}`);
+      return;
+    }
+
+    const data = snap.data();
+
+    // --- Load sizes ---
+    if (Array.isArray(data.sizeOptions)) {
+      data.sizeOptions.forEach(size => {
+        const opt = document.createElement("option");
+        opt.value = size.replace('"', '');
+        opt.textContent = size;
+        sizeSelect.appendChild(opt);
+      });
+    }
+
+    // --- Load colors ---
+    const colors = data.colorOptions || [];
+    if (colors.length > 0) {
+      colors.forEach(color => {
+        const c1 = document.createElement("option");
+        c1.value = color;
+        c1.textContent = color;
+        color1Select.appendChild(c1);
+
+        const c2 = document.createElement("option");
+        c2.value = color;
+        c2.textContent = color;
+        color2Select.appendChild(c2);
+      });
+    }
+
+    // --- Store prices for this bracelet type ---
+    currentPriceMap = data.price || {};
+    updatePrice();
+  });
+}
+
+// --- Price calculation ---
+function updatePrice() {
+  const size = sizeSelect.value.replace('"', '');
+  const clipType = clipTypeSelect.value;
+
+  let basePrice = parseFloat(currentPriceMap[size + '"']) || 0;
+  if (clipType === "Metal") basePrice += 1;
+
+  priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
+}
+
+// --- Event listeners ---
+knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
+sizeSelect.addEventListener("change", updatePrice);
+clipTypeSelect.addEventListener("change", updatePrice);
+
+clipTypeSelect.addEventListener("change", () => {
+  const type = clipTypeSelect.value;
+  clipColorSelect.disabled = (type === "Adjustable Knot" || type === "Metal");
+  if (clipColorSelect.disabled) clipColorSelect.value = "";
+});
+
+// --- Submit order ---
+async function submitOrder() {
+  const name = document.getElementById("braceletName").value.trim();
+  const phone = document.getElementById("braceletPhone").value.trim();
+  const email = document.getElementById("braceletEmail").value.trim();
+  const braceletType = knotSelect.value;
+  const size = sizeSelect.value;
+  const color1 = color1Select.value;
+  const color2 = color2Select.value;
+  const clipType = clipTypeSelect.value;
+  const clipColor = clipColorSelect.value;
+  const qty = parseInt(document.getElementById("braceletQty").value) || 1;
+
+  if (!name || (!phone && !email) || !braceletType || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
+    return alert("⚠️ Fill all required fields. Provide phone or email.");
+  }
+
+  let basePrice = parseFloat(currentPriceMap[size + '"']) || 0;
+  if (clipType === "Metal") basePrice += 1;
+  const total = basePrice * qty;
+
+  try {
+    await addDoc(collection(db, "braceletOrders"), {
+      name, phone: phone || null, email: email || null,
+      product: braceletType, size, color1, color2,
+      clipType, clipColor, qty, total,
+      createdAt: new Date(), status: "Pending"
+    });
+    orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
+    form.reset();
+    priceDisplay.textContent = "Price: $0.00";
+    clipColorSelect.disabled = false;
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to submit order.");
+  }
+}
+
+document.getElementById("submitBtn").addEventListener("click", submitOrder);
+</script>
 </body>
 </html>
