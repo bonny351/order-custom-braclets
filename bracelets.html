@@ -73,14 +73,11 @@
       transition: 0.2s;
     }
     button:hover { background: darkred; }
-
     #priceDisplay {
       margin-top: 5px;
       font-weight: bold;
       color: #ffb347;
     }
-
-    /* Image previews */
     #imagePreviewContainer {
       display: flex;
       justify-content: center;
@@ -225,6 +222,13 @@
     let currentPriceMap = {};
     let currentStockMap = {};
 
+    // Helper: normalize Firestore key and size
+    function normalizeSizeKey(size) {
+      if (!size) return size;
+      const s = size.replace(/"/g, "");
+      return s.endsWith('"') ? s : s + '"';
+    }
+
     // Load bracelet data
     async function loadBraceletData(braceletType) {
       if (!braceletType) return;
@@ -246,10 +250,13 @@
       }
 
       const data = snap.data();
+      console.log("Loaded product data:", data);
 
-      // ✅ Fix: Parse price JSON if stored as string
+      // ✅ Parse price JSON if stored as string
       try {
-        currentPriceMap = typeof data.price === "string" ? JSON.parse(data.price) : data.price || {};
+        currentPriceMap = typeof data.price === "string"
+          ? JSON.parse(data.price)
+          : data.price || {};
       } catch (e) {
         console.error("Failed to parse price data:", e);
         currentPriceMap = {};
@@ -314,11 +321,15 @@
 
     // Update price
     function updatePrice() {
-      const size = sizeSelect.value.replace(/"/g, '');
+      const rawSize = sizeSelect.value;
+      const key = normalizeSizeKey(rawSize);
       const clipType = clipTypeSelect.value;
-      let basePrice = parseFloat(currentPriceMap[size]) || 0;
+
+      let basePrice = parseFloat(currentPriceMap[key]) || 0;
       if (clipType === "Metal") basePrice += 1;
       priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
+
+      console.log("Selected size:", rawSize, "key used:", key, "price map:", currentPriceMap);
     }
 
     // Event listeners
@@ -352,7 +363,8 @@
         return alert("⚠️ Fill all required fields. Provide phone or email.");
       }
 
-      let basePrice = parseFloat(currentPriceMap[size]) || 0;
+      const key = normalizeSizeKey(size);
+      let basePrice = parseFloat(currentPriceMap[key]) || 0;
       if (clipType === "Metal") basePrice += 1;
       const total = basePrice * qty;
 
