@@ -55,6 +55,7 @@ span.unscheduled { background:#444; }
 <hr style="border-color:#ff4444;">
 
 <button id="toggleMaintenanceBtn">⚠️ Toggle Under Construction</button>
+<button id="printCardsBtn">🖨 Print Business Cards</button>
 <p id="maintenanceMsg" class="message"></p>
 
 <div id="maintenanceScheduleDiv" style="text-align:center; margin-top:10px;"></div>
@@ -62,6 +63,16 @@ span.unscheduled { background:#444; }
 </section>
 
 <div id="maintenanceOverlay">🛠️ Site is currently under maintenance. Please check back later.</div>
+
+<!-- Hidden business card layout -->
+<div id="businessCardLayout" style="display:none;">
+  <div style="width:3.5in; height:2in; background:linear-gradient(180deg,#7a0c0c,#000); color:white; border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:'Poppins',sans-serif; border:2px solid #ff0000;">
+    <h2 style="margin:0; color:#ff0000;">Tactics & Treats</h2>
+    <p style="margin:4px 0;">Crafted with Care & Strength</p>
+    <p style="margin:0; font-size:0.8em;">bonny351.github.io/order-custom-braclets/</p>
+    <p style="font-size:0.7em; margin-top:8px; color:#ffb347;">Owner • Handmade Gear & Treats</p>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -109,6 +120,7 @@ const maintenanceMsg = document.getElementById("maintenanceMsg");
 const maintenanceScheduleDiv = document.getElementById("maintenanceScheduleDiv");
 const maintenanceDaysDiv = document.getElementById("maintenanceDaysDiv");
 const maintenanceOverlay = document.getElementById("maintenanceOverlay");
+const printBtn = document.getElementById("printCardsBtn");
 
 let currentCategory = "";
 let currentCollection = "";
@@ -117,7 +129,7 @@ const dayCheckboxes = [];
 const maintenanceDoc = doc(db,"siteSettings","maintenance");
 
 // ---------- Admin page flag ----------
-const isAdminPage = true; // overlay never shows
+const isAdminPage = true;
 
 // ---------- Tabs ----------
 Object.keys(allCollections).forEach(cat=>{
@@ -218,6 +230,28 @@ toggleBtn.addEventListener("click", async ()=>{
   }
 });
 
+// ---------- Print Business Cards ----------
+printBtn.addEventListener("click", ()=>{
+  const layout = document.getElementById("businessCardLayout");
+  const printWindow = window.open("", "_blank");
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Tactics & Treats</title>
+        <style>
+          @page { size: 3.5in 2in; margin:0; }
+          body { margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#000; }
+        </style>
+      </head>
+      <body>${layout.innerHTML}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+  printWindow.onafterprint = ()=>printWindow.close();
+});
+
 // ---------- INITIAL ----------
 loadMaintenanceStatus();
 
@@ -256,7 +290,6 @@ async function loadTable(){
       const cell = row.insertCell();
       let value = data[key] ?? "";
 
-      // ✅ Convert Firestore timestamp objects
       if (value && typeof value === "object" && "seconds" in value && "nanoseconds" in value) {
         value = convertFirestoreTimestamp(value);
       } else if (Array.isArray(value)) {
@@ -268,7 +301,6 @@ async function loadTable(){
       cell.textContent=value;
       cell.contentEditable=true;
 
-      // ---------- Editable logic ----------
       cell.addEventListener("blur", async ()=>{
         let newValue = cell.textContent.trim();
         if(key==="phone"){ newValue=newValue.replace(/[^\d]/g,""); if(newValue.length===10) newValue=`(${newValue.slice(0,3)}) ${newValue.slice(3,6)}-${newValue.slice(6)}`; }
@@ -296,7 +328,6 @@ async function loadTable(){
       });
     });
 
-    // ---------- Products restock ----------
     if(currentCategory==="Products"){
       const restockCell=row.insertCell();
       const boxesInput=document.createElement("input"); boxesInput.type="number"; boxesInput.min=0; boxesInput.placeholder="Boxes to add"; restockCell.appendChild(boxesInput);
@@ -309,7 +340,6 @@ async function loadTable(){
       });
     }
 
-    // ---------- Highlight recent orders ----------
     if(currentCategory==="Orders" && data.timestamp){
       const orderTime = new Date(data.timestamp).getTime();
       if(now - orderTime < 24*60*60*1000) row.classList.add("recent-order");
@@ -320,7 +350,6 @@ async function loadTable(){
     }
   }
 
-  // ---------- Delete buttons ----------
   if(currentCategory==="Orders" || currentCategory==="Products"){
     const checkboxTh=document.createElement("th"); checkboxTh.textContent="Select"; dynamicTable.rows[0].insertBefore(checkboxTh,dynamicTable.rows[0].cells[0]);
     [...dynamicTable.rows].slice(1).forEach(row=>{ const cell=row.insertCell(0); const cb=document.createElement("input"); cb.type="checkbox"; cell.appendChild(cb); });
