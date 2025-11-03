@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel – Tactics & Treats</title>
+<title>Full Admin Panel – Tactics & Treats</title>
 <style>
 body{font-family:"Poppins",sans-serif;background:#111;color:white;margin:0;padding:20px;}
 h1,h2{text-align:center;color:#ff0000;margin-bottom:20px;}
@@ -34,7 +34,6 @@ button:hover{background:darkred;box-shadow:0 0 8px #ff0000;}
 select{padding:4px 6px;border-radius:5px;border:none;background:#222;color:white;}
 input[type=number]{width:70px;}
 label{cursor:pointer;margin-right:6px;}
-#maintenanceOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#111;color:#ff0000;font-size:24px;display:flex;justify-content:center;align-items:center;z-index:9999;text-align:center;}
 span.day{display:inline-block;padding:4px 8px;margin:2px;border-radius:4px;color:white;}
 span.scheduled{background:red;}
 span.unscheduled{background:#444;}
@@ -67,8 +66,6 @@ span.unscheduled{background:#444;}
   <div id="maintenanceDaysDiv" style="text-align:center;margin-top:10px;"></div>
 </section>
 
-<div id="maintenanceOverlay">🛠️ Site is currently under maintenance. Please check back later.</div>
-
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {getFirestore,collection,getDocs,doc,setDoc,deleteDoc,getDoc} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -91,7 +88,6 @@ const toggleBtn=document.getElementById("toggleMaintenanceBtn");
 const maintenanceMsg=document.getElementById("maintenanceMsg");
 const maintenanceScheduleDiv=document.getElementById("maintenanceScheduleDiv");
 const maintenanceDaysDiv=document.getElementById("maintenanceDaysDiv");
-const maintenanceOverlay=document.getElementById("maintenanceOverlay");
 const printBtn=document.getElementById("printCardsBtn");
 
 let currentCategory="";let currentCollection="";
@@ -130,7 +126,7 @@ async function loadMaintenanceStatus(){
     const docSnap=await getDoc(maintenanceDoc);
     const data=docSnap.exists()?docSnap.data():{enabled:false,scheduledDays:[]};
     maintenanceMsg.textContent=data.enabled?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-    loadMaintenanceSchedule(data.scheduledDays||[]);displayScheduledDays(data.scheduledDays||[]);checkScheduledMaintenance(data);
+    loadMaintenanceSchedule(data.scheduledDays||[]);displayScheduledDays(data.scheduledDays||[]);
   }catch(err){console.error(err);maintenanceMsg.textContent="❌ Error";}
 }
 function displayScheduledDays(scheduledDays){
@@ -148,12 +144,6 @@ async function saveSchedule(){
   const selectedDays=dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value));
   try{await setDoc(maintenanceDoc,{enabled:true,scheduledDays:selectedDays},{merge:true});alert("✅ Maintenance schedule saved!");displayScheduledDays(selectedDays);loadMaintenanceStatus();}
   catch(err){console.error(err);alert("❌ Error");}
-}
-function checkScheduledMaintenance(data){
-  const today=new Date().getDay();
-  const underMaintenance=data.enabled||(data.scheduledDays&&data.scheduledDays.includes(today));
-  maintenanceMsg.textContent=underMaintenance?"🛠️ Site is UNDER CONSTRUCTION (Scheduled)":"✅ Site is LIVE";
-  maintenanceOverlay.style.display=(!isAdminPage&&underMaintenance)?"flex":"none";
 }
 toggleBtn.addEventListener("click",async()=>{
   try{const docSnap=await getDoc(maintenanceDoc);const current=docSnap.exists()?docSnap.data().enabled:false;
@@ -228,20 +218,8 @@ async function loadTable(){
     delBtn.addEventListener("click",async()=>{const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.cells[0].firstChild.checked);if(selectedRows.length===0){alert("No items selected.");return;}if(!confirm(`⚠️ Delete ${selectedRows.length} item(s)?`))return;
       for(const row of selectedRows){try{await deleteDoc(doc(db,currentCollection,row.dataset.id));}catch(e){console.error(e);}}loadTable();});
     actionButtonsDiv.appendChild(delBtn);
-…and here’s the **final remainder of your full code**, completing the table logic block cleanly:  
-
-```html
-    actionButtonsDiv.appendChild(delBtn);
   }
-
-  // --- search filter ---
-  searchInput.oninput = () => {
-    const term = searchInput.value.toLowerCase();
-    [...dynamicTable.rows].forEach((row, i) => {
-      if (i === 0) return;
-      row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
-    });
-  };
+  searchInput.oninput=()=>{const term=searchInput.value.toLowerCase();[...dynamicTable.rows].forEach((row,i)=>{if(i===0)return;row.style.display=row.textContent.toLowerCase().includes(term)?"":"none";});};
 }
 </script>
 </body>
