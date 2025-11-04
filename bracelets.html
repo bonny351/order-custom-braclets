@@ -26,15 +26,8 @@
       text-decoration: none;
       transition: 0.2s;
     }
-    nav a:hover {
-      color: #ff0000;
-      text-shadow: 0 0 6px #ff0000;
-    }
-    h1 {
-      text-align: center;
-      color: #ff0000;
-      margin-bottom: 30px;
-    }
+    nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+    h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
     form {
       background: #111;
       border-radius: 16px;
@@ -73,37 +66,26 @@
       transition: 0.2s;
     }
     button:hover { background: darkred; }
-    #priceDisplay {
-      margin-top: 5px;
-      font-weight: bold;
-      color: #ffb347;
-    }
+    #priceDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; }
     #imagePreviewContainer {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      margin: 20px 0;
+      display: flex; justify-content: center; align-items: center;
+      gap: 20px; margin: 20px 0;
     }
     #imagePreviewContainer img {
-      object-fit: cover;
-      border-radius: 8px;
-      border: 2px solid #ff0000;
-      opacity: 0;
+      object-fit: cover; border-radius: 8px;
+      border: 2px solid #ff0000; opacity: 0;
       transition: opacity 0.5s ease;
     }
-    #imagePreviewContainer img.show {
-      opacity: 1;
-    }
-    #mainBraceletImg {
-      width: 200px;
-      height: 200px;
-      border-radius: 16px;
-      border-width: 3px;
-    }
-    .sideImg {
-      width: 80px;
-      height: 80px;
+    #imagePreviewContainer img.show { opacity: 1; }
+    #mainBraceletImg { width: 200px; height: 200px; border-radius: 16px; border-width: 3px; }
+    .sideImg { width: 80px; height: 80px; }
+
+    /* Swatch preview styles */
+    .color-option { display: flex; align-items: center; gap: 8px; }
+    .color-swatch {
+      width: 18px; height: 18px;
+      border-radius: 4px;
+      border: 1px solid #555;
     }
   </style>
 </head>
@@ -138,10 +120,10 @@
     <input id="braceletName" type="text" required>
 
     <label>Phone Number</label>
-    <input id="braceletPhone" type="tel">
+    <input id="braceletPhone" type="tel" placeholder="Required">
 
     <label>Email</label>
-    <input id="braceletEmail" type="email">
+    <input id="braceletEmail" type="email" placeholder="Optional">
 
     <label>Bracelet Type</label>
     <select id="knotType" required>
@@ -162,21 +144,26 @@
     <label>Color 2</label>
     <select id="color2" required></select>
 
+    <!-- ===================== CLIP TYPE & COLOR ===================== -->
     <label>Clip Type</label>
     <select id="clipType" required>
       <option value="">Select Clip Type</option>
-      <option value="Plastic">Plastic</option>
-      <option value="Metal">Metal</option>
+      <option value="Regular">Regular Clip</option>
+      <option value="Flint & Steel">Flint & Steel Clip (Fire Starter)</option>
+      <option value="Super Small">Super Small Clip</option>
+      <option value="Metal">Metal Clip (+$1)</option>
       <option value="Adjustable Knot">Adjustable Knot</option>
     </select>
 
     <label>Clip Color</label>
     <select id="clipColor" required>
       <option value="">Select Clip Color</option>
-      <option value="Black">Black</option>
-      <option value="Silver">Silver</option>
-      <option value="Red">Red</option>
-      <option value="Blue">Blue</option>
+      <option value="Black" data-color="#000000">Black</option>
+      <option value="Dark Green" data-color="#2f4f2f">Dark Green</option>
+      <option value="Army Green" data-color="#4b5320">Army Green</option>
+      <option value="Tan" data-color="#d2b48c">Tan</option>
+      <option value="Orange" data-color="#ff6600">Orange</option>
+      <option value="Light Green" data-color="#98fb98">Light Green</option>
     </select>
 
     <label>Quantity</label>
@@ -185,12 +172,10 @@
     <button type="button" id="submitBtn">Submit Bracelet Order</button>
   </form>
 
-  <!-- Donate button -->
   <div style="text-align:center; margin-top:20px;">
     <button id="donateBtn" style="background:#ffb347;">💖 Donate</button>
   </div>
 
-  <!-- Donation popup -->
   <div id="donateBox" style="display:none; text-align:center; background:#111; border-radius:12px; box-shadow:0 0 12px #ff0000; padding:20px; max-width:400px; margin:20px auto;">
     <h3 style="color:#ffb347;">Make a Donation</h3>
     <input id="donateName" type="text" placeholder="Your Name" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
@@ -206,7 +191,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
       authDomain: "bracelets-and-color.firebaseapp.com",
@@ -229,14 +213,7 @@
     const form = document.getElementById("braceletForm");
     const orderMsg = document.getElementById("orderMsg");
 
-    const mainBraceletImg = document.getElementById("mainBraceletImg");
-    const sideImg1 = document.getElementById("sideImg1");
-    const sideImg2 = document.getElementById("sideImg2");
-    const sideImg3 = document.getElementById("sideImg3");
-    const sideImg4 = document.getElementById("sideImg4");
-
     let currentPriceMap = {};
-    let currentStockMap = {};
 
     function normalizeSizeKey(size) {
       if (!size) return size;
@@ -249,15 +226,12 @@
       const typeKey = braceletType.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
       const docRef = doc(db, "products_bracelets", typeKey);
       const snap = await getDoc(docRef);
-
       sizeSelect.innerHTML = "";
       color1Select.innerHTML = "";
       color2Select.innerHTML = "";
 
       if (!snap.exists()) {
         sizeSelect.innerHTML = '<option value="">Not Available</option>';
-        color1Select.innerHTML = '<option value="">Not Available</option>';
-        color2Select.innerHTML = '<option value="">Not Available</option>';
         priceDisplay.textContent = "Price: $0.00";
         return;
       }
@@ -265,86 +239,49 @@
       const data = snap.data();
       try {
         currentPriceMap = typeof data.price === "string" ? JSON.parse(data.price) : data.price || {};
-      } catch {
-        currentPriceMap = {};
-      }
+      } catch { currentPriceMap = {}; }
 
-      currentStockMap = data.stockQty || {};
-
-      if (Array.isArray(data.sizeOptions)) {
-        data.sizeOptions.forEach(size => {
-          const opt = document.createElement("option");
-          opt.value = size.replace(/"/g, '');
-          opt.textContent = size;
-          sizeSelect.appendChild(opt);
-        });
-      }
+      (data.sizeOptions || []).forEach(size => {
+        const opt = document.createElement("option");
+        opt.value = size.replace(/"/g, '');
+        opt.textContent = size;
+        sizeSelect.appendChild(opt);
+      });
 
       const colors = data.colorOptions || [];
       colors.forEach(color => {
-        const c1 = document.createElement("option");
-        c1.value = color;
-        c1.textContent = color;
-        color1Select.appendChild(c1);
-
-        const c2 = document.createElement("option");
-        c2.value = color;
-        c2.textContent = color;
-        color2Select.appendChild(c2);
+        const o1 = document.createElement("option");
+        o1.value = color; o1.textContent = color;
+        color1Select.appendChild(o1);
+        const o2 = document.createElement("option");
+        o2.value = color; o2.textContent = color;
+        color2Select.appendChild(o2);
       });
-
       updatePrice();
-    }
-
-    function fadeIn(img, newSrc) {
-      img.classList.remove("show");
-      setTimeout(() => {
-        img.src = newSrc;
-        img.onload = () => img.classList.add("show");
-      }, 150);
-    }
-
-    function updateImages(type) {
-      if (!type) {
-        ["sideImg1","sideImg2","sideImg3","sideImg4","mainBraceletImg"].forEach(id => {
-          fadeIn(document.getElementById(id), "default.png");
-        });
-        return;
-      }
-      const key = type.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
-      fadeIn(mainBraceletImg, `${key}-main.png`);
-      fadeIn(sideImg1, `${key}-side1.png`);
-      fadeIn(sideImg2, `${key}-side2.png`);
-      fadeIn(sideImg3, `${key}-side3.png`);
-      fadeIn(sideImg4, `${key}-side4.png`);
     }
 
     function updatePrice() {
-      const rawSize = sizeSelect.value;
-      const key = normalizeSizeKey(rawSize);
+      const size = normalizeSizeKey(sizeSelect.value);
       const clipType = clipTypeSelect.value;
-      let basePrice = parseFloat(currentPriceMap[key]) || 0;
-      if (clipType === "Metal") basePrice += 1;
+      let basePrice = parseFloat(currentPriceMap[size]) || 0;
+      if (clipType === "Metal") basePrice += 1; // Metal adds $1
       priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
     }
 
-    knotSelect.addEventListener("change", () => {
-      loadBraceletData(knotSelect.value);
-      updateImages(knotSelect.value);
-    });
+    knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
     sizeSelect.addEventListener("change", updatePrice);
     clipTypeSelect.addEventListener("change", () => {
-      updatePrice();
       const type = clipTypeSelect.value;
-      clipColorSelect.disabled = (type === "Adjustable Knot" || type === "Metal");
+      clipColorSelect.disabled = (type === "Metal" || type === "Adjustable Knot");
       if (clipColorSelect.disabled) clipColorSelect.value = "";
+      updatePrice();
     });
 
     async function submitOrder() {
       const name = document.getElementById("braceletName").value.trim();
       const phone = document.getElementById("braceletPhone").value.trim();
       const email = document.getElementById("braceletEmail").value.trim();
-      const braceletType = knotSelect.value;
+      const type = knotSelect.value;
       const size = sizeSelect.value;
       const color1 = color1Select.value;
       const color2 = color2Select.value;
@@ -352,8 +289,11 @@
       const clipColor = clipColorSelect.value;
       const qty = parseInt(document.getElementById("braceletQty").value) || 1;
 
-      if (!name || (!phone && !email) || !braceletType || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
-        return alert("⚠️ Fill all required fields. Provide phone or email.");
+      // Phone number must always be filled; email is optional
+      if (!phone) return alert("⚠️ Please enter your phone number.");
+
+      if (!name || !type || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
+        return alert("⚠️ Please fill in all required fields.");
       }
 
       const key = normalizeSizeKey(size);
@@ -363,25 +303,12 @@
 
       try {
         await addDoc(collection(db, "braceletOrders"), {
-          name,
-          phone: phone || null,
-          email: email || null,
-          product: braceletType,
-          size,
-          color1,
-          color2,
-          clipType,
-          clipColor,
-          qty,
-          total,
-          createdAt: new Date(),
-          status: "Pending"
+          name, phone, email: email || null,
+          product: type, size, color1, color2, clipType, clipColor,
+          qty, total, createdAt: new Date(), status: "Pending"
         });
-
         orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
-        form.reset();
-        priceDisplay.textContent = "Price: $0.00";
-        updateImages(null);
+        form.reset(); priceDisplay.textContent = "Price: $0.00";
       } catch (err) {
         console.error(err);
         alert("❌ Failed to submit order.");
@@ -389,51 +316,6 @@
     }
 
     document.getElementById("submitBtn").addEventListener("click", submitOrder);
-
-    // --- DONATE FEATURE ---
-    const donateBtn = document.getElementById("donateBtn");
-    const donateBox = document.getElementById("donateBox");
-    const confirmDonateBtn = document.getElementById("confirmDonateBtn");
-    const cancelDonateBtn = document.getElementById("cancelDonateBtn");
-
-    donateBtn.addEventListener("click", () => {
-      donateBox.style.display = "block";
-      orderMsg.textContent = "";
-    });
-    cancelDonateBtn.addEventListener("click", () => {
-      donateBox.style.display = "none";
-    });
-
-    confirmDonateBtn.addEventListener("click", async () => {
-      const name = document.getElementById("donateName").value.trim();
-      const email = document.getElementById("donateEmail").value.trim();
-      const amount = parseFloat(document.getElementById("donateAmount").value);
-
-      if (!name || !amount || amount <= 0) {
-        alert("⚠️ Please enter your name and donation amount.");
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "braceletOrders"), {
-          name,
-          email: email || null,
-          type: "Donate",
-          total: amount,
-          createdAt: new Date(),
-          status: "Pending"
-        });
-
-        orderMsg.textContent = `💖 Thank you, ${name}! Your $${amount.toFixed(2)} donation was received.`;
-        donateBox.style.display = "none";
-        document.getElementById("donateName").value = "";
-        document.getElementById("donateEmail").value = "";
-        document.getElementById("donateAmount").value = "";
-      } catch (err) {
-        console.error(err);
-        alert("❌ Failed to submit donation.");
-      }
-    });
   </script>
 </body>
 </html>
