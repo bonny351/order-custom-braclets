@@ -15,7 +15,7 @@ section{background:#181818;padding:20px;border-radius:12px;box-shadow:0 0 12px r
 .tab,.subTab{padding:10px 20px;cursor:pointer;border-radius:5px;background:#222;color:#fff;font-weight:bold;transition:.2s;}
 .tab.active,.subTab.active{background:#ff0000;color:#fff;box-shadow:0 0 8px #ff0000;}
 .tab:hover,.subTab:hover{background:#ff4444;}
-table{width:100%;border-collapse:collapse;margin-top:10px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;transition:opacity 0.3s ease;}
 th,td{padding:10px;border:1px solid #ff0000;text-align:center;}
 th{background:#222;color:#ffb347;position:sticky;top:0;z-index:1;}
 tr:nth-child(even){background:#222;}
@@ -37,6 +37,18 @@ label{cursor:pointer;margin-right:6px;}
 span.day{display:inline-block;padding:4px 8px;margin:2px;border-radius:4px;color:white;}
 span.scheduled{background:red;}
 span.unscheduled{background:#444;}
+.loadingOverlay{
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.6);
+  display:flex;justify-content:center;align-items:center;
+  color:#ffb347;font-weight:bold;font-size:20px;
+  border-radius:12px;
+  z-index:2;
+  opacity:0;
+  transition:opacity .3s;
+}
+.loadingOverlay.show{opacity:1;}
 </style>
 </head>
 <body>
@@ -49,10 +61,11 @@ span.unscheduled{background:#444;}
 <div class="tabs" id="mainTabs"></div>
 <div class="subTabs" id="collectionTabs"></div>
 
-<section id="tableSection">
+<section id="tableSection" style="position:relative;">
   <h2 id="tableTitle">Loading...</h2>
   <input type="text" id="searchInput" placeholder="🔍 Search...">
   <p id="tableMsg" class="message"></p>
+  <div class="loadingOverlay" id="loadingOverlay">⏳ Loading...</div>
   <table id="dynamicTable"></table>
   <div id="actionButtons" class="flex"></div>
 
@@ -89,6 +102,7 @@ const maintenanceMsg=document.getElementById("maintenanceMsg");
 const maintenanceScheduleDiv=document.getElementById("maintenanceScheduleDiv");
 const maintenanceDaysDiv=document.getElementById("maintenanceDaysDiv");
 const printBtn=document.getElementById("printCardsBtn");
+const loadingOverlay=document.getElementById("loadingOverlay");
 
 let currentCategory="";let currentCollection="";
 const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -166,11 +180,18 @@ loadMaintenanceStatus();
 
 // Table logic
 async function loadTable(){
+  const scrollY=window.scrollY;
+  const tableHeight=dynamicTable.offsetHeight;
+  dynamicTable.style.minHeight=tableHeight+"px";
+  loadingOverlay.classList.add("show");
+
   tableTitle.textContent=currentCollection;tableMsg.textContent="⏳ Loading...";
-  dynamicTable.innerHTML="";actionButtonsDiv.innerHTML="";
   const snap=await getDocs(collection(db,currentCollection));
-  if(snap.empty){tableMsg.textContent="No documents found";return;}
+
+  dynamicTable.style.opacity="0";
+  if(snap.empty){tableMsg.textContent="No documents found";dynamicTable.innerHTML="";loadingOverlay.classList.remove("show");return;}
   tableMsg.textContent="";
+  dynamicTable.innerHTML="";
   const keysSet=new Set();snap.forEach(docSnap=>Object.keys(docSnap.data()).forEach(k=>keysSet.add(k)));
   if(currentCategory==="Orders")keysSet.add("phone");
   if(currentCategory==="Products"){keysSet.add("stockStatus");keysSet.add("itemsPerBox");}
@@ -217,9 +238,15 @@ async function loadTable(){
     const delBtn=document.createElement("button");delBtn.textContent=currentCategory==="Orders"?"🗑 Delete Selected Orders":"🗑 Delete Selected Products";
     delBtn.addEventListener("click",async()=>{const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.cells[0].firstChild.checked);if(selectedRows.length===0){alert("No items selected.");return;}if(!confirm(`⚠️ Delete ${selectedRows.length} item(s)?`))return;
       for(const row of selectedRows){try{await deleteDoc(doc(db,currentCollection,row.dataset.id));}catch(e){console.error(e);}}loadTable();});
-    actionButtonsDiv.appendChild(delBtn);
+    actionButtonsDiv.innerHTML="";actionButtonsDiv.appendChild(delBtn);
   }
   searchInput.oninput=()=>{const term=searchInput.value.toLowerCase();[...dynamicTable.rows].forEach((row,i)=>{if(i===0)return;row.style.display=row.textContent.toLowerCase().includes(term)?"":"none";});};
+
+  // Restore scroll & fade-in
+  dynamicTable.style.opacity="1";
+  window.scrollTo(0, scrollY);
+  dynamicTable.style.minHeight="";
+  loadingOverlay.classList.remove("show");
 }
 </script>
 </body>
