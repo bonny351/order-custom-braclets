@@ -79,14 +79,6 @@
     #imagePreviewContainer img.show { opacity: 1; }
     #mainBraceletImg { width: 200px; height: 200px; border-radius: 16px; border-width: 3px; }
     .sideImg { width: 80px; height: 80px; }
-
-    /* Swatch preview styles */
-    .color-option { display: flex; align-items: center; gap: 8px; }
-    .color-swatch {
-      width: 18px; height: 18px;
-      border-radius: 4px;
-      border: 1px solid #555;
-    }
   </style>
 </head>
 <body>
@@ -158,12 +150,12 @@
     <label>Clip Color</label>
     <select id="clipColor" required>
       <option value="">Select Clip Color</option>
-      <option value="Black" data-color="#000000">Black</option>
-      <option value="Dark Green" data-color="#2f4f2f">Dark Green</option>
-      <option value="Army Green" data-color="#4b5320">Army Green</option>
-      <option value="Tan" data-color="#d2b48c">Tan</option>
-      <option value="Orange" data-color="#ff6600">Orange</option>
-      <option value="Light Green" data-color="#98fb98">Light Green</option>
+      <option value="Black">Black</option>
+      <option value="Dark Green">Dark Green</option>
+      <option value="Army Green">Army Green</option>
+      <option value="Tan">Tan</option>
+      <option value="Orange">Orange</option>
+      <option value="Light Green">Light Green</option>
     </select>
 
     <label>Quantity</label>
@@ -174,6 +166,7 @@
 
   <p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
 
+  <!-- SCRIPT -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -213,12 +206,15 @@
       const typeKey = braceletType.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
       const docRef = doc(db, "products_bracelets", typeKey);
       const snap = await getDoc(docRef);
+
       sizeSelect.innerHTML = "";
       color1Select.innerHTML = "";
       color2Select.innerHTML = "";
 
       if (!snap.exists()) {
         sizeSelect.innerHTML = '<option value="">Not Available</option>';
+        color1Select.innerHTML = '<option value="">Not Available</option>';
+        color2Select.innerHTML = '<option value="">Not Available</option>';
         priceDisplay.textContent = "Price: $0.00";
         return;
       }
@@ -236,14 +232,20 @@
       });
 
       const colors = data.colorOptions || [];
-      colors.forEach(color => {
-        const o1 = document.createElement("option");
-        o1.value = color; o1.textContent = color;
-        color1Select.appendChild(o1);
-        const o2 = document.createElement("option");
-        o2.value = color; o2.textContent = color;
-        color2Select.appendChild(o2);
-      });
+      if (colors.length) {
+        colors.forEach(color => {
+          const c1 = document.createElement("option");
+          c1.value = color; c1.textContent = color;
+          color1Select.appendChild(c1);
+          const c2 = document.createElement("option");
+          c2.value = color; c2.textContent = color;
+          color2Select.appendChild(c2);
+        });
+      } else {
+        color1Select.innerHTML = '<option value="">No Colors Found</option>';
+        color2Select.innerHTML = '<option value="">No Colors Found</option>';
+      }
+
       updatePrice();
     }
 
@@ -257,11 +259,6 @@
 
     function updateClipColorOptions() {
       const type = clipTypeSelect.value;
-      const options = {
-        full: ["Black","Dark Green","Army Green","Tan","Orange","Light Green"],
-        blackOnly: ["Black"],
-      };
-
       clipColorSelect.innerHTML = "";
       let allowedColors = [];
 
@@ -270,9 +267,9 @@
         clipColorSelect.innerHTML = '<option value="">No Color Option</option>';
         return;
       } else if (type === "Regular" || type === "Super Small") {
-        allowedColors = options.blackOnly;
+        allowedColors = ["Black"];
       } else {
-        allowedColors = options.full;
+        allowedColors = ["Black","Dark Green","Army Green","Tan","Orange","Light Green"];
       }
 
       clipColorSelect.disabled = false;
@@ -289,6 +286,7 @@
       });
     }
 
+    // ---- Event Listeners ----
     knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
     sizeSelect.addEventListener("change", updatePrice);
     clipTypeSelect.addEventListener("change", () => {
