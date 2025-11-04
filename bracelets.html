@@ -203,6 +203,7 @@
       });
     }
 
+    // Load colors, sizes, and prices for selected bracelet
     async function loadBraceletData(typeKey) {
       if (!typeKey) return;
 
@@ -227,19 +228,32 @@
         currentPriceMap = typeof data.price === "string" ? JSON.parse(data.price) : data.price || {};
       } catch { currentPriceMap = {}; }
 
-      const colors = typeof data.colorOptions === "string"
-        ? data.colorOptions.split(",").map(c => c.trim()).filter(Boolean)
-        : data.colorOptions || [];
+      // Parse and clean colors and sizes
+      const colors = (data.colorOptions || "")
+        .split(",")
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
 
-      const sizes = typeof data.sizeOptions === "string"
-        ? data.sizeOptions.split(",").map(s => s.trim()).filter(Boolean)
-        : data.sizeOptions || [];
+      const sizes = (data.sizeOptions || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
 
-      sizes.forEach(size => sizeSelect.add(new Option(size, size)));
-      colors.forEach(color => {
-        color1Select.add(new Option(color, color));
-        color2Select.add(new Option(color, color));
-      });
+      if (sizes.length) {
+        sizes.forEach(size => sizeSelect.add(new Option(size, size)));
+      } else {
+        sizeSelect.innerHTML = '<option value="">No Sizes</option>';
+      }
+
+      if (colors.length) {
+        colors.forEach(color => {
+          color1Select.add(new Option(color, color));
+          color2Select.add(new Option(color, color));
+        });
+      } else {
+        color1Select.innerHTML = '<option value="">No Colors</option>';
+        color2Select.innerHTML = '<option value="">No Colors</option>';
+      }
 
       updatePrice();
     }
@@ -312,7 +326,6 @@
       }
     }
 
-    // Event listeners
     knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
     sizeSelect.addEventListener("change", updatePrice);
     qtyInput.addEventListener("change", updatePrice);
