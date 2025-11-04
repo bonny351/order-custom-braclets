@@ -124,10 +124,7 @@
 
     <label>Bracelet Type</label>
     <select id="knotType" required>
-      <option value="">Select Bracelet</option>
-      <option value="Cobra">Cobra</option>
-      <option value="King Cobra">King Cobra</option>
-      <option value="Fishtail">Fishtail</option>
+      <option value="">Loading...</option>
     </select>
 
     <label>Size</label>
@@ -164,7 +161,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { 
+      getFirestore, collection, getDocs, doc, getDoc, addDoc, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -186,19 +185,27 @@
     const clipColorSelect = document.getElementById("clipColor");
     const qtyInput = document.getElementById("braceletQty");
     const priceDisplay = document.getElementById("priceDisplay");
-    const orderMsg = document.getElementById("orderMsg");
     const form = document.getElementById("braceletForm");
+    const orderMsg = document.getElementById("orderMsg");
 
     let currentPriceMap = {};
 
-    function normalizeSizeKey(size) {
-      if (!size) return size;
-      return size.replace(/["\s]/g, "").toLowerCase();
+    // Load bracelet types dynamically
+    async function loadBraceletTypes() {
+      knotSelect.innerHTML = '<option value="">Select Bracelet</option>';
+      const snap = await getDocs(collection(db, "products_bracelets"));
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const opt = document.createElement("option");
+        opt.value = docSnap.id;
+        opt.textContent = data.type || docSnap.id;
+        knotSelect.appendChild(opt);
+      });
     }
 
-    async function loadBraceletData(type) {
-      if (!type) return;
-      const typeKey = type.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
+    async function loadBraceletData(typeKey) {
+      if (!typeKey) return;
+
       const docRef = doc(db, "products_bracelets", typeKey);
       const snap = await getDoc(docRef);
 
@@ -215,33 +222,30 @@
       }
 
       const data = snap.data();
+
       try {
         currentPriceMap = typeof data.price === "string" ? JSON.parse(data.price) : data.price || {};
       } catch { currentPriceMap = {}; }
 
-      (data.sizeOptions || []).forEach(size => {
-        const opt = document.createElement("option");
-        opt.value = size;
-        opt.textContent = size;
-        sizeSelect.appendChild(opt);
-      });
+      const colors = typeof data.colorOptions === "string"
+        ? data.colorOptions.split(",").map(c => c.trim()).filter(Boolean)
+        : data.colorOptions || [];
 
-      const colors = data.colorOptions || [];
-      if (colors.length) {
-        colors.forEach(c => {
-          color1Select.add(new Option(c, c));
-          color2Select.add(new Option(c, c));
-        });
-      } else {
-        color1Select.innerHTML = '<option value="">No Colors</option>';
-        color2Select.innerHTML = '<option value="">No Colors</option>';
-      }
+      const sizes = typeof data.sizeOptions === "string"
+        ? data.sizeOptions.split(",").map(s => s.trim()).filter(Boolean)
+        : data.sizeOptions || [];
+
+      sizes.forEach(size => sizeSelect.add(new Option(size, size)));
+      colors.forEach(color => {
+        color1Select.add(new Option(color, color));
+        color2Select.add(new Option(color, color));
+      });
 
       updatePrice();
     }
 
     function updatePrice() {
-      const size = normalizeSizeKey(sizeSelect.value);
+      const size = sizeSelect.value;
       const clipType = clipTypeSelect.value;
       const qty = parseInt(qtyInput.value) || 1;
       let base = parseFloat(currentPriceMap[size]) || 0;
@@ -270,11 +274,6 @@
       allowed.forEach(c => clipColorSelect.add(new Option(c, c)));
     }
 
-    knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
-    sizeSelect.addEventListener("change", updatePrice);
-    clipTypeSelect.addEventListener("change", () => { updateClipColorOptions(); updatePrice(); });
-    qtyInput.addEventListener("change", updatePrice);
-
     async function submitOrder() {
       const name = form.braceletName.value.trim();
       const phone = form.braceletPhone.value.trim();
@@ -288,14 +287,11 @@
       const qty = parseInt(qtyInput.value) || 1;
 
       if (!phone) return alert("⚠️ Please enter your phone number.");
-      if (!name || !type || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
+      if (!name || !type || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled))
         return alert("⚠️ Please fill in all required fields.");
-      }
 
-      const key = normalizeSizeKey(size);
-      let base = parseFloat(currentPriceMap[key]) || 0;
-      if (clipType === "Metal") base += 1;
-      const total = base * qty;
+      const base = parseFloat(currentPriceMap[size]) || 0;
+      const total = (clipType === "Metal" ? base + 1 : base) * qty;
 
       try {
         await addDoc(collection(db, "braceletOrders"), {
@@ -316,7 +312,15 @@
       }
     }
 
+    // Event listeners
+    knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
+    sizeSelect.addEventListener("change", updatePrice);
+    qtyInput.addEventListener("change", updatePrice);
+    clipTypeSelect.addEventListener("change", () => { updateClipColorOptions(); updatePrice(); });
     document.getElementById("submitBtn").addEventListener("click", submitOrder);
+
+    // Initialize
+    loadBraceletTypes();
     updateClipColorOptions();
   </script>
 </body>
