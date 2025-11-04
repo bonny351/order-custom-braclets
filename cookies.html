@@ -80,6 +80,21 @@ button:hover { background: darkred; }
   <button type="button" id="submitBtn">Submit Cookie Order</button>
 </form>
 
+<!-- 💖 Donate button -->
+<div style="text-align:center; margin-top:20px;">
+  <button id="donateBtn" style="background:#ffb347;">💖 Donate</button>
+</div>
+
+<!-- Donation popup -->
+<div id="donateBox" style="display:none; text-align:center; background:#111; border-radius:12px; box-shadow:0 0 12px #ff0000; padding:20px; max-width:400px; margin:20px auto;">
+  <h3 style="color:#ffb347;">Make a Donation</h3>
+  <input id="donateName" type="text" placeholder="Your Name" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+  <input id="donateEmail" type="email" placeholder="Your Email (optional)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+  <input id="donateAmount" type="number" min="1" placeholder="Donation Amount ($)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+  <button id="confirmDonateBtn" style="background:#ff0000; color:white; padding:10px 20px; border-radius:8px; margin-right:10px;">Submit Donation</button>
+  <button id="cancelDonateBtn" style="background:gray; color:white; padding:10px 20px; border-radius:8px;">Cancel</button>
+</div>
+
 <p id="orderMsg"></p>
 
 <script type="module">
@@ -114,7 +129,6 @@ onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
 // --- LIVE COOKIES ---
 onSnapshot(collection(db, "products_cookies"), snapshot => {
   cookieSelect.innerHTML = '<option value="">Select Cookie</option>';
-
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
     const opt = document.createElement("option");
@@ -133,7 +147,6 @@ cookieSelect.addEventListener("change", async () => {
   if(!docSnap.exists()) return;
   currentCookieData = docSnap.data();
 
-  // STOCK STATUS
   if(currentCookieData.stock >= 10){
     stockStatus.textContent = "In Stock";
     stockStatus.className = "low-stock";
@@ -180,6 +193,51 @@ async function submitCookieOrder() {
 }
 
 document.getElementById("submitBtn").addEventListener("click", submitCookieOrder);
+
+// --- DONATE FEATURE ---
+const donateBtn = document.getElementById("donateBtn");
+const donateBox = document.getElementById("donateBox");
+const confirmDonateBtn = document.getElementById("confirmDonateBtn");
+const cancelDonateBtn = document.getElementById("cancelDonateBtn");
+
+donateBtn.addEventListener("click", () => {
+  donateBox.style.display = "block";
+  orderMsg.textContent = "";
+});
+cancelDonateBtn.addEventListener("click", () => {
+  donateBox.style.display = "none";
+});
+
+confirmDonateBtn.addEventListener("click", async () => {
+  const name = document.getElementById("donateName").value.trim();
+  const email = document.getElementById("donateEmail").value.trim();
+  const amount = parseFloat(document.getElementById("donateAmount").value);
+
+  if (!name || !amount || amount <= 0) {
+    alert("⚠️ Please enter your name and donation amount.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "cookieOrders"), {
+      name,
+      email: email || null,
+      type: "Donate",
+      total: amount,
+      createdAt: new Date(),
+      status: "Pending"
+    });
+
+    orderMsg.textContent = `💖 Thank you, ${name}! Your $${amount.toFixed(2)} donation was received.`;
+    donateBox.style.display = "none";
+    document.getElementById("donateName").value = "";
+    document.getElementById("donateEmail").value = "";
+    document.getElementById("donateAmount").value = "";
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to submit donation.");
+  }
+});
 </script>
 </body>
 </html>
