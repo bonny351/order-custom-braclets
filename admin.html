@@ -37,8 +37,6 @@ label{cursor:pointer;margin-right:6px;}
 span.day{display:inline-block;padding:4px 8px;margin:2px;border-radius:4px;color:white;}
 span.scheduled{background:red;}
 span.unscheduled{background:#444;}
-
-/* ✅ Updated overlay fix */
 .loadingOverlay {
   position:absolute;
   top:0;left:0;right:0;bottom:0;
@@ -53,12 +51,11 @@ span.unscheduled{background:#444;}
   z-index:2;
   opacity:0;
   transition:opacity .3s;
-  pointer-events:none; /* allows clicks when hidden */
+  pointer-events:none;
 }
-
 .loadingOverlay.show {
   opacity:1;
-  pointer-events:auto; /* only blocks clicks when visible */
+  pointer-events:auto;
 }
 </style>
 </head>
@@ -74,6 +71,7 @@ span.unscheduled{background:#444;}
 
 <section id="tableSection" style="position:relative;">
   <h2 id="tableTitle">Loading...</h2>
+  <p id="orderCount" class="message"></p>
   <input type="text" id="searchInput" placeholder="🔍 Search...">
   <p id="tableMsg" class="message"></p>
   <div class="loadingOverlay" id="loadingOverlay">⏳ Loading...</div>
@@ -81,11 +79,9 @@ span.unscheduled{background:#444;}
   <div id="actionButtons" class="flex"></div>
 
   <hr style="border-color:#ff4444;">
-
   <button id="toggleMaintenanceBtn">⚠️ Toggle Under Construction</button>
   <button id="printCardsBtn">🖨 Print Business Cards</button>
   <p id="maintenanceMsg" class="message"></p>
-
   <div id="maintenanceScheduleDiv" style="text-align:center;margin-top:10px;"></div>
   <div id="maintenanceDaysDiv" style="text-align:center;margin-top:10px;"></div>
 </section>
@@ -126,13 +122,12 @@ const maintenanceScheduleDiv=document.getElementById("maintenanceScheduleDiv");
 const maintenanceDaysDiv=document.getElementById("maintenanceDaysDiv");
 const printBtn=document.getElementById("printCardsBtn");
 const loadingOverlay=document.getElementById("loadingOverlay");
+const orderCountMsg=document.getElementById("orderCount");
 
 let currentCategory="";let currentCollection="";
-const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-const dayCheckboxes=[];
 const maintenanceDoc=doc(db,"siteSettings","maintenance");
 
-// Create category tabs
+// Tab setup
 Object.keys(allCollections).forEach(cat=>{
   const tab=document.createElement("div");
   tab.className="tab";
@@ -164,90 +159,53 @@ function loadCollectionTabs(){
   collectionTabsDiv.children[0].click();
 }
 
-// Maintenance functions
-async function loadMaintenanceStatus(){
-  try{
-    const docSnap=await getDoc(maintenanceDoc);
-    const data=docSnap.exists()?docSnap.data():{enabled:false,scheduledDays:[]};
-    maintenanceMsg.textContent=data.enabled?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-    loadMaintenanceSchedule(data.scheduledDays||[]);
-    displayScheduledDays(data.scheduledDays||[]);
-  }catch(err){console.error(err);}
-}
-function displayScheduledDays(scheduledDays){
-  maintenanceDaysDiv.innerHTML="<strong>Scheduled Maintenance Days:</strong><br>";
-  days.forEach((day,i)=>{
-    const span=document.createElement("span");
-    span.className=scheduledDays.includes(i)?"day scheduled":"day unscheduled";
-    span.textContent=day;
-    maintenanceDaysDiv.appendChild(span);
-  });
-}
-function loadMaintenanceSchedule(scheduledDays){
-  maintenanceScheduleDiv.innerHTML="<strong>Schedule Maintenance:</strong><br>";
-  days.forEach((day,i)=>{
-    const label=document.createElement("label");
-    const cb=document.createElement("input");
-    cb.type="checkbox";
-    cb.value=i;
-    cb.checked=scheduledDays.includes(i);
-    cb.addEventListener("change",()=>displayScheduledDays(dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value))));
-    dayCheckboxes[i]=cb;
-    label.appendChild(cb);
-    label.appendChild(document.createTextNode(day));
-    maintenanceScheduleDiv.appendChild(label);
-  });
-  const saveBtn=document.createElement("button");
-  saveBtn.textContent="💾 Save Schedule";
-  saveBtn.addEventListener("click",saveSchedule);
-  maintenanceScheduleDiv.appendChild(saveBtn);
-}
-async function saveSchedule(){
-  const selectedDays=dayCheckboxes.filter(cb=>cb.checked).map(cb=>parseInt(cb.value));
-  await setDoc(maintenanceDoc,{enabled:true,scheduledDays:selectedDays},{merge:true});
-  alert("✅ Maintenance schedule saved!");
-  loadMaintenanceStatus();
-}
+// Maintenance toggle
 toggleBtn.addEventListener("click",async()=>{
   const docSnap=await getDoc(maintenanceDoc);
   const current=docSnap.exists()?docSnap.data().enabled:false;
-  const scheduledDays=docSnap.exists()?docSnap.data().scheduledDays||[]:[];
-  await setDoc(maintenanceDoc,{enabled:!current,scheduledDays},{merge:true});
+  await setDoc(maintenanceDoc,{enabled:!current},{merge:true});
   maintenanceMsg.textContent=!current?"🛠️ Site is UNDER CONSTRUCTION":"✅ Site is LIVE";
-  loadMaintenanceStatus();
 });
 
-// Print PDF button
 printBtn.addEventListener("click",()=>{
   const pdfURL="Tactics & Treats.pdf";
-  const printWindow=window.open(pdfURL,"_blank");
-  if(!printWindow){alert("Please allow popups.");return;}
-  printWindow.onload=()=>{printWindow.print();};
+  const win=window.open(pdfURL,"_blank");
+  if(!win){alert("Please allow popups.");return;}
+  win.onload=()=>win.print();
 });
 
-loadMaintenanceStatus();
+async function getTotalOrderCount(){
+  const orderCollections=["braceletOrders","cookieOrders","spiritOrders"];
+  let total=0;
+  for(const collName of orderCollections){
+    const snap=await getDocs(collection(db,collName));
+    total+=snap.size;
+  }
+  return total;
+}
 
-// Table logic
+// Main table loader
 async function loadTable(){
   const scrollY=window.scrollY;
-  const tableHeight=dynamicTable.offsetHeight;
-  dynamicTable.style.minHeight=tableHeight+"px";
+  dynamicTable.style.minHeight=dynamicTable.offsetHeight+"px";
   loadingOverlay.classList.add("show");
 
   tableTitle.textContent=currentCollection;
   const snap=await getDocs(collection(db,currentCollection));
 
-  dynamicTable.style.opacity="0";
-  if(snap.empty){
-    tableMsg.textContent="No documents found";
-    dynamicTable.innerHTML="";
-    loadingOverlay.classList.remove("show");
-    return;
+  // ✅ Update order count logic
+  if(currentCategory==="Orders"){
+    orderCountMsg.textContent=`📦 Total Orders: ${snap.size}`;
+  }else if(currentCategory==="Settings" && ["_meta","metadata","siteSettings","adminSettings"].includes(currentCollection)){
+    const totalOrders=await getTotalOrderCount();
+    orderCountMsg.textContent=`📊 Total Orders Across All Collections: ${totalOrders}`;
+  }else{
+    orderCountMsg.textContent="";
   }
 
   dynamicTable.innerHTML="";
   const keysSet=new Set();
-  snap.forEach(docSnap=>Object.keys(docSnap.data()).forEach(k=>keysSet.add(k)));
+  snap.forEach(d=>Object.keys(d.data()).forEach(k=>keysSet.add(k)));
   const keys=Array.from(keysSet);
   const headerRow=dynamicTable.insertRow();
   headerRow.insertCell(0).textContent="ID";
@@ -267,16 +225,15 @@ async function loadTable(){
       cell.textContent=value;
       cell.contentEditable=true;
       cell.addEventListener("blur",async()=>{
-        let newValue=cell.textContent.trim();
         try{
-          await setDoc(doc(db,currentCollection,row.dataset.id),{...data,[key]:newValue});
+          await setDoc(doc(db,currentCollection,row.dataset.id),{...data,[key]:cell.textContent.trim()});
           tableMsg.textContent=`✅ ${key} updated!`;
-        }catch(err){console.error(err);}
+        }catch(e){console.error(e);}
       });
     });
   }
 
-  searchInput.oninput=()=>{const term=searchInput.value.toLowerCase();[...dynamicTable.rows].forEach((r,i)=>{if(i===0)return;r.style.display=r.textContent.toLowerCase().includes(term)?"":"none";});};
+  searchInput.oninput=()=>{const t=searchInput.value.toLowerCase();[...dynamicTable.rows].forEach((r,i)=>{if(i===0)return;r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";});};
 
   dynamicTable.style.opacity="1";
   window.scrollTo(0,scrollY);
