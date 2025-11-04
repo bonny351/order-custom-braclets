@@ -57,6 +57,7 @@ span.unscheduled{background:#444;}
   opacity:1;
   pointer-events:auto;
 }
+.addRow input{background:#222;color:white;border:1px solid #ff0000;border-radius:5px;padding:4px;text-align:center;}
 </style>
 </head>
 <body>
@@ -82,8 +83,6 @@ span.unscheduled{background:#444;}
   <button id="toggleMaintenanceBtn">⚠️ Toggle Under Construction</button>
   <button id="printCardsBtn">🖨 Print Business Cards</button>
   <p id="maintenanceMsg" class="message"></p>
-  <div id="maintenanceScheduleDiv" style="text-align:center;margin-top:10px;"></div>
-  <div id="maintenanceDaysDiv" style="text-align:center;margin-top:10px;"></div>
 </section>
 
 <script type="module">
@@ -118,8 +117,6 @@ const tableMsg=document.getElementById("tableMsg");
 const actionButtonsDiv=document.getElementById("actionButtons");
 const toggleBtn=document.getElementById("toggleMaintenanceBtn");
 const maintenanceMsg=document.getElementById("maintenanceMsg");
-const maintenanceScheduleDiv=document.getElementById("maintenanceScheduleDiv");
-const maintenanceDaysDiv=document.getElementById("maintenanceDaysDiv");
 const printBtn=document.getElementById("printCardsBtn");
 const loadingOverlay=document.getElementById("loadingOverlay");
 const orderCountMsg=document.getElementById("orderCount");
@@ -127,7 +124,7 @@ const orderCountMsg=document.getElementById("orderCount");
 let currentCategory="";let currentCollection="";
 const maintenanceDoc=doc(db,"siteSettings","maintenance");
 
-// Tab setup
+// Tabs
 Object.keys(allCollections).forEach(cat=>{
   const tab=document.createElement("div");
   tab.className="tab";
@@ -159,7 +156,6 @@ function loadCollectionTabs(){
   collectionTabsDiv.children[0].click();
 }
 
-// Maintenance toggle
 toggleBtn.addEventListener("click",async()=>{
   const docSnap=await getDoc(maintenanceDoc);
   const current=docSnap.exists()?docSnap.data().enabled:false;
@@ -184,16 +180,13 @@ async function getTotalOrderCount(){
   return total;
 }
 
-// Main table loader
 async function loadTable(){
   const scrollY=window.scrollY;
   dynamicTable.style.minHeight=dynamicTable.offsetHeight+"px";
   loadingOverlay.classList.add("show");
-
   tableTitle.textContent=currentCollection;
   const snap=await getDocs(collection(db,currentCollection));
 
-  // ✅ Update order count logic
   if(currentCategory==="Orders"){
     orderCountMsg.textContent=`📦 Total Orders: ${snap.size}`;
   }else if(currentCategory==="Settings" && ["_meta","metadata","siteSettings","adminSettings"].includes(currentCollection)){
@@ -233,8 +226,69 @@ async function loadTable(){
     });
   }
 
-  searchInput.oninput=()=>{const t=searchInput.value.toLowerCase();[...dynamicTable.rows].forEach((r,i)=>{if(i===0)return;r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";});};
+  // ➕ Add New Product Row
+  if(currentCategory==="Products"){
+    const addRow=dynamicTable.insertRow();
+    addRow.classList.add("addRow");
+    const idCell=addRow.insertCell(0);
+    idCell.textContent="🆕 New";
+    const inputCells={};
+    keys.forEach(key=>{
+      const cell=addRow.insertCell();
+      const input=document.createElement("input");
+      input.placeholder=key;
+      input.style.width="95%";
+      inputCells[key]=input;
+      cell.appendChild(input);
+    });
+    const addBtnCell=addRow.insertCell();
+    const addBtn=document.createElement("button");
+    addBtn.textContent="➕ Add Product";
+    addBtn.addEventListener("click",async()=>{
+      const newData={};
+      keys.forEach(k=>{
+        const val=inputCells[k].value.trim();
+        if(val!=="")newData[k]=isNaN(val)?val:Number(val);
+      });
+      if(Object.keys(newData).length===0){alert("⚠️ Please enter at least one value!");return;}
+      try{
+        const newDoc=doc(collection(db,currentCollection));
+        await setDoc(newDoc,newData);
+        alert("✅ New product added!");
+        loadTable();
+      }catch(err){console.error(err);alert("❌ Error adding product.");}
+    });
+    addBtnCell.appendChild(addBtn);
+  }
 
+  // 🗑 Delete Selected
+  if(currentCategory==="Orders"||currentCategory==="Products"){
+    const checkboxTh=document.createElement("th");
+    checkboxTh.textContent="Select";
+    dynamicTable.rows[0].insertBefore(checkboxTh,dynamicTable.rows[0].cells[0]);
+    [...dynamicTable.rows].slice(1).forEach(row=>{
+      const selectCell=row.insertCell(0);
+      const cb=document.createElement("input");
+      cb.type="checkbox";
+      selectCell.appendChild(cb);
+    });
+    const delBtn=document.createElement("button");
+    delBtn.textContent=currentCategory==="Orders"?"🗑 Delete Selected Orders":"🗑 Delete Selected Products";
+    delBtn.addEventListener("click",async()=>{
+      const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.cells[0].firstChild.checked);
+      if(selectedRows.length===0){alert("No items selected.");return;}
+      if(!confirm(`⚠️ Delete ${selectedRows.length} item(s)?`))return;
+      for(const row of selectedRows){
+        try{await deleteDoc(doc(db,currentCollection,row.dataset.id));}catch(err){console.error(err);}
+      }
+      alert(`✅ Deleted ${selectedRows.length} item(s).`);
+      loadTable();
+    });
+    actionButtonsDiv.innerHTML="";
+    actionButtonsDiv.appendChild(delBtn);
+  }
+
+  searchInput.oninput=()=>{const t=searchInput.value.toLowerCase();[...dynamicTable.rows].forEach((r,i)=>{if(i===0)return;r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";});};
   dynamicTable.style.opacity="1";
   window.scrollTo(0,scrollY);
   dynamicTable.style.minHeight="";
