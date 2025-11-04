@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tactics & Treats | Bracelet Preorder</title>
+  <title>Bracelets – Tactics & Treats Preorder</title>
   <style>
     body {
       font-family: "Poppins", sans-serif;
@@ -53,11 +53,6 @@
       font-size: 14px;
     }
 
-    select {
-      position: relative;
-      z-index: 10;
-    }
-
     select:disabled {
       background: #555;
       color: #aaa;
@@ -91,11 +86,6 @@
     #imagePreviewContainer img.show { opacity: 1; }
     #mainBraceletImg { width: 200px; height: 200px; border-radius: 16px; border-width: 3px; }
     .sideImg { width: 80px; height: 80px; }
-
-    .error {
-      border: 2px solid #ff4444;
-      background: #330000;
-    }
   </style>
 </head>
 <body>
@@ -122,17 +112,17 @@
     </div>
   </div>
 
-  <form id="braceletForm" autocomplete="on">
-    <label for="braceletName">Name</label>
-    <input id="braceletName" type="text" required autocomplete="name">
+  <form id="braceletForm">
+    <label>Name</label>
+    <input id="braceletName" type="text" required>
 
-    <label for="braceletPhone">Phone Number</label>
-    <input id="braceletPhone" type="tel" required autocomplete="tel">
+    <label>Phone Number</label>
+    <input id="braceletPhone" type="tel" placeholder="Required" required>
 
-    <label for="braceletEmail">Email (optional)</label>
-    <input id="braceletEmail" type="email" autocomplete="email">
+    <label>Email</label>
+    <input id="braceletEmail" type="email" placeholder="Optional">
 
-    <label for="knotType">Bracelet Type</label>
+    <label>Bracelet Type</label>
     <select id="knotType" required>
       <option value="">Select Bracelet</option>
       <option value="Cobra">Cobra</option>
@@ -140,18 +130,18 @@
       <option value="Fishtail">Fishtail</option>
     </select>
 
-    <label for="braceletSize">Size</label>
+    <label>Size</label>
     <select id="braceletSize" required></select>
 
     <p id="priceDisplay">Price: $0.00</p>
 
-    <label for="color1">Color 1</label>
+    <label>Color 1</label>
     <select id="color1" required></select>
 
-    <label for="color2">Color 2</label>
+    <label>Color 2</label>
     <select id="color2" required></select>
 
-    <label for="clipType">Clip Type</label>
+    <label>Clip Type</label>
     <select id="clipType" required>
       <option value="">Select Clip Type</option>
       <option value="Regular">Regular Clip</option>
@@ -161,16 +151,16 @@
       <option value="Adjustable Knot">Adjustable Knot</option>
     </select>
 
-    <label for="clipColor">Clip Color</label>
+    <label>Clip Color</label>
     <select id="clipColor" required></select>
 
-    <label for="braceletQty">Quantity</label>
+    <label>Quantity</label>
     <input id="braceletQty" type="number" min="1" value="1" required>
 
     <button type="button" id="submitBtn">Submit Bracelet Order</button>
   </form>
 
-  <div id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></div>
+  <p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -194,10 +184,10 @@
     const color2Select = document.getElementById("color2");
     const clipTypeSelect = document.getElementById("clipType");
     const clipColorSelect = document.getElementById("clipColor");
-    const priceDisplay = document.getElementById("priceDisplay");
     const qtyInput = document.getElementById("braceletQty");
-    const form = document.getElementById("braceletForm");
+    const priceDisplay = document.getElementById("priceDisplay");
     const orderMsg = document.getElementById("orderMsg");
+    const form = document.getElementById("braceletForm");
 
     let currentPriceMap = {};
 
@@ -238,12 +228,10 @@
 
       const colors = data.colorOptions || [];
       if (colors.length) {
-        for (const c of colors) {
-          const o1 = new Option(c, c);
-          const o2 = new Option(c, c);
-          color1Select.add(o1);
-          color2Select.add(o2);
-        }
+        colors.forEach(c => {
+          color1Select.add(new Option(c, c));
+          color2Select.add(new Option(c, c));
+        });
       } else {
         color1Select.innerHTML = '<option value="">No Colors</option>';
         color2Select.innerHTML = '<option value="">No Colors</option>';
@@ -299,10 +287,9 @@
       const clipColor = clipColorSelect.value;
       const qty = parseInt(qtyInput.value) || 1;
 
-      const required = [name, phone, type, size, color1, color2, clipType];
-      if (required.some(v => !v) || (!clipColor && !clipColorSelect.disabled)) {
-        alert("⚠️ Please fill in all required fields.");
-        return;
+      if (!phone) return alert("⚠️ Please enter your phone number.");
+      if (!name || !type || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
+        return alert("⚠️ Please fill in all required fields.");
       }
 
       const key = normalizeSizeKey(size);
