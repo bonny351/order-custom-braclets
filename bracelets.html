@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bracelets – Tactics & Treats Preorder</title>
+  <title>Tactics & Treats | Bracelet Preorder</title>
   <style>
     body {
       font-family: "Poppins", sans-serif;
@@ -36,17 +36,15 @@
       margin: 20px auto;
       max-width: 500px;
       box-shadow: 0 0 15px #ff0000;
-      overflow: visible !important; /* ✅ Fix dropdown clipping */
     }
 
     label {
       display: block;
-      margin-top: 10px;
+      margin-top: 12px;
       font-weight: 500;
-      color: white;
     }
 
-    input, button {
+    input, select, button {
       width: 100%;
       padding: 10px;
       border-radius: 8px;
@@ -56,14 +54,8 @@
     }
 
     select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin-top: 5px;
-      font-size: 14px;
       position: relative;
-      z-index: 9999; /* ✅ Dropdowns always on top */
+      z-index: 10;
     }
 
     select:disabled {
@@ -88,16 +80,22 @@
 
     #imagePreviewContainer {
       display: flex; justify-content: center; align-items: center;
-      gap: 20px; margin: 20px 0;
+      flex-wrap: wrap; gap: 20px; margin: 20px 0;
     }
     #imagePreviewContainer img {
       object-fit: cover; border-radius: 8px;
       border: 2px solid #ff0000; opacity: 0;
       transition: opacity 0.5s ease;
+      max-width: 100%;
     }
     #imagePreviewContainer img.show { opacity: 1; }
     #mainBraceletImg { width: 200px; height: 200px; border-radius: 16px; border-width: 3px; }
     .sideImg { width: 80px; height: 80px; }
+
+    .error {
+      border: 2px solid #ff4444;
+      background: #330000;
+    }
   </style>
 </head>
 <body>
@@ -110,7 +108,6 @@
 
   <h1>Bracelet Preorder</h1>
 
-  <!-- Image previews -->
   <div id="imagePreviewContainer">
     <div style="display:flex; flex-direction:column; gap:10px;">
       <img id="sideImg1" class="sideImg" src="default.png" alt="Side Image 1">
@@ -125,18 +122,17 @@
     </div>
   </div>
 
-  <!-- Main bracelet form -->
-  <form id="braceletForm">
-    <label>Name</label>
-    <input id="braceletName" type="text" required>
+  <form id="braceletForm" autocomplete="on">
+    <label for="braceletName">Name</label>
+    <input id="braceletName" type="text" required autocomplete="name">
 
-    <label>Phone Number</label>
-    <input id="braceletPhone" type="tel" placeholder="Required">
+    <label for="braceletPhone">Phone Number</label>
+    <input id="braceletPhone" type="tel" required autocomplete="tel">
 
-    <label>Email</label>
-    <input id="braceletEmail" type="email" placeholder="Optional">
+    <label for="braceletEmail">Email (optional)</label>
+    <input id="braceletEmail" type="email" autocomplete="email">
 
-    <label>Bracelet Type</label>
+    <label for="knotType">Bracelet Type</label>
     <select id="knotType" required>
       <option value="">Select Bracelet</option>
       <option value="Cobra">Cobra</option>
@@ -144,19 +140,18 @@
       <option value="Fishtail">Fishtail</option>
     </select>
 
-    <label>Size</label>
+    <label for="braceletSize">Size</label>
     <select id="braceletSize" required></select>
 
     <p id="priceDisplay">Price: $0.00</p>
 
-    <label>Color 1</label>
+    <label for="color1">Color 1</label>
     <select id="color1" required></select>
 
-    <label>Color 2</label>
+    <label for="color2">Color 2</label>
     <select id="color2" required></select>
 
-    <!-- ===================== CLIP TYPE & COLOR ===================== -->
-    <label>Clip Type</label>
+    <label for="clipType">Clip Type</label>
     <select id="clipType" required>
       <option value="">Select Clip Type</option>
       <option value="Regular">Regular Clip</option>
@@ -166,29 +161,20 @@
       <option value="Adjustable Knot">Adjustable Knot</option>
     </select>
 
-    <label>Clip Color</label>
-    <select id="clipColor" required>
-      <option value="">Select Clip Color</option>
-      <option value="Black">Black</option>
-      <option value="Dark Green">Dark Green</option>
-      <option value="Army Green">Army Green</option>
-      <option value="Tan">Tan</option>
-      <option value="Orange">Orange</option>
-      <option value="Light Green">Light Green</option>
-    </select>
+    <label for="clipColor">Clip Color</label>
+    <select id="clipColor" required></select>
 
-    <label>Quantity</label>
+    <label for="braceletQty">Quantity</label>
     <input id="braceletQty" type="number" min="1" value="1" required>
 
     <button type="button" id="submitBtn">Submit Bracelet Order</button>
   </form>
 
-  <p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
+  <div id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></div>
 
-  <!-- SCRIPT -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -209,6 +195,7 @@
     const clipTypeSelect = document.getElementById("clipType");
     const clipColorSelect = document.getElementById("clipColor");
     const priceDisplay = document.getElementById("priceDisplay");
+    const qtyInput = document.getElementById("braceletQty");
     const form = document.getElementById("braceletForm");
     const orderMsg = document.getElementById("orderMsg");
 
@@ -216,13 +203,12 @@
 
     function normalizeSizeKey(size) {
       if (!size) return size;
-      const s = size.replace(/"/g, "");
-      return s.endsWith('"') ? s : s + '"';
+      return size.replace(/["\s]/g, "").toLowerCase();
     }
 
-    async function loadBraceletData(braceletType) {
-      if (!braceletType) return;
-      const typeKey = braceletType.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
+    async function loadBraceletData(type) {
+      if (!type) return;
+      const typeKey = type.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
       const docRef = doc(db, "products_bracelets", typeKey);
       const snap = await getDoc(docRef);
 
@@ -245,24 +231,22 @@
 
       (data.sizeOptions || []).forEach(size => {
         const opt = document.createElement("option");
-        opt.value = size.replace(/"/g, '');
+        opt.value = size;
         opt.textContent = size;
         sizeSelect.appendChild(opt);
       });
 
       const colors = data.colorOptions || [];
       if (colors.length) {
-        colors.forEach(color => {
-          const c1 = document.createElement("option");
-          c1.value = color; c1.textContent = color;
-          color1Select.appendChild(c1);
-          const c2 = document.createElement("option");
-          c2.value = color; c2.textContent = color;
-          color2Select.appendChild(c2);
-        });
+        for (const c of colors) {
+          const o1 = new Option(c, c);
+          const o2 = new Option(c, c);
+          color1Select.add(o1);
+          color2Select.add(o2);
+        }
       } else {
-        color1Select.innerHTML = '<option value="">No Colors Found</option>';
-        color2Select.innerHTML = '<option value="">No Colors Found</option>';
+        color1Select.innerHTML = '<option value="">No Colors</option>';
+        color2Select.innerHTML = '<option value="">No Colors</option>';
       }
 
       updatePrice();
@@ -271,85 +255,82 @@
     function updatePrice() {
       const size = normalizeSizeKey(sizeSelect.value);
       const clipType = clipTypeSelect.value;
-      let basePrice = parseFloat(currentPriceMap[size]) || 0;
-      if (clipType === "Metal") basePrice += 1;
-      priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
+      const qty = parseInt(qtyInput.value) || 1;
+      let base = parseFloat(currentPriceMap[size]) || 0;
+      if (clipType === "Metal") base += 1;
+      const total = base * qty;
+      priceDisplay.textContent = `Price: $${total.toFixed(2)}`;
     }
 
     function updateClipColorOptions() {
       const type = clipTypeSelect.value;
       clipColorSelect.innerHTML = "";
-      let allowedColors = [];
+      let allowed = [];
 
       if (type === "Metal" || type === "Adjustable Knot") {
         clipColorSelect.disabled = true;
         clipColorSelect.innerHTML = '<option value="">No Color Option</option>';
         return;
       } else if (type === "Regular" || type === "Super Small") {
-        allowedColors = ["Black"];
+        allowed = ["Black"];
       } else {
-        allowedColors = ["Black","Dark Green","Army Green","Tan","Orange","Light Green"];
+        allowed = ["Black", "Dark Green", "Army Green", "Tan", "Orange", "Light Green"];
       }
 
       clipColorSelect.disabled = false;
-      const defaultOpt = document.createElement("option");
-      defaultOpt.value = "";
-      defaultOpt.textContent = "Select Clip Color";
-      clipColorSelect.appendChild(defaultOpt);
-
-      allowedColors.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        clipColorSelect.appendChild(opt);
-      });
+      clipColorSelect.add(new Option("Select Clip Color", ""));
+      allowed.forEach(c => clipColorSelect.add(new Option(c, c)));
     }
 
-    // ---- Event Listeners ----
     knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
     sizeSelect.addEventListener("change", updatePrice);
-    clipTypeSelect.addEventListener("change", () => {
-      updateClipColorOptions();
-      updatePrice();
-    });
+    clipTypeSelect.addEventListener("change", () => { updateClipColorOptions(); updatePrice(); });
+    qtyInput.addEventListener("change", updatePrice);
 
     async function submitOrder() {
-      const name = document.getElementById("braceletName").value.trim();
-      const phone = document.getElementById("braceletPhone").value.trim();
-      const email = document.getElementById("braceletEmail").value.trim();
+      const name = form.braceletName.value.trim();
+      const phone = form.braceletPhone.value.trim();
+      const email = form.braceletEmail.value.trim();
       const type = knotSelect.value;
       const size = sizeSelect.value;
       const color1 = color1Select.value;
       const color2 = color2Select.value;
       const clipType = clipTypeSelect.value;
       const clipColor = clipColorSelect.value;
-      const qty = parseInt(document.getElementById("braceletQty").value) || 1;
+      const qty = parseInt(qtyInput.value) || 1;
 
-      if (!phone) return alert("⚠️ Please enter your phone number.");
-      if (!name || !type || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
-        return alert("⚠️ Please fill in all required fields.");
+      const required = [name, phone, type, size, color1, color2, clipType];
+      if (required.some(v => !v) || (!clipColor && !clipColorSelect.disabled)) {
+        alert("⚠️ Please fill in all required fields.");
+        return;
       }
 
       const key = normalizeSizeKey(size);
-      let basePrice = parseFloat(currentPriceMap[key]) || 0;
-      if (clipType === "Metal") basePrice += 1;
-      const total = basePrice * qty;
+      let base = parseFloat(currentPriceMap[key]) || 0;
+      if (clipType === "Metal") base += 1;
+      const total = base * qty;
 
       try {
         await addDoc(collection(db, "braceletOrders"), {
           name, phone, email: email || null,
-          product: type, size, color1, color2, clipType, clipColor,
-          qty, total, createdAt: new Date(), status: "Pending"
+          product: type, size, color1, color2,
+          clipType, clipColor,
+          qty, total,
+          createdAt: serverTimestamp(),
+          status: "Pending"
         });
         orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
-        form.reset(); priceDisplay.textContent = "Price: $0.00";
-      } catch (err) {
-        console.error(err);
+        form.reset();
+        updateClipColorOptions();
+        priceDisplay.textContent = "Price: $0.00";
+      } catch (e) {
+        console.error(e);
         alert("❌ Failed to submit order.");
       }
     }
 
     document.getElementById("submitBtn").addEventListener("click", submitOrder);
+    updateClipColorOptions();
   </script>
 </body>
 </html>
