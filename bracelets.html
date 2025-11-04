@@ -132,6 +132,7 @@
     </div>
   </div>
 
+  <!-- Main bracelet form -->
   <form id="braceletForm">
     <label>Name</label>
     <input id="braceletName" type="text" required>
@@ -184,6 +185,21 @@
     <button type="button" id="submitBtn">Submit Bracelet Order</button>
   </form>
 
+  <!-- Donate button -->
+  <div style="text-align:center; margin-top:20px;">
+    <button id="donateBtn" style="background:#ffb347;">💖 Donate</button>
+  </div>
+
+  <!-- Donation popup -->
+  <div id="donateBox" style="display:none; text-align:center; background:#111; border-radius:12px; box-shadow:0 0 12px #ff0000; padding:20px; max-width:400px; margin:20px auto;">
+    <h3 style="color:#ffb347;">Make a Donation</h3>
+    <input id="donateName" type="text" placeholder="Your Name" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+    <input id="donateEmail" type="email" placeholder="Your Email (optional)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+    <input id="donateAmount" type="number" min="1" placeholder="Donation Amount ($)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+    <button id="confirmDonateBtn" style="background:#ff0000; color:white; padding:10px 20px; border-radius:8px; margin-right:10px;">Submit Donation</button>
+    <button id="cancelDonateBtn" style="background:gray; color:white; padding:10px 20px; border-radius:8px;">Cancel</button>
+  </div>
+
   <p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
 
   <script type="module">
@@ -222,17 +238,14 @@
     let currentPriceMap = {};
     let currentStockMap = {};
 
-    // Helper: normalize Firestore key and size
     function normalizeSizeKey(size) {
       if (!size) return size;
       const s = size.replace(/"/g, "");
       return s.endsWith('"') ? s : s + '"';
     }
 
-    // Load bracelet data
     async function loadBraceletData(braceletType) {
       if (!braceletType) return;
-
       const typeKey = braceletType.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
       const docRef = doc(db, "products_bracelets", typeKey);
       const snap = await getDoc(docRef);
@@ -250,21 +263,14 @@
       }
 
       const data = snap.data();
-      console.log("Loaded product data:", data);
-
-      // ✅ Parse price JSON if stored as string
       try {
-        currentPriceMap = typeof data.price === "string"
-          ? JSON.parse(data.price)
-          : data.price || {};
-      } catch (e) {
-        console.error("Failed to parse price data:", e);
+        currentPriceMap = typeof data.price === "string" ? JSON.parse(data.price) : data.price || {};
+      } catch {
         currentPriceMap = {};
       }
 
       currentStockMap = data.stockQty || {};
 
-      // Sizes
       if (Array.isArray(data.sizeOptions)) {
         data.sizeOptions.forEach(size => {
           const opt = document.createElement("option");
@@ -274,7 +280,6 @@
         });
       }
 
-      // Colors
       const colors = data.colorOptions || [];
       colors.forEach(color => {
         const c1 = document.createElement("option");
@@ -291,7 +296,6 @@
       updatePrice();
     }
 
-    // Fade-in helper
     function fadeIn(img, newSrc) {
       img.classList.remove("show");
       setTimeout(() => {
@@ -300,17 +304,13 @@
       }, 150);
     }
 
-    // Update images
     function updateImages(type) {
       if (!type) {
-        fadeIn(mainBraceletImg, "default.png");
-        fadeIn(sideImg1, "default.png");
-        fadeIn(sideImg2, "default.png");
-        fadeIn(sideImg3, "default.png");
-        fadeIn(sideImg4, "default.png");
+        ["sideImg1","sideImg2","sideImg3","sideImg4","mainBraceletImg"].forEach(id => {
+          fadeIn(document.getElementById(id), "default.png");
+        });
         return;
       }
-
       const key = type.toLowerCase().replace(/\s+/g, "-").replace("/", "-");
       fadeIn(mainBraceletImg, `${key}-main.png`);
       fadeIn(sideImg1, `${key}-side1.png`);
@@ -319,25 +319,19 @@
       fadeIn(sideImg4, `${key}-side4.png`);
     }
 
-    // Update price
     function updatePrice() {
       const rawSize = sizeSelect.value;
       const key = normalizeSizeKey(rawSize);
       const clipType = clipTypeSelect.value;
-
       let basePrice = parseFloat(currentPriceMap[key]) || 0;
       if (clipType === "Metal") basePrice += 1;
       priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
-
-      console.log("Selected size:", rawSize, "key used:", key, "price map:", currentPriceMap);
     }
 
-    // Event listeners
     knotSelect.addEventListener("change", () => {
       loadBraceletData(knotSelect.value);
       updateImages(knotSelect.value);
     });
-
     sizeSelect.addEventListener("change", updatePrice);
     clipTypeSelect.addEventListener("change", () => {
       updatePrice();
@@ -346,7 +340,6 @@
       if (clipColorSelect.disabled) clipColorSelect.value = "";
     });
 
-    // Submit order
     async function submitOrder() {
       const name = document.getElementById("braceletName").value.trim();
       const phone = document.getElementById("braceletPhone").value.trim();
@@ -370,10 +363,19 @@
 
       try {
         await addDoc(collection(db, "braceletOrders"), {
-          name, phone: phone || null, email: email || null,
-          product: braceletType, size, color1, color2,
-          clipType, clipColor, qty, total,
-          createdAt: new Date(), status: "Pending"
+          name,
+          phone: phone || null,
+          email: email || null,
+          product: braceletType,
+          size,
+          color1,
+          color2,
+          clipType,
+          clipColor,
+          qty,
+          total,
+          createdAt: new Date(),
+          status: "Pending"
         });
 
         orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
@@ -387,6 +389,51 @@
     }
 
     document.getElementById("submitBtn").addEventListener("click", submitOrder);
+
+    // --- DONATE FEATURE ---
+    const donateBtn = document.getElementById("donateBtn");
+    const donateBox = document.getElementById("donateBox");
+    const confirmDonateBtn = document.getElementById("confirmDonateBtn");
+    const cancelDonateBtn = document.getElementById("cancelDonateBtn");
+
+    donateBtn.addEventListener("click", () => {
+      donateBox.style.display = "block";
+      orderMsg.textContent = "";
+    });
+    cancelDonateBtn.addEventListener("click", () => {
+      donateBox.style.display = "none";
+    });
+
+    confirmDonateBtn.addEventListener("click", async () => {
+      const name = document.getElementById("donateName").value.trim();
+      const email = document.getElementById("donateEmail").value.trim();
+      const amount = parseFloat(document.getElementById("donateAmount").value);
+
+      if (!name || !amount || amount <= 0) {
+        alert("⚠️ Please enter your name and donation amount.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "braceletOrders"), {
+          name,
+          email: email || null,
+          type: "Donate",
+          total: amount,
+          createdAt: new Date(),
+          status: "Pending"
+        });
+
+        orderMsg.textContent = `💖 Thank you, ${name}! Your $${amount.toFixed(2)} donation was received.`;
+        donateBox.style.display = "none";
+        document.getElementById("donateName").value = "";
+        document.getElementById("donateEmail").value = "";
+        document.getElementById("donateAmount").value = "";
+      } catch (err) {
+        console.error(err);
+        alert("❌ Failed to submit donation.");
+      }
+    });
   </script>
 </body>
 </html>
