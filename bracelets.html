@@ -203,7 +203,7 @@
       });
     }
 
-    // Load colors, sizes, and prices for selected bracelet
+    // Load bracelet data
     async function loadBraceletData(typeKey) {
       if (!typeKey) return;
 
@@ -224,20 +224,17 @@
 
       const data = snap.data();
 
-      try {
-        currentPriceMap = typeof data.price === "string" ? JSON.parse(data.price) : data.price || {};
-      } catch { currentPriceMap = {}; }
+      // ✅ price is a Firestore MAP (object)
+      currentPriceMap = data.price || {};
 
-      // Parse and clean colors and sizes
+      // ✅ colorOptions is a string like "Blue,Green,Black"
       const colors = (data.colorOptions || "")
         .split(",")
         .map(c => c.trim())
         .filter(c => c.length > 0);
 
-      const sizes = (data.sizeOptions || "")
-        .split(",")
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
+      // ✅ sizeOptions is an array in Firestore
+      const sizes = Array.isArray(data.sizeOptions) ? data.sizeOptions : [];
 
       if (sizes.length) {
         sizes.forEach(size => sizeSelect.add(new Option(size, size)));
