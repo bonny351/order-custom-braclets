@@ -172,19 +172,6 @@
     <button type="button" id="submitBtn">Submit Bracelet Order</button>
   </form>
 
-  <div style="text-align:center; margin-top:20px;">
-    <button id="donateBtn" style="background:#ffb347;">💖 Donate</button>
-  </div>
-
-  <div id="donateBox" style="display:none; text-align:center; background:#111; border-radius:12px; box-shadow:0 0 12px #ff0000; padding:20px; max-width:400px; margin:20px auto;">
-    <h3 style="color:#ffb347;">Make a Donation</h3>
-    <input id="donateName" type="text" placeholder="Your Name" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
-    <input id="donateEmail" type="email" placeholder="Your Email (optional)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
-    <input id="donateAmount" type="number" min="1" placeholder="Donation Amount ($)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
-    <button id="confirmDonateBtn" style="background:#ff0000; color:white; padding:10px 20px; border-radius:8px; margin-right:10px;">Submit Donation</button>
-    <button id="cancelDonateBtn" style="background:gray; color:white; padding:10px 20px; border-radius:8px;">Cancel</button>
-  </div>
-
   <p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
 
   <script type="module">
@@ -264,16 +251,48 @@
       const size = normalizeSizeKey(sizeSelect.value);
       const clipType = clipTypeSelect.value;
       let basePrice = parseFloat(currentPriceMap[size]) || 0;
-      if (clipType === "Metal") basePrice += 1; // Metal adds $1
+      if (clipType === "Metal") basePrice += 1;
       priceDisplay.textContent = `Price: $${basePrice.toFixed(2)}`;
+    }
+
+    function updateClipColorOptions() {
+      const type = clipTypeSelect.value;
+      const options = {
+        full: ["Black","Dark Green","Army Green","Tan","Orange","Light Green"],
+        blackOnly: ["Black"],
+      };
+
+      clipColorSelect.innerHTML = "";
+      let allowedColors = [];
+
+      if (type === "Metal" || type === "Adjustable Knot") {
+        clipColorSelect.disabled = true;
+        clipColorSelect.innerHTML = '<option value="">No Color Option</option>';
+        return;
+      } else if (type === "Regular" || type === "Super Small") {
+        allowedColors = options.blackOnly;
+      } else {
+        allowedColors = options.full;
+      }
+
+      clipColorSelect.disabled = false;
+      const defaultOpt = document.createElement("option");
+      defaultOpt.value = "";
+      defaultOpt.textContent = "Select Clip Color";
+      clipColorSelect.appendChild(defaultOpt);
+
+      allowedColors.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        clipColorSelect.appendChild(opt);
+      });
     }
 
     knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
     sizeSelect.addEventListener("change", updatePrice);
     clipTypeSelect.addEventListener("change", () => {
-      const type = clipTypeSelect.value;
-      clipColorSelect.disabled = (type === "Metal" || type === "Adjustable Knot");
-      if (clipColorSelect.disabled) clipColorSelect.value = "";
+      updateClipColorOptions();
       updatePrice();
     });
 
@@ -289,9 +308,7 @@
       const clipColor = clipColorSelect.value;
       const qty = parseInt(document.getElementById("braceletQty").value) || 1;
 
-      // Phone number must always be filled; email is optional
       if (!phone) return alert("⚠️ Please enter your phone number.");
-
       if (!name || !type || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled)) {
         return alert("⚠️ Please fill in all required fields.");
       }
