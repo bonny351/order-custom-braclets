@@ -261,34 +261,70 @@ async function loadTable(){
     addBtnCell.appendChild(addBtn);
   }
 
-  // 🗑 Delete Selected
+  // 🗑 Delete Selected + 📋 Copy Selected
   if(currentCategory==="Orders"||currentCategory==="Products"){
     const checkboxTh=document.createElement("th");
     checkboxTh.textContent="Select";
     dynamicTable.rows[0].insertBefore(checkboxTh,dynamicTable.rows[0].cells[0]);
+
     [...dynamicTable.rows].slice(1).forEach(row=>{
       const selectCell=row.insertCell(0);
       const cb=document.createElement("input");
       cb.type="checkbox";
+      cb.classList.add("rowCheckbox");
       selectCell.appendChild(cb);
     });
+
+    // DELETE BUTTON
     const delBtn=document.createElement("button");
     delBtn.textContent=currentCategory==="Orders"?"🗑 Delete Selected Orders":"🗑 Delete Selected Products";
     delBtn.addEventListener("click",async()=>{
-      const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.cells[0].firstChild.checked);
+      const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.querySelector(".rowCheckbox").checked);
       if(selectedRows.length===0){alert("No items selected.");return;}
       if(!confirm(`⚠️ Delete ${selectedRows.length} item(s)?`))return;
+
       for(const row of selectedRows){
         try{await deleteDoc(doc(db,currentCollection,row.dataset.id));}catch(err){console.error(err);}
       }
+
       alert(`✅ Deleted ${selectedRows.length} item(s).`);
       loadTable();
     });
+
+    // COPY BUTTON
+    const copyBtn=document.createElement("button");
+    copyBtn.textContent="📋 Copy Selected";
+    copyBtn.addEventListener("click",()=>{
+      const selectedRows=[...dynamicTable.rows].slice(1).filter(r=>r.querySelector(".rowCheckbox").checked);
+
+      if(selectedRows.length===0){alert("No items selected.");return;}
+
+      const output=[];
+      selectedRows.forEach(row=>{
+        const obj={id:row.dataset.id};
+        [...row.cells].slice(2).forEach((cell,i)=>{
+          obj[keys[i]]=cell.textContent.trim();
+        });
+        output.push(obj);
+      });
+
+      navigator.clipboard.writeText(JSON.stringify(output,null,2));
+      alert("📋 Copied to clipboard!");
+    });
+
     actionButtonsDiv.innerHTML="";
     actionButtonsDiv.appendChild(delBtn);
+    actionButtonsDiv.appendChild(copyBtn);
   }
 
-  searchInput.oninput=()=>{const t=searchInput.value.toLowerCase();[...dynamicTable.rows].forEach((r,i)=>{if(i===0)return;r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";});};
+  searchInput.oninput=()=>{
+    const t=searchInput.value.toLowerCase();
+    [...dynamicTable.rows].forEach((r,i)=>{
+      if(i===0)return;
+      r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";
+    });
+  };
+
   dynamicTable.style.opacity="1";
   window.scrollTo(0,scrollY);
   dynamicTable.style.minHeight="";
