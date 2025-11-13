@@ -45,8 +45,6 @@ button { margin-top: 20px; padding: 12px; background: #ff0000; color: #fff; font
 button:hover { background: darkred; }
 #priceDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; }
 #totalDisplay { margin-top: 3px; font-weight: bold; color: #00ff99; }
-.low-stock { color: #ffa500; font-weight: bold; }
-.out-of-stock { color: #ff0000; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -90,12 +88,10 @@ button:hover { background: darkred; }
   <button type="button" id="submitBtn">Submit Order</button>
 </form>
 
-<!-- 💖 Donate button -->
 <div style="text-align:center; margin-top:20px;">
   <button id="donateBtn" style="background:#ffb347;">💖 Donate</button>
 </div>
 
-<!-- Donation popup -->
 <div id="donateBox" style="display:none; text-align:center; background:#111; border-radius:12px; box-shadow:0 0 12px #ff0000; padding:20px; max-width:400px; margin:20px auto;">
   <h3 style="color:#ffb347;">Make a Donation</h3>
   <input id="donateName" type="text" placeholder="Your Name" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
@@ -111,7 +107,7 @@ button:hover { background: darkred; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, runTransaction, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-// Firebase Config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -124,11 +120,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Firestore references
 const productsCol = collection(db, "products_spirit");
 const ordersCol = collection(db, "spiritOrders");
 
-// DOM elements
 const select = document.getElementById("spiritItem");
 const qtyInput = document.getElementById("spiritQty");
 const priceDisplay = document.getElementById("priceDisplay");
@@ -138,7 +132,7 @@ const msg = document.getElementById("orderMsg");
 let products = {};
 let currentPrice = 0;
 
-// Load products
+// Load products with SAFE stock + SAFE price logic
 async function loadProducts() {
   try {
     const snapshot = await getDocs(productsCol);
@@ -147,22 +141,28 @@ async function loadProducts() {
 
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
-      products[docSnap.id] = data;
+
+      // SAFETY FIX: Convert to real numbers
+      const price = Number(data.price) || 0;
+      const stock = Number(data.stock);
+
+      products[docSnap.id] = { ...data, price, stock };
 
       const option = document.createElement("option");
       option.value = docSnap.id;
 
       let status = "";
-      if (data.stock <= 0) {
+
+      if (isNaN(stock) || stock <= 0) {
         option.disabled = true;
         status = " (Out of Stock)";
-      } else if (data.stock <= 5) {
+      } else if (stock <= 5) {
         status = " (Low Stock)";
       } else {
-        status = ` (${data.stock} in stock)`;
+        status = ` (${stock} in stock)`;
       }
 
-      option.textContent = `${data.name || "Unnamed"} - $${(data.price || 0).toFixed(2)}${status}`;
+      option.textContent = `${data.name || "Unnamed"} - $${price.toFixed(2)}${status}`;
       select.appendChild(option);
     });
   } catch (err) {
@@ -172,7 +172,7 @@ async function loadProducts() {
 }
 await loadProducts();
 
-// Update price
+// Update Price + Total
 select.addEventListener("change", () => {
   const product = products[select.value];
   currentPrice = product ? Number(product.price) || 0 : 0;
@@ -202,19 +202,32 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
 
   const selected = products[id];
   if (!selected) return alert("❌ Item not found.");
-  if (selected.stock < qty) return alert("❌ Not enough stock.");
+
+  // SAFETY: Ensure stock is valid
+  if (selected.stock === undefined || isNaN(selected.stock)) {
+    return alert("❌ This item has no valid stock value in Firestore.");
+  }
+  if (Number(selected.stock) < qty) {
+    return alert("❌ Not enough stock.");
+  }
 
   try {
     await runTransaction(db, async (tx) => {
       const ref = doc(db, "products_spirit", id);
       const snap = await tx.get(ref);
+
       if (!snap.exists()) throw new Error("Product not found");
 
       const data = snap.data();
-      if (data.stock < qty) throw new Error("Not enough stock");
-      tx.update(ref, { stock: data.stock - qty });
+      const stock = Number(data.stock);
 
-      const total = qty * (data.price || 0);
+      if (isNaN(stock) || stock < qty)
+        throw new Error("Not enough stock");
+
+      tx.update(ref, { stock: stock - qty });
+
+      const total = qty * (Number(data.price) || 0);
+
       await addDoc(ordersCol, {
         name, email, size, quantity: qty,
         product: data.name,
@@ -235,7 +248,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   }
 });
 
-// --- DONATE FEATURE ---
+// DONATE Feature
 const donateBtn = document.getElementById("donateBtn");
 const donateBox = document.getElementById("donateBox");
 const confirmDonateBtn = document.getElementById("confirmDonateBtn");
@@ -245,6 +258,7 @@ donateBtn.addEventListener("click", () => {
   donateBox.style.display = "block";
   msg.textContent = "";
 });
+
 cancelDonateBtn.addEventListener("click", () => {
   donateBox.style.display = "none";
 });
