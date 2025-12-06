@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cookies – Tactics & Treats Preorder</title>
+
 <style>
 body {
   font-family: "Poppins", sans-serif;
@@ -28,6 +29,7 @@ nav a {
 }
 nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
 h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
+
 form {
   background: #111;
   border-radius: 16px;
@@ -36,7 +38,11 @@ form {
   max-width: 500px;
   box-shadow: 0 0 15px #ff0000;
 }
-label { display: block; margin-top: 10px; font-weight: 500; color: white; }
+label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 500;
+}
 input, select, button {
   width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px;
 }
@@ -44,66 +50,78 @@ button {
   margin-top: 20px; padding: 12px; background: #ff0000; color: #fff; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s;
 }
 button:hover { background: darkred; }
-#stockStatus { margin-top: 5px; font-weight: bold; }
-.low-stock { color: #ffa500; }
-.out-of-stock { color: #ff0000; }
+
+.low-stock { color:#ffa500; }
+.out-of-stock { color:#ff0000; }
 #orderMsg { text-align:center; color:#ffb347; font-weight:bold; margin-top:15px; }
 </style>
 </head>
 <body>
 
-<!-- 🔐 CAMPUS LOCATION LOCK -->
-<script>
-function blockIfOutsideSHS() {
-    if (!navigator.geolocation) {
-        alert("Location access required to use this page.");
-        window.location.href = "index.html";
-        return;
-    }
+<!-- 🔐 HARD CAMPUS LOCK + 5 SECOND RECHECK -->
+<div id="lockScreen" style="
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:black; color:white; display:flex;
+  align-items:center; justify-content:center;
+  font-size:22px; z-index:99999;">
+  Checking your location...
+</div>
 
+<script>
+// SHS coordinates
+const SHS_LAT = 48.29923;
+const SHS_LON = -116.57302;
+const ALLOWED_RADIUS = 0.25; // 250 meters
+
+// GPS distance (Haversine)
+function distance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat/2)**2 +
+        Math.cos(lat1*Math.PI/180) *
+        Math.cos(lat2*Math.PI/180) *
+        Math.sin(dLon/2)**2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+function checkSHSLocation(forceRedirect = true) {
     navigator.geolocation.getCurrentPosition(
         (pos) => {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
+            const dist = distance(lat, lon, SHS_LAT, SHS_LON);
 
-            // Sandpoint High School center point
-            const shsLat = 48.29923;
-            const shsLon = -116.57302;
-
-            function distance(lat1, lon1, lat2, lon2) {
-                const R = 6371;
-                const dLat = (lat2 - lat1) * Math.PI / 180;
-                const dLon = (lon2 - lon1) * Math.PI / 180;
-                const a = 
-                    Math.sin(dLat/2) ** 2 +
-                    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-                    Math.sin(dLon/2) ** 2;
-
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                return R * c;
-            }
-
-            const dist = distance(lat, lon, shsLat, shsLon);
-            const allowedRadius = 0.25; // 250 meters around SHS campus
-
-            if (dist > allowedRadius) {
-                alert("Cookie orders are only available while on Sandpoint High School campus.");
-                window.location.href = "index.html";
+            if (dist > ALLOWED_RADIUS) {
+                if (forceRedirect) {
+                    window.location.replace("index.html");
+                }
+            } else {
+                document.getElementById("lockScreen").style.display = "none";
             }
         },
         () => {
-            alert("Location permission required. Redirecting...");
-            window.location.href = "index.html";
+            if (forceRedirect) {
+                window.location.replace("index.html");
+            }
         }
     );
 }
 
-window.onload = blockIfOutsideSHS;
+document.addEventListener("DOMContentLoaded", () => {
+    checkSHSLocation(true);
+
+    // Recheck every 5 seconds
+    setInterval(() => {
+        checkSHSLocation(true);
+    }, 5000);
+});
 </script>
-<!-- END LOCATION LOCK -->
+<!-- END GPS LOCK -->
 
 <nav>
-  <a href="cookies.html" class="text-white underline">Cookies</a>
+  <a href="cookies.html">Cookies</a>
   <a href="bracelets.html">Bracelets</a>
   <a href="spiritwear.html">Spirit Wear</a>
 </nav>
@@ -187,7 +205,7 @@ onSnapshot(collection(db, "products_cookies"), snapshot => {
   });
 });
 
-// HANDLE COOKIE CHANGE
+// COOKIE CHANGE
 cookieSelect.addEventListener("change", async () => {
   const id = cookieSelect.value;
   if(!id) return;
@@ -233,19 +251,19 @@ async function submitCookieOrder() {
       product: data.name, qty, total,
       createdAt: new Date(), status: "Pending"
     });
+
     orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
     document.getElementById("cookieForm").reset();
     stockStatus.textContent = "";
     currentCookieData = null;
   } catch(err) {
-    console.error(err);
     alert("❌ Failed to submit order.");
   }
 }
 
 document.getElementById("submitBtn").addEventListener("click", submitCookieOrder);
 
-// DONATE BOX
+// DONATE UI
 const donateBtn = document.getElementById("donateBtn");
 const donateBox = document.getElementById("donateBox");
 const confirmDonateBtn = document.getElementById("confirmDonateBtn");
@@ -255,7 +273,6 @@ donateBtn.addEventListener("click", () => {
   donateBox.style.display = "block";
   orderMsg.textContent = "";
 });
-
 cancelDonateBtn.addEventListener("click", () => {
   donateBox.style.display = "none";
 });
@@ -266,7 +283,7 @@ confirmDonateBtn.addEventListener("click", async () => {
   const amount = parseFloat(document.getElementById("donateAmount").value);
 
   if (!name || !amount || amount <= 0) {
-    alert("⚠️ Please enter your name and donation amount.");
+    alert("⚠️ Enter name + donation amount.");
     return;
   }
 
@@ -282,11 +299,12 @@ confirmDonateBtn.addEventListener("click", async () => {
 
     orderMsg.textContent = `💖 Thank you, ${name}! Your $${amount.toFixed(2)} donation was received.`;
     donateBox.style.display = "none";
+
     document.getElementById("donateName").value = "";
     document.getElementById("donateEmail").value = "";
     document.getElementById("donateAmount").value = "";
+    
   } catch (err) {
-    console.error(err);
     alert("❌ Failed to submit donation.");
   }
 });
