@@ -52,6 +52,56 @@ button:hover { background: darkred; }
 </head>
 <body>
 
+<!-- 🔐 CAMPUS LOCATION LOCK -->
+<script>
+function blockIfOutsideSHS() {
+    if (!navigator.geolocation) {
+        alert("Location access required to use this page.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+
+            // Sandpoint High School center point
+            const shsLat = 48.29923;
+            const shsLon = -116.57302;
+
+            function distance(lat1, lon1, lat2, lon2) {
+                const R = 6371;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = 
+                    Math.sin(dLat/2) ** 2 +
+                    Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                    Math.sin(dLon/2) ** 2;
+
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            }
+
+            const dist = distance(lat, lon, shsLat, shsLon);
+            const allowedRadius = 0.25; // 250 meters around SHS campus
+
+            if (dist > allowedRadius) {
+                alert("Cookie orders are only available while on Sandpoint High School campus.");
+                window.location.href = "index.html";
+            }
+        },
+        () => {
+            alert("Location permission required. Redirecting...");
+            window.location.href = "index.html";
+        }
+    );
+}
+
+window.onload = blockIfOutsideSHS;
+</script>
+<!-- END LOCATION LOCK -->
+
 <nav>
   <a href="cookies.html" class="text-white underline">Cookies</a>
   <a href="bracelets.html">Bracelets</a>
@@ -80,12 +130,10 @@ button:hover { background: darkred; }
   <button type="button" id="submitBtn">Submit Cookie Order</button>
 </form>
 
-<!-- 💖 Donate button -->
 <div style="text-align:center; margin-top:20px;">
   <button id="donateBtn" style="background:#ffb347;">💖 Donate</button>
 </div>
 
-<!-- Donation popup -->
 <div id="donateBox" style="display:none; text-align:center; background:#111; border-radius:12px; box-shadow:0 0 12px #ff0000; padding:20px; max-width:400px; margin:20px auto;">
   <h3 style="color:#ffb347;">Make a Donation</h3>
   <input id="donateName" type="text" placeholder="Your Name" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
@@ -119,14 +167,14 @@ const orderMsg = document.getElementById("orderMsg");
 
 let currentCookieData = null;
 
-// --- SITE STATUS ---
+// SITE STATUS
 onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
   if(docSnap.exists() && docSnap.data().enabled){
     window.location.href = "under-construction.html";
   }
 });
 
-// --- LIVE COOKIES ---
+// LIVE COOKIE LIST
 onSnapshot(collection(db, "products_cookies"), snapshot => {
   cookieSelect.innerHTML = '<option value="">Select Cookie</option>';
   snapshot.forEach(docSnap => {
@@ -139,12 +187,14 @@ onSnapshot(collection(db, "products_cookies"), snapshot => {
   });
 });
 
-// --- HANDLE COOKIE CHANGE ---
+// HANDLE COOKIE CHANGE
 cookieSelect.addEventListener("change", async () => {
   const id = cookieSelect.value;
   if(!id) return;
+
   const docSnap = await getDoc(doc(db, "products_cookies", id));
   if(!docSnap.exists()) return;
+
   currentCookieData = docSnap.data();
 
   if(currentCookieData.stock >= 10){
@@ -159,7 +209,7 @@ cookieSelect.addEventListener("change", async () => {
   }
 });
 
-// --- SUBMIT ORDER ---
+// SUBMIT ORDER
 async function submitCookieOrder() {
   const name = document.getElementById("cookieName").value.trim();
   const phone = document.getElementById("cookiePhone").value.trim();
@@ -167,7 +217,8 @@ async function submitCookieOrder() {
   const cookieId = cookieSelect.value;
   const qty = parseInt(document.getElementById("cookieQty").value) || 1;
 
-  if(!name || (!phone && !email) || !cookieId) return alert("⚠️ Fill all required fields.");
+  if(!name || (!phone && !email) || !cookieId)
+    return alert("⚠️ Fill all required fields.");
 
   const cookieRef = doc(db, "products_cookies", cookieId);
   const cookieSnap = await getDoc(cookieRef);
@@ -194,7 +245,7 @@ async function submitCookieOrder() {
 
 document.getElementById("submitBtn").addEventListener("click", submitCookieOrder);
 
-// --- DONATE FEATURE ---
+// DONATE BOX
 const donateBtn = document.getElementById("donateBtn");
 const donateBox = document.getElementById("donateBox");
 const confirmDonateBtn = document.getElementById("confirmDonateBtn");
@@ -204,6 +255,7 @@ donateBtn.addEventListener("click", () => {
   donateBox.style.display = "block";
   orderMsg.textContent = "";
 });
+
 cancelDonateBtn.addEventListener("click", () => {
   donateBox.style.display = "none";
 });
