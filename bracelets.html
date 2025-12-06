@@ -9,92 +9,56 @@
 body {
   font-family: "Poppins", sans-serif;
   background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
-  color: white;
-  margin: 0;
-  padding: 20px;
+  color: white; margin: 0; padding: 20px;
 }
 nav {
-  text-align: center;
-  background: #111;
-  padding: 10px 0;
-  border-bottom: 2px solid #ff0000;
-  box-shadow: 0 0 10px #ff0000;
+  text-align: center; background: #111; padding: 10px 0;
+  border-bottom: 2px solid #ff0000; box-shadow: 0 0 10px #ff0000;
 }
-nav a {
-  color: white;
-  margin: 0 15px;
-  font-weight: bold;
-  text-decoration: none;
-  transition: 0.2s;
-}
+nav a { color: white; margin: 0 15px; font-weight: bold;
+  text-decoration: none; transition: 0.2s; }
 nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
 
 h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
 
 form {
-  background: #111;
-  border-radius: 16px;
-  padding: 20px;
-  margin: 20px auto;
-  max-width: 500px;
-  box-shadow: 0 0 15px #ff0000;
+  background: #111; border-radius: 16px; padding: 20px; margin: 20px auto;
+  max-width: 500px; box-shadow: 0 0 15px #ff0000;
 }
 
+/* IMAGE PREVIEW */
 #imagePreviewContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 20px;
+  display: flex; justify-content: center; gap: 20px; margin-bottom: 20px;
 }
-
 #imagePreviewContainer img {
-  border-radius: 8px;
-  border: 2px solid #ff0000;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.4s ease;
+  border-radius: 8px; border: 2px solid #ff0000;
+  object-fit: cover; opacity: 0; transition: opacity .4s;
 }
-
-#mainBraceletImg {
-  width: 200px;
-  height: 200px;
-  border-radius: 16px;
-  border-width: 3px;
-}
-
-.sideImg {
-  width: 80px;
-  height: 80px;
-}
+#mainBraceletImg { width: 200px; height: 200px; border-radius: 16px; }
+.sideImg { width: 80px; height: 80px; }
 
 label { display: block; margin-top: 12px; font-weight: 500; }
 
-input, select, button {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  margin-top: 5px;
-  font-size: 14px;
+input, select, textarea, button {
+  width: 100%; padding: 10px; margin-top: 5px;
+  border-radius: 8px; border: none; font-size: 14px;
 }
+textarea { resize: none; height: 70px; }
 
 button {
-  margin-top: 20px;
-  padding: 12px;
-  background: #ff0000;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
+  background: #ff0000; color: white; margin-top: 20px; cursor: pointer;
+  font-weight: bold; transition: .2s; border-radius: 8px;
 }
 button:hover { background: darkred; }
 
-#priceDisplay {
-  margin-top: 5px;
-  font-weight: bold;
-  color: #ffb347;
+#priceDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; }
+
+/* OVERRIDE BOX */
+#overrideBox {
+  display:none; position:fixed; top:50%; left:50%;
+  transform:translate(-50%, -50%);
+  background:#111; padding:20px; border-radius:10px;
+  box-shadow:0 0 12px red; z-index:10000;
 }
 </style>
 </head>
@@ -108,7 +72,7 @@ button:hover { background: darkred; }
 
 <h1>Bracelet Preorder</h1>
 
-<!-- IMAGE PREVIEW SECTION -->
+<!-- IMAGE PREVIEW -->
 <div id="imagePreviewContainer">
   <div style="display:flex; flex-direction:column; gap:10px;">
     <img id="sideImg1" class="sideImg" src="default.png">
@@ -123,26 +87,16 @@ button:hover { background: darkred; }
   </div>
 </div>
 
-<!-- OVERRIDE BOX -->
-<div id="overrideBox" style="
-  display:none; position:fixed; top:50%; left:50%;
-  transform:translate(-50%, -50%);
-  background:#111; padding:20px; border-radius:10px;
-  box-shadow:0 0 12px red; z-index:100000;">
-  <h3 style="margin-top:0;">Admin Override</h3>
-  <input id="overrideInput" type="password" placeholder="Enter code"
-    style="padding:10px; width:100%; border-radius:6px; margin-bottom:10px;">
-  <button id="overrideBtn" style="
-    padding:10px; background:red; color:white; border:none;
-    border-radius:6px; width:100%; cursor:pointer;">
-    Submit
-  </button>
+<!-- OVERRIDE POPUP -->
+<div id="overrideBox">
+  <h3>Admin Override</h3>
+  <input id="overrideInput" type="password" placeholder="Enter code">
+  <button id="overrideBtn">Submit</button>
 </div>
 
 <form id="braceletForm">
-
   <label>Name</label>
-  <input id="braceletName" type="text" required>
+  <input id="braceletName" required>
 
   <label>Phone Number</label>
   <input id="braceletPhone" type="tel" required>
@@ -167,10 +121,10 @@ button:hover { background: darkred; }
   <label>Clip Type</label>
   <select id="clipType" required>
     <option value="">Select Clip Type</option>
-    <option value="Regular">Regular Clip</option>
-    <option value="Flint & Steel">Flint & Steel Clip</option>
-    <option value="Super Small">Super Small Clip</option>
-    <option value="Metal">Metal Clip</option>
+    <option value="Regular">Regular</option>
+    <option value="Flint & Steel">Flint & Steel</option>
+    <option value="Super Small">Super Small</option>
+    <option value="Metal">Metal</option>
     <option value="Adjustable Knot">Adjustable Knot</option>
   </select>
 
@@ -178,25 +132,27 @@ button:hover { background: darkred; }
   <select id="clipColor" required></select>
 
   <label>Quantity</label>
-  <input id="braceletQty" type="number" min="1" value="1" required>
+  <input id="braceletQty" type="number" min="1" value="1">
 
   <label>Delivery Method</label>
   <select id="deliveryType" required>
     <option value="">Choose Delivery</option>
     <option value="pickup">Pickup at SHS (Free)</option>
-    <option value="shipping">Ship Order (+$10)</option>
+    <option value="shipping">Shipping (+$10)</option>
   </select>
 
-  <button type="button" id="submitBtn">Submit Bracelet Order</button>
+  <label id="addressLabel" style="display:none;">Delivery Address</label>
+  <textarea id="deliveryAddress" placeholder="Enter address" style="display:none;"></textarea>
 
+  <button type="button" id="submitBtn">Submit Bracelet Order</button>
 </form>
 
-<p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
+<p id="orderMsg" style="text-align:center; font-weight:bold;"></p>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, getDoc, addDoc
+  getFirestore, collection, getDocs, getDoc, doc, addDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -213,187 +169,173 @@ const db = getFirestore(app);
 
 let overrideActive = false;
 
-const mainImg = document.getElementById("mainBraceletImg");
-const s1 = document.getElementById("sideImg1");
-const s2 = document.getElementById("sideImg2");
-const s3 = document.getElementById("sideImg3");
-const s4 = document.getElementById("sideImg4");
-
+/* IMAGE FADE-IN */
 function fadeIn(img, src) {
   img.style.opacity = 0;
   img.src = src;
-  setTimeout(() => { img.style.opacity = 1; }, 100);
+  setTimeout(() => img.style.opacity = 1, 100);
 }
 
-// LONG PRESS OVERRIDE
-let pressTimer;
-document.addEventListener("touchstart", () => {
-  pressTimer = setTimeout(() => {
-    document.getElementById("overrideBox").style.display = "block";
-    document.getElementById("overrideInput").focus();
-  }, 3000);
-});
-document.addEventListener("touchend", () => clearTimeout(pressTimer));
+/* IMAGE LOADING (Correct for your files) */
+function loadImages(typeKey) {
+  let key = typeKey.toLowerCase().replace(/ /g, "-");
 
-// DESKTOP OVERRIDE
-document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey && e.key === "o") {
-    document.getElementById("overrideBox").style.display = "block";
-    document.getElementById("overrideInput").focus();
-  }
-});
+  fadeIn(mainBraceletImg, `${key}-main.png`);
+  fadeIn(sideImg1, `${key}-side1.png`);
+  fadeIn(sideImg2, `${key}-side2.png`);
+  fadeIn(sideImg3, `${key}-side3.png`);
+  fadeIn(sideImg4, `${key}-side4.png`);
+}
 
-document.getElementById("overrideBtn").addEventListener("click", () => {
-  if (document.getElementById("overrideInput").value.trim() === "20903") {
-    overrideActive = !overrideActive;
-    alert("Override toggled. Now: " + (overrideActive ? "FREE MODE" : "NORMAL MODE"));
-    document.getElementById("overrideBox").style.display = "none";
-    updatePrice();
-  } else {
-    alert("Incorrect code.");
-  }
-});
-
-// LOAD PRODUCTS
+/* LOAD TYPES */
 const knotSelect = document.getElementById("knotType");
 const sizeSelect = document.getElementById("braceletSize");
 const color1Select = document.getElementById("color1");
 const color2Select = document.getElementById("color2");
-const clipTypeSelect = document.getElementById("clipType");
-const clipColorSelect = document.getElementById("clipColor");
-const qtyInput = document.getElementById("braceletQty");
-const deliveryType = document.getElementById("deliveryType");
-const priceDisplay = document.getElementById("priceDisplay");
-let currentPriceMap = {};
 
 async function loadBraceletTypes() {
   knotSelect.innerHTML = '<option value="">Select Bracelet</option>';
   const snap = await getDocs(collection(db, "products_bracelets"));
   snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const opt = document.createElement("option");
-    opt.value = docSnap.id;
-    opt.textContent = data.type;
-    knotSelect.appendChild(opt);
+    const d = docSnap.data();
+    knotSelect.add(new Option(d.type, docSnap.id));
   });
 }
 
-async function loadBraceletData(typeKey) {
-  if (!typeKey) return;
+let currentPriceMap = {};
 
-  const snap = await getDoc(doc(db, "products_bracelets", typeKey));
+/* LOAD SELECTED PRODUCT */
+async function loadBraceletData(id) {
+  const snap = await getDoc(doc(db, "products_bracelets", id));
   if (!snap.exists()) return;
 
   const data = snap.data();
-  currentPriceMap = data.price || {};
+  currentPriceMap = data.price;
 
   sizeSelect.innerHTML = "";
-  color1Select.innerHTML = "";
-  color2Select.innerHTML = "";
-
   data.sizeOptions.forEach(s => sizeSelect.add(new Option(s, s)));
 
-  const colors = data.colorOptions.split(",").map(c => c.trim());
-  colors.forEach(c => {
+  color1Select.innerHTML = "";
+  color2Select.innerHTML = "";
+  data.colorOptions.split(",").forEach(c => {
     color1Select.add(new Option(c, c));
     color2Select.add(new Option(c, c));
   });
 
-  // IMAGE LOADING
-  fadeIn(mainImg, `${typeKey}-main.png`);
-  fadeIn(s1, `${typeKey}-side1.png`);
-  fadeIn(s2, `${typeKey}-side2.png`);
-  fadeIn(s3, `${typeKey}-side3.png`);
-  fadeIn(s4, `${typeKey}-side4.png`);
-
+  loadImages(data.type);
   updatePrice();
 }
 
-function updateClipColorOptions() {
-  const type = clipTypeSelect.value;
+/* DELIVERY HANDLING */
+const deliveryType = document.getElementById("deliveryType");
+const addressLabel = document.getElementById("addressLabel");
+const deliveryAddress = document.getElementById("deliveryAddress");
+
+deliveryType.addEventListener("change", () => {
+  if (deliveryType.value === "shipping") {
+    addressLabel.style.display = "block";
+    deliveryAddress.style.display = "block";
+  } else {
+    addressLabel.style.display = "none";
+    deliveryAddress.style.display = "none";
+    deliveryAddress.value = "";
+  }
+  updatePrice();
+});
+
+/* CLIP COLOR LOGIC */
+const clipTypeSelect = document.getElementById("clipType");
+const clipColorSelect = document.getElementById("clipColor");
+
+function updateClipColors() {
+  let type = clipTypeSelect.value;
   clipColorSelect.innerHTML = "";
 
   if (type === "Metal" || type === "Adjustable Knot") {
     clipColorSelect.disabled = true;
-    clipColorSelect.innerHTML = '<option value="">No Color Option</option>';
-    return;
+    clipColorSelect.innerHTML = '<option value="">No Color</option>';
+  } else {
+    clipColorSelect.disabled = false;
+    clipColorSelect.add(new Option("Black","Black"));
   }
-
-  clipColorSelect.disabled = false;
-  clipColorSelect.add(new Option("Black", "Black"));
 }
 
+/* PRICE */
 function updatePrice() {
   const size = sizeSelect.value;
   const clipType = clipTypeSelect.value;
-  const qty = parseInt(qtyInput.value) || 1;
-  const delivery = deliveryType.value;
-
-  let base = parseFloat(currentPriceMap[size]) || 0;
-  if (clipType === "Metal") base += 1;
-
-  let subtotal = base * qty;
-  let shipping = (delivery === "shipping") ? 10 : 0;
-
-  if (overrideActive) {
-    subtotal = 0;
-    shipping = 0;
-  }
-
-  const total = subtotal + shipping;
-  priceDisplay.textContent = `Price: $${total.toFixed(2)}`;
-}
-
-async function submitOrder() {
-  const name = braceletName.value.trim();
-  const phone = braceletPhone.value.trim();
-  const email = braceletEmail.value.trim();
-  const type = knotType.value;
-  const size = braceletSize.value;
-  const color1 = color1Select.value;
-  const color2 = color2Select.value;
-  const clipType = clipTypeSelect.value;
-  const clipColor = clipColorSelect.value;
   const qty = parseInt(braceletQty.value) || 1;
   const delivery = deliveryType.value;
 
-  if (!name || !phone || !type || !size || !color1 || !color2 || !clipType || !delivery)
-    return alert("Fill all required fields.");
-
   let base = parseFloat(currentPriceMap[size]) || 0;
   if (clipType === "Metal") base += 1;
 
   let subtotal = base * qty;
-  let shipping = (delivery === "shipping") ? 10 : 0;
+  let shipping = delivery === "shipping" ? 10 : 0;
 
-  if (overrideActive) {
-    subtotal = 0;
-    shipping = 0;
+  if (overrideActive) subtotal = shipping = 0;
+
+  priceDisplay.textContent = `Price: $${(subtotal + shipping).toFixed(2)}`;
+}
+
+/* OVERRIDE */
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.key === "o") {
+    document.getElementById("overrideBox").style.display = "block";
   }
+});
 
-  const total = subtotal + shipping;
+overrideBtn.onclick = () => {
+  if (overrideInput.value.trim() === "20903") {
+    overrideActive = !overrideActive;
+    alert("Override: " + (overrideActive ? "ON" : "OFF"));
+    updatePrice();
+  }
+  document.getElementById("overrideBox").style.display = "none";
+};
+
+/* SUBMIT */
+submitBtn.onclick = async () => {
+  const name = braceletName.value.trim();
+  const phone = braceletPhone.value.trim();
+  const type = knotType.value;
+  const size = braceletSize.value;
+  const delivery = deliveryType.value;
+
+  if (!name || !phone || !type || !size || !delivery)
+    return alert("Please fill all required fields.");
+
+  if (delivery === "shipping" && deliveryAddress.value.trim() === "")
+    return alert("Enter an address for shipping.");
 
   await addDoc(collection(db, "braceletOrders"), {
-    name, phone, email,
-    type, size, color1, color2, clipType, clipColor,
-    qty, deliveryMethod: delivery,
-    subtotal, shipping, total,
+    name,
+    phone,
+    type,
+    size,
+    color1: color1Select.value,
+    color2: color2Select.value,
+    clipType: clipTypeSelect.value,
+    clipColor: clipColorSelect.value,
+    qty: parseInt(braceletQty.value),
+    delivery,
+    address: delivery === "shipping" ? deliveryAddress.value : null,
     createdAt: new Date()
   });
 
-  orderMsg.textContent = `Order submitted! Total: $${total.toFixed(2)}`;
-}
+  orderMsg.textContent = "Order Submitted!";
+};
 
-knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
-sizeSelect.addEventListener("change", updatePrice);
-qtyInput.addEventListener("change", updatePrice);
-clipTypeSelect.addEventListener("change", () => { updateClipColorOptions(); updatePrice(); });
-deliveryType.addEventListener("change", updatePrice);
-submitBtn.addEventListener("click", submitOrder);
-
-// INITIAL LOAD
+/* INIT */
 loadBraceletTypes();
-updateClipColorOptions();
+updateClipColors();
+
+knotType.addEventListener("change", () => loadBraceletData(knotType.value));
+sizeSelect.addEventListener("change", updatePrice);
+braceletQty.addEventListener("change", updatePrice);
+clipTypeSelect.addEventListener("change", () => { updateClipColors(); updatePrice(); });
+deliveryType.addEventListener("change", updatePrice);
+
 </script>
 
 </body>
