@@ -13,39 +13,51 @@ body {
   margin:0;
   padding:20px;
 }
-h1, h2 {
+
+h1,h2 {
   text-align:center;
   color:#ff0000;
+  margin-bottom:20px;
 }
 
 header {
   display:flex;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
   background:linear-gradient(90deg,#7a0c0c,#000);
   padding:15px;
   border-radius:10px;
   margin-bottom:20px;
+  box-shadow:0 0 12px rgba(255,0,0,0.4);
 }
 
 .tabs, .subTabs {
   display:flex;
   justify-content:center;
+  margin-bottom:15px;
   gap:10px;
-  margin-bottom:10px;
   flex-wrap:wrap;
 }
 
 .tab, .subTab {
-  background:#222;
   padding:10px 20px;
-  border-radius:6px;
   cursor:pointer;
+  border-radius:5px;
+  background:#222;
+  color:white;
   font-weight:bold;
-  transition:.2s;
 }
+
 .tab.active, .subTab.active {
   background:#ff0000;
+  box-shadow:0 0 8px #ff0000;
+}
+
+section {
+  background:#181818;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 0 12px rgba(255,0,0,0.2);
 }
 
 table {
@@ -53,48 +65,54 @@ table {
   border-collapse:collapse;
   margin-top:10px;
 }
-th, td {
-  padding:10px;
+
+th,td {
   border:1px solid #ff0000;
+  padding:10px;
   text-align:center;
+}
+
+tr:nth-child(even) {
+  background:#222;
 }
 
 .statusSelect {
   padding:6px;
   background:#222;
   color:white;
-  border-radius:6px;
   border:1px solid #ff0000;
+  border-radius:5px;
 }
 
-.row-green   { background:rgba(0,255,0,0.2); }
-.row-yellow  { background:rgba(255,255,0,0.25); }
-.row-red     { background:rgba(255,0,0,0.25); }
+/* Color coded rows */
+.paidRow    { background:rgba(0,255,0,0.25) !important; }
+.pendingRow { background:rgba(255,255,0,0.25) !important; }
+.unpaidRow  { background:rgba(255,0,0,0.25) !important; }
 
 </style>
 </head>
 <body>
 
-<header><h1>Tactics & Treats – Admin Panel</h1></header>
+<header><h1>Tactics & Treats Admin Panel</h1></header>
 
 <div class="tabs" id="mainTabs"></div>
 <div class="subTabs" id="subTabs"></div>
 
-<h2 id="tableTitle">Loading...</h2>
-<input id="searchInput" type="text" placeholder="Search..." style="width:90%;max-width:400px;display:block;margin:0 auto 10px;">
+<section>
+  <h2 id="tableTitle">Loading...</h2>
+  <input type="text" id="searchInput" placeholder="🔍 Search..." style="width:90%;max-width:400px;margin:auto;display:block;">
+  <p id="tableMsg" style="text-align:center;color:#ffb347;"></p>
 
-<table id="dataTable"></table>
-
-<p id="msg" style="text-align:center;color:#ffb347;"></p>
+  <table id="dynamicTable"></table>
+</section>
 
 <script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc
+  getFirestore,collection,getDocs,doc,setDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const firebaseConfig = {
+const firebaseConfig={
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain:"bracelets-and-color.firebaseapp.com",
   projectId:"bracelets-and-color",
@@ -103,33 +121,30 @@ const firebaseConfig = {
   appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const collections = {
-  "Products": ["products", "products_bracelets", "products_cookies", "products_spirit"],
-  "Orders": ["braceletOrders", "cookieOrders", "spiritOrders"],
-  "Users": ["users"],
-  "Settings": ["siteSettings"]
+const collections={
+  "Products":["products","products_bracelets","products_cookies","products_spirit"],
+  "Orders":["braceletOrders","cookieOrders","spiritOrders"],
+  "Users":["users"],
+  "Settings":["siteSettings"]
 };
 
-const mainTabs = document.getElementById("mainTabs");
-const subTabs = document.getElementById("subTabs");
-const table = document.getElementById("dataTable");
-const msg = document.getElementById("msg");
-const tableTitle = document.getElementById("tableTitle");
-const searchInput = document.getElementById("searchInput");
+const mainTabs=document.getElementById("mainTabs");
+const subTabs=document.getElementById("subTabs");
+const table=document.getElementById("dynamicTable");
+const title=document.getElementById("tableTitle");
+const msg=document.getElementById("tableMsg");
 
-let currentCollection = "";
+/* Create Main Tabs */
+Object.keys(collections).forEach(cat=>{
+  const t=document.createElement("div");
+  t.className="tab";
+  t.textContent=cat;
 
-/* CREATE MAIN TABS */
-Object.keys(collections).forEach(cat => {
-  const t = document.createElement("div");
-  t.className = "tab";
-  t.textContent = cat;
-
-  t.onclick = () => {
-    [...mainTabs.children].forEach(x => x.classList.remove("active"));
+  t.onclick=()=>{
+    [...mainTabs.children].forEach(x=>x.classList.remove("active"));
     t.classList.add("active");
     loadSubTabs(cat);
   };
@@ -138,18 +153,17 @@ Object.keys(collections).forEach(cat => {
 });
 mainTabs.children[0].click();
 
-/* CREATE SUBTABS */
-function loadSubTabs(cat) {
-  subTabs.innerHTML = "";
-  collections[cat].forEach(sub => {
-    const st = document.createElement("div");
-    st.className = "subTab";
-    st.textContent = sub;
+/* Load Sub Tabs */
+function loadSubTabs(cat){
+  subTabs.innerHTML="";
+  collections[cat].forEach(sub=>{
+    const st=document.createElement("div");
+    st.className="subTab";
+    st.textContent=sub;
 
-    st.onclick = () => {
-      [...subTabs.children].forEach(x => x.classList.remove("active"));
+    st.onclick=()=>{
+      [...subTabs.children].forEach(x=>x.classList.remove("active"));
       st.classList.add("active");
-      currentCollection = sub;
       loadTable(sub);
     };
 
@@ -158,118 +172,130 @@ function loadSubTabs(cat) {
   subTabs.children[0].click();
 }
 
-/* APPLY STATUS COLOR */
+/* Apply Color Based on Status */
 function colorRow(row, status) {
-  row.classList.remove("row-green","row-red","row-yellow");
+  row.classList.remove("paidRow","pendingRow","unpaidRow");
 
   if (status === "Paid in Cash" || status === "Paid by Card")
-    row.classList.add("row-green");
-  else if (status === "Unpaid")
-    row.classList.add("row-red");
+    row.classList.add("paidRow");
   else if (status === "Pending")
-    row.classList.add("row-yellow");
+    row.classList.add("pendingRow");
+  else if (status === "Unpaid")
+    row.classList.add("unpaidRow");
 }
 
-/* STATUS DROPDOWN */
+/* Status Dropdown Generator */
 function makeStatusDropdown(row, data, id) {
-  const select = document.createElement("select");
-  select.className = "statusSelect";
+  const select=document.createElement("select");
+  select.className="statusSelect";
 
-  ["Paid in Cash","Paid by Card","Unpaid","Pending"].forEach(s => {
-    const opt = new Option(s,s);
-    if (data.status === s) opt.selected = true;
+  ["Paid in Cash","Paid by Card","Unpaid","Pending"].forEach(s=>{
+    const opt=new Option(s,s);
+    if(data.status===s) opt.selected=true;
     select.add(opt);
   });
 
-  colorRow(row, data.status);
+  // Apply color immediately
+  colorRow(row,data.status);
 
-  select.onchange = async () => {
-    const newStatus = select.value;
+  select.onchange=async()=>{
+    const newStatus=select.value;
     try {
-      await setDoc(doc(db, currentCollection, id), {
-        ...data,
-        status:newStatus
+      await setDoc(doc(db,currentCollection,id),{
+        ...data, status:newStatus
       });
 
-      data.status = newStatus;
-      colorRow(row, newStatus);
-      msg.textContent = "✔ Status Updated";
+      data.status=newStatus;
+      colorRow(row,newStatus);
+      msg.textContent="✔ Status Updated";
     } catch {
-      msg.textContent = "❌ Error Updating";
+      msg.textContent="❌ Failed to Update Status";
     }
   };
 
   return select;
 }
 
-/* LOAD TABLE */
-async function loadTable(colName) {
-  table.innerHTML = "";
-  tableTitle.textContent = colName;
+let currentCollection="";
 
-  const snap = await getDocs(collection(db,colName));
-  const docs = snap.docs;
+/* Load Table */
+async function loadTable(col){
+  currentCollection=col;
+  table.innerHTML="";
+  title.textContent=col;
 
-  if (docs.length === 0) {
-    table.innerHTML = "<tr><td>No data</td></tr>";
+  const snap=await getDocs(collection(db,col));
+  const docs=snap.docs;
+
+  if (docs.length===0){
+    table.innerHTML="<tr><td>No Data</td></tr>";
     return;
   }
 
-  const allKeys = new Set(["status"]); // always include status
-  docs.forEach(d => Object.keys(d.data()).forEach(k => allKeys.add(k)));
+  const keys=new Set(["status"]); // always include status
+  docs.forEach(d=>Object.keys(d.data()).forEach(k=>keys.add(k)));
+  const keyList=[...keys];
 
-  const keys = [...allKeys];
+  // Header Row
+  const header=table.insertRow();
 
-  /* HEADER */
-  const header = table.insertRow();
-  header.insertCell().textContent = "Status";
-  keys.forEach(k => header.insertCell().textContent = k);
+  header.insertCell().textContent="Select";
+  header.insertCell().textContent="Status";
+  keyList.forEach(k=>{
+    const th=document.createElement("th");
+    th.textContent=k;
+    header.appendChild(th);
+  });
 
-  /* ROWS */
-  docs.forEach(docSnap => {
-    const row = table.insertRow();
-    const data = docSnap.data();
+  // Table Rows
+  docs.forEach(docSnap=>{
+    const row=table.insertRow();
+    const data=docSnap.data();
 
-    // STATUS CELL
-    const stCell = row.insertCell();
-    stCell.appendChild(makeStatusDropdown(row, data, docSnap.id));
+    // Checkbox Column
+    const checkboxCell=row.insertCell();
+    checkboxCell.innerHTML=`<input type="checkbox" class="rowSelect">`;
 
-    // DATA CELLS
-    keys.forEach(k => {
-      const cell = row.insertCell();
-      cell.textContent = data[k] ?? "";
-      cell.contentEditable = true;
+    // Status Column
+    const statusCell=row.insertCell();
+    statusCell.appendChild(makeStatusDropdown(row,data,docSnap.id));
 
-      cell.onblur = async () => {
-        const v = cell.textContent.trim();
+    // Data Columns
+    keyList.forEach(k=>{
+      const c=row.insertCell();
+      c.textContent=data[k] ?? "";
+      c.contentEditable=true;
+
+      c.onblur=async()=>{
+        const newVal=c.textContent.trim();
         try {
-          await setDoc(doc(db,colName,docSnap.id), {
+          await setDoc(doc(db,col,docSnap.id),{
             ...data,
-            [k]:v
+            [k]:newVal
           });
-          data[k] = v;
-          msg.textContent = `✔ Updated ${k}`;
+          data[k]=newVal;
+          msg.textContent=`✔ Updated ${k}`;
         } catch {
-          msg.textContent = "❌ Error Updating";
+          msg.textContent="❌ Update Failed";
         }
       };
     });
 
-    // APPLY COLOR
-    colorRow(row, data.status);
+    // Apply color on load
+    colorRow(row,data.status);
   });
 }
 
-/* SEARCH FILTER */
-searchInput.oninput = () => {
-  const term = searchInput.value.toLowerCase();
+/* Search Filtering */
+document.getElementById("searchInput").oninput=()=>{
+  const term=searchInput.value.toLowerCase();
+
   [...table.rows].forEach((r,i)=>{
-    if (i===0) return;
-    r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none";
+    if (i===0) return; 
+    r.style.display=r.textContent.toLowerCase().includes(term) ? "" : "none";
   });
 };
 
 </script>
-
 </body>
 </html>
