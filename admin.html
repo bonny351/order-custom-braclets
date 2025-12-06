@@ -7,72 +7,45 @@
 
 <style>
 body {
-  font-family:"Poppins",sans-serif;
+  font-family: "Poppins", sans-serif;
   background:#111;
   color:white;
   margin:0;
   padding:20px;
 }
-h1,h2 {
+h1, h2 {
   text-align:center;
   color:#ff0000;
-  margin-bottom:20px;
 }
 
 header {
   display:flex;
+  justify-content:center;
   align-items:center;
-  justify-content:space-between;
   background:linear-gradient(90deg,#7a0c0c,#000);
-  padding:10px 20px;
+  padding:15px;
   border-radius:10px;
-  box-shadow:0 0 12px rgba(255,0,0,0.4);
   margin-bottom:20px;
 }
-header img {
-  height:60px;
-  width:60px;
-  border-radius:50%;
-  border:2px solid #ff0000;
-}
-header h1 {
-  flex:1;
-  text-align:center;
-  margin:0;
-  color:#ff0000;
-}
 
-section {
-  background:#181818;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 0 12px rgba(255,0,0,0.2);
-  margin-bottom:30px;
-  position:relative;
-}
-
-.tabs,.subTabs {
+.tabs, .subTabs {
   display:flex;
   justify-content:center;
   gap:10px;
+  margin-bottom:10px;
   flex-wrap:wrap;
-  margin-bottom:15px;
 }
 
-.tab,.subTab {
-  padding:10px 20px;
-  cursor:pointer;
-  border-radius:5px;
+.tab, .subTab {
   background:#222;
-  color:white;
+  padding:10px 20px;
+  border-radius:6px;
+  cursor:pointer;
   font-weight:bold;
   transition:.2s;
 }
-
-.tab.active,.subTab.active {
+.tab.active, .subTab.active {
   background:#ff0000;
-  color:white;
-  box-shadow:0 0 8px #ff0000;
 }
 
 table {
@@ -80,95 +53,45 @@ table {
   border-collapse:collapse;
   margin-top:10px;
 }
-th,td {
+th, td {
   padding:10px;
   border:1px solid #ff0000;
   text-align:center;
 }
-th {
+
+.statusSelect {
+  padding:6px;
   background:#222;
-  color:#ffb347;
-}
-tr:nth-child(even) { background:#222; }
-
-img.admin-thumb {
-  height:70px;
-  border-radius:6px;
-  border:2px solid #ff0000;
-}
-
-#searchInput {
-  width:100%;
-  max-width:400px;
-  margin:10px auto;
-  display:block;
-  padding:8px;
-  border-radius:5px;
-  border:none;
-  font-size:14px;
-}
-
-.loadingOverlay {
-  position:absolute;
-  top:0; left:0; right:0; bottom:0;
-  background:rgba(0,0,0,0.6);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:20px;
-  color:#ffb347;
-  opacity:0;
-  pointer-events:none;
-  transition:.3s;
-}
-.loadingOverlay.show {
-  opacity:1;
-  pointer-events:auto;
-}
-
-button {
-  padding:8px 12px;
-  background:#ff0000;
   color:white;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-  transition:.2s;
+  border-radius:6px;
+  border:1px solid #ff0000;
 }
-button:hover {
-  background:darkred;
-  box-shadow:0 0 8px #ff0000;
-}
+
+.row-green   { background:rgba(0,255,0,0.2); }
+.row-yellow  { background:rgba(255,255,0,0.25); }
+.row-red     { background:rgba(255,0,0,0.25); }
 
 </style>
 </head>
 <body>
 
-<header>
-  <img src="logo.png">
-  <h1>Tactics & Treats – Admin Panel</h1>
-</header>
+<header><h1>Tactics & Treats – Admin Panel</h1></header>
 
 <div class="tabs" id="mainTabs"></div>
 <div class="subTabs" id="subTabs"></div>
 
-<section>
-  <h2 id="tableTitle">Loading...</h2>
-  <input type="text" id="searchInput" placeholder="Search...">
-  <p id="tableMsg"></p>
+<h2 id="tableTitle">Loading...</h2>
+<input id="searchInput" type="text" placeholder="Search..." style="width:90%;max-width:400px;display:block;margin:0 auto 10px;">
 
-  <div class="loadingOverlay" id="loadOverlay">Loading...</div>
+<table id="dataTable"></table>
 
-  <table id="dataTable"></table>
-
-</section>
+<p id="msg" style="text-align:center;color:#ffb347;"></p>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc
+  getFirestore, collection, getDocs, doc, setDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -183,15 +106,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const GH_RAW = ""; // OPTIONAL: if your site is hosted by GitHub Pages, relative paths work already.
-
-const mainTabs = document.getElementById("mainTabs");
-const subTabs = document.getElementById("subTabs");
-const tableTitle = document.getElementById("tableTitle");
-const tableMsg = document.getElementById("tableMsg");
-const table = document.getElementById("dataTable");
-const overlay = document.getElementById("loadOverlay");
-
 const collections = {
   "Products": ["products", "products_bracelets", "products_cookies", "products_spirit"],
   "Orders": ["braceletOrders", "cookieOrders", "spiritOrders"],
@@ -199,37 +113,44 @@ const collections = {
   "Settings": ["siteSettings"]
 };
 
-let currentCategory = "";
+const mainTabs = document.getElementById("mainTabs");
+const subTabs = document.getElementById("subTabs");
+const table = document.getElementById("dataTable");
+const msg = document.getElementById("msg");
+const tableTitle = document.getElementById("tableTitle");
+const searchInput = document.getElementById("searchInput");
+
 let currentCollection = "";
 
-/* Create main tabs */
+/* CREATE MAIN TABS */
 Object.keys(collections).forEach(cat => {
   const t = document.createElement("div");
   t.className = "tab";
   t.textContent = cat;
+
   t.onclick = () => {
-    [...mainTabs.children].forEach(x=>x.classList.remove("active"));
+    [...mainTabs.children].forEach(x => x.classList.remove("active"));
     t.classList.add("active");
-    currentCategory = cat;
-    loadSubTabs();
+    loadSubTabs(cat);
   };
+
   mainTabs.appendChild(t);
 });
 mainTabs.children[0].click();
 
-/* Load Sub Tabs */
-function loadSubTabs() {
+/* CREATE SUBTABS */
+function loadSubTabs(cat) {
   subTabs.innerHTML = "";
-  collections[currentCategory].forEach(col => {
+  collections[cat].forEach(sub => {
     const st = document.createElement("div");
     st.className = "subTab";
-    st.textContent = col;
+    st.textContent = sub;
 
     st.onclick = () => {
-      [...subTabs.children].forEach(x=>x.classList.remove("active"));
+      [...subTabs.children].forEach(x => x.classList.remove("active"));
       st.classList.add("active");
-      currentCollection = col;
-      loadTable();
+      currentCollection = sub;
+      loadTable(sub);
     };
 
     subTabs.appendChild(st);
@@ -237,126 +158,116 @@ function loadSubTabs() {
   subTabs.children[0].click();
 }
 
-/* Bracelet image loader */
-function braceletImage(name, side=0) {
-  if (!name) return "default.png";
+/* APPLY STATUS COLOR */
+function colorRow(row, status) {
+  row.classList.remove("row-green","row-red","row-yellow");
 
-  const key = name.toLowerCase().replace(/ /g,"-");
-  return side === 0 
-      ? `${key}-main.png`
-      : `${key}-side${side}.png`;
+  if (status === "Paid in Cash" || status === "Paid by Card")
+    row.classList.add("row-green");
+  else if (status === "Unpaid")
+    row.classList.add("row-red");
+  else if (status === "Pending")
+    row.classList.add("row-yellow");
 }
 
-/* Render custom bracelet row */
-function renderBraceletRow(row, data, id) {
-  const fields = [
-    "name","phone","email","type","size",
-    "color1","color2","clipType","clipColor",
-    "qty","delivery","address"
-  ];
+/* STATUS DROPDOWN */
+function makeStatusDropdown(row, data, id) {
+  const select = document.createElement("select");
+  select.className = "statusSelect";
 
-  // IMAGES (5 previews)
-  const imgCell = row.insertCell();
-  imgCell.innerHTML = `
-    <img class="admin-thumb" src="${braceletImage(data.type,0)}">
-    <img class="admin-thumb" src="${braceletImage(data.type,1)}">
-    <img class="admin-thumb" src="${braceletImage(data.type,2)}">
-    <img class="admin-thumb" src="${braceletImage(data.type,3)}">
-    <img class="admin-thumb" src="${braceletImage(data.type,4)}">
-  `;
-
-  // Editable fields
-  fields.forEach(f => {
-    const cell = row.insertCell();
-    cell.textContent = data[f] ?? "";
-    cell.contentEditable = true;
-
-    cell.onblur = async () => {
-      const v = cell.textContent.trim();
-      try {
-        await setDoc(doc(db,currentCollection,id),{
-          ...data, [f]: v
-        });
-        tableMsg.textContent = `✔ Updated ${f}`;
-      } catch {
-        tableMsg.textContent = "❌ Update failed";
-      }
-    };
+  ["Paid in Cash","Paid by Card","Unpaid","Pending"].forEach(s => {
+    const opt = new Option(s,s);
+    if (data.status === s) opt.selected = true;
+    select.add(opt);
   });
+
+  colorRow(row, data.status);
+
+  select.onchange = async () => {
+    const newStatus = select.value;
+    try {
+      await setDoc(doc(db, currentCollection, id), {
+        ...data,
+        status:newStatus
+      });
+
+      data.status = newStatus;
+      colorRow(row, newStatus);
+      msg.textContent = "✔ Status Updated";
+    } catch {
+      msg.textContent = "❌ Error Updating";
+    }
+  };
+
+  return select;
 }
 
-/* Load Table */
-async function loadTable() {
-  overlay.classList.add("show");
+/* LOAD TABLE */
+async function loadTable(colName) {
   table.innerHTML = "";
-  tableTitle.textContent = currentCollection;
+  tableTitle.textContent = colName;
 
-  const snap = await getDocs(collection(db,currentCollection));
-  const rows = snap.docs;
+  const snap = await getDocs(collection(db,colName));
+  const docs = snap.docs;
 
-  if (currentCollection === "braceletOrders") {
-    // Custom bracelet header
-    const h = table.insertRow();
-    [
-      "Images","Name","Phone","Email","Type","Size",
-      "Color1","Color2","ClipType","ClipColor",
-      "Qty","Delivery","Address"
-    ].forEach(t=>{
-      const th=document.createElement("th");
-      th.textContent=t;
-      h.appendChild(th);
-    });
-
-    rows.forEach(docSnap=>{
-      const r = table.insertRow();
-      renderBraceletRow(r, docSnap.data(), docSnap.id);
-    });
-
-    overlay.classList.remove("show");
+  if (docs.length === 0) {
+    table.innerHTML = "<tr><td>No data</td></tr>";
     return;
   }
 
-  // Generic tables
-  const allKeys = new Set();
-  rows.forEach(d=> Object.keys(d.data()).forEach(k=>allKeys.add(k)));
+  const allKeys = new Set(["status"]); // always include status
+  docs.forEach(d => Object.keys(d.data()).forEach(k => allKeys.add(k)));
+
   const keys = [...allKeys];
 
+  /* HEADER */
   const header = table.insertRow();
-  header.insertCell().textContent = "ID";
-  keys.forEach(k=>{
-    const th=document.createElement("th");
-    th.textContent=k;
-    header.appendChild(th);
-  });
+  header.insertCell().textContent = "Status";
+  keys.forEach(k => header.insertCell().textContent = k);
 
-  rows.forEach(docSnap=>{
-    const r = table.insertRow();
-    r.insertCell().textContent = docSnap.id;
+  /* ROWS */
+  docs.forEach(docSnap => {
+    const row = table.insertRow();
     const data = docSnap.data();
 
-    keys.forEach(k=>{
-      const c = r.insertCell();
-      c.textContent = typeof data[k] === "object" 
-        ? JSON.stringify(data[k]) 
-        : data[k];
+    // STATUS CELL
+    const stCell = row.insertCell();
+    stCell.appendChild(makeStatusDropdown(row, data, docSnap.id));
 
-      c.contentEditable = true;
-      c.onblur = async ()=>{
-        let v = c.textContent.trim();
+    // DATA CELLS
+    keys.forEach(k => {
+      const cell = row.insertCell();
+      cell.textContent = data[k] ?? "";
+      cell.contentEditable = true;
+
+      cell.onblur = async () => {
+        const v = cell.textContent.trim();
         try {
-          await setDoc(doc(db,currentCollection,docSnap.id),{
-            ...data,[k]:v
+          await setDoc(doc(db,colName,docSnap.id), {
+            ...data,
+            [k]:v
           });
-          tableMsg.textContent=`✔ Updated ${k}`;
+          data[k] = v;
+          msg.textContent = `✔ Updated ${k}`;
         } catch {
-          tableMsg.textContent="❌ Update failed";
+          msg.textContent = "❌ Error Updating";
         }
       };
     });
-  });
 
-  overlay.classList.remove("show");
+    // APPLY COLOR
+    colorRow(row, data.status);
+  });
 }
+
+/* SEARCH FILTER */
+searchInput.oninput = () => {
+  const term = searchInput.value.toLowerCase();
+  [...table.rows].forEach((r,i)=>{
+    if (i===0) return;
+    r.style.display = r.textContent.toLowerCase().includes(term) ? "" : "none";
+  });
+};
 
 </script>
 
