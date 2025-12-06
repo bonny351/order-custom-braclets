@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bracelets – Tactics & Treats Preorder</title>
+
   <style>
     body {
       font-family: "Poppins", sans-serif;
@@ -27,6 +28,7 @@
       transition: 0.2s;
     }
     nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
+
     h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
 
     form {
@@ -84,6 +86,7 @@
       max-width: 100%;
     }
     #imagePreviewContainer img.show { opacity: 1; }
+
     #mainBraceletImg { width: 200px; height: 200px; border-radius: 16px; border-width: 3px; }
     .sideImg { width: 80px; height: 80px; }
   </style>
@@ -100,32 +103,32 @@
 
   <div id="imagePreviewContainer">
     <div style="display:flex; flex-direction:column; gap:10px;">
-      <img id="sideImg1" class="sideImg" src="default.png" alt="Side Image 1">
-      <img id="sideImg2" class="sideImg" src="default.png" alt="Side Image 2">
+      <img id="sideImg1" class="sideImg" src="default.png">
+      <img id="sideImg2" class="sideImg" src="default.png">
     </div>
+
     <div>
-      <img id="mainBraceletImg" src="default.png" alt="Main Bracelet Preview">
+      <img id="mainBraceletImg" src="default.png">
     </div>
+
     <div style="display:flex; flex-direction:column; gap:10px;">
-      <img id="sideImg3" class="sideImg" src="default.png" alt="Side Image 3">
-      <img id="sideImg4" class="sideImg" src="default.png" alt="Side Image 4">
+      <img id="sideImg3" class="sideImg" src="default.png">
+      <img id="sideImg4" class="sideImg" src="default.png">
     </div>
   </div>
 
   <form id="braceletForm">
     <label>Name</label>
-    <input id="braceletName" type="text" required>
+    <input id="braceletName" name="braceletName" type="text" required>
 
     <label>Phone Number</label>
-    <input id="braceletPhone" type="tel" placeholder="Required" required>
+    <input id="braceletPhone" name="braceletPhone" type="tel" required>
 
     <label>Email</label>
-    <input id="braceletEmail" type="email" placeholder="Optional">
+    <input id="braceletEmail" name="braceletEmail" type="email">
 
     <label>Bracelet Type</label>
-    <select id="knotType" required>
-      <option value="">Loading...</option>
-    </select>
+    <select id="knotType" required></select>
 
     <label>Size</label>
     <select id="braceletSize" required></select>
@@ -141,10 +144,10 @@
     <label>Clip Type</label>
     <select id="clipType" required>
       <option value="">Select Clip Type</option>
-      <option value="Regular"></option>
+      <option value="Regular">Regular Clip</option>
       <option value="Flint & Steel">Flint & Steel Clip (Fire Starter)</option>
       <option value="Super Small">Super Small Clip</option>
-      <option value="Metal"></option>
+      <option value="Metal">Metal Clip</option>
       <option value="Adjustable Knot">Adjustable Knot</option>
     </select>
 
@@ -161,8 +164,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { 
-      getFirestore, collection, getDocs, doc, getDoc, addDoc, serverTimestamp 
+    import {
+      getFirestore, collection, getDocs, doc, getDoc, addDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -185,25 +188,28 @@
     const clipColorSelect = document.getElementById("clipColor");
     const qtyInput = document.getElementById("braceletQty");
     const priceDisplay = document.getElementById("priceDisplay");
-    const form = document.getElementById("braceletForm");
     const orderMsg = document.getElementById("orderMsg");
 
     let currentPriceMap = {};
 
-    // Load bracelet types dynamically
+    //-----------------------------
+    // LOAD BRACELET TYPES
+    //-----------------------------
     async function loadBraceletTypes() {
       knotSelect.innerHTML = '<option value="">Select Bracelet</option>';
       const snap = await getDocs(collection(db, "products_bracelets"));
       snap.forEach(docSnap => {
         const data = docSnap.data();
         const opt = document.createElement("option");
-        opt.value = docSnap.id;
+        opt.value = docSnap.id; // must match cobra, fishtail, king-cobra
         opt.textContent = data.type || docSnap.id;
         knotSelect.appendChild(opt);
       });
     }
 
-    // Load bracelet data
+    //-----------------------------
+    // LOAD DATA FOR SELECTED TYPE
+    //-----------------------------
     async function loadBraceletData(typeKey) {
       if (!typeKey) return;
 
@@ -224,47 +230,42 @@
 
       const data = snap.data();
 
-      // ✅ price is a Firestore MAP (object)
       currentPriceMap = data.price || {};
 
-      // ✅ colorOptions is a string like "Blue,Green,Black"
       const colors = (data.colorOptions || "")
         .split(",")
         .map(c => c.trim())
         .filter(c => c.length > 0);
 
-      // ✅ sizeOptions is an array in Firestore
       const sizes = Array.isArray(data.sizeOptions) ? data.sizeOptions : [];
 
-      if (sizes.length) {
-        sizes.forEach(size => sizeSelect.add(new Option(size, size)));
-      } else {
-        sizeSelect.innerHTML = '<option value="">No Sizes</option>';
-      }
-
-      if (colors.length) {
-        colors.forEach(color => {
-          color1Select.add(new Option(color, color));
-          color2Select.add(new Option(color, color));
-        });
-      } else {
-        color1Select.innerHTML = '<option value="">No Colors</option>';
-        color2Select.innerHTML = '<option value="">No Colors</option>';
-      }
+      sizes.forEach(size => sizeSelect.add(new Option(size, size)));
+      colors.forEach(c => {
+        color1Select.add(new Option(c, c));
+        color2Select.add(new Option(c, c));
+      });
 
       updatePrice();
     }
 
+    //-----------------------------
+    // PRICE CALCULATOR
+    //-----------------------------
     function updatePrice() {
       const size = sizeSelect.value;
       const clipType = clipTypeSelect.value;
       const qty = parseInt(qtyInput.value) || 1;
+
       let base = parseFloat(currentPriceMap[size]) || 0;
       if (clipType === "Metal") base += 1;
+
       const total = base * qty;
       priceDisplay.textContent = `Price: $${total.toFixed(2)}`;
     }
 
+    //-----------------------------
+    // CLIP COLOR LOGIC
+    //-----------------------------
     function updateClipColorOptions() {
       const type = clipTypeSelect.value;
       clipColorSelect.innerHTML = "";
@@ -274,21 +275,64 @@
         clipColorSelect.disabled = true;
         clipColorSelect.innerHTML = '<option value="">No Color Option</option>';
         return;
-      } else if (type === "Regular" || type === "Super Small") {
+      } 
+      else if (type === "Regular" || type === "Super Small") {
         allowed = ["Black"];
-      } else {
+      }
+      else {
         allowed = ["Black", "Dark Green", "Army Green", "Tan", "Orange", "Light Green"];
       }
 
       clipColorSelect.disabled = false;
       clipColorSelect.add(new Option("Select Clip Color", ""));
       allowed.forEach(c => clipColorSelect.add(new Option(c, c)));
+
+      if (allowed.length === 1) {
+        clipColorSelect.value = allowed[0];
+      }
     }
 
+    //-----------------------------
+    // IMAGE PREVIEW SYSTEM
+    //-----------------------------
+    function updateBraceletImages(typeKey) {
+      const mainImg = document.getElementById("mainBraceletImg");
+      const side1 = document.getElementById("sideImg1");
+      const side2 = document.getElementById("sideImg2");
+      const side3 = document.getElementById("sideImg3");
+      const side4 = document.getElementById("sideImg4");
+
+      if (!typeKey) {
+        mainImg.src = "default.png";
+        side1.src = "default.png";
+        side2.src = "default.png";
+        side3.src = "default.png";
+        side4.src = "default.png";
+        return;
+      }
+
+      mainImg.src = `${typeKey}-main.png`;
+      side1.src = `${typeKey}-side1.png`;
+      side2.src = `${typeKey}-side2.png`;
+      side3.src = `${typeKey}-side3.png`;
+      side4.src = `${typeKey}-side4.png`;
+
+      setTimeout(() => {
+        mainImg.classList.add("show");
+        side1.classList.add("show");
+        side2.classList.add("show");
+        side3.classList.add("show");
+        side4.classList.add("show");
+      }, 50);
+    }
+
+    //-----------------------------
+    // SUBMIT ORDER
+    //-----------------------------
     async function submitOrder() {
-      const name = form.braceletName.value.trim();
-      const phone = form.braceletPhone.value.trim();
-      const email = form.braceletEmail.value.trim();
+      const name = document.getElementById("braceletName").value.trim();
+      const phone = document.getElementById("braceletPhone").value.trim();
+      const email = document.getElementById("braceletEmail").value.trim();
       const type = knotSelect.value;
       const size = sizeSelect.value;
       const color1 = color1Select.value;
@@ -314,7 +358,7 @@
           status: "Pending"
         });
         orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
-        form.reset();
+        document.getElementById("braceletForm").reset();
         updateClipColorOptions();
         priceDisplay.textContent = "Price: $0.00";
       } catch (e) {
@@ -323,15 +367,32 @@
       }
     }
 
-    knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
+    //-----------------------------
+    // EVENT LISTENERS
+    //-----------------------------
+    knotSelect.addEventListener("change", () => {
+      const typeKey = knotSelect.value;
+      loadBraceletData(typeKey);
+      updateBraceletImages(typeKey);
+    });
+
     sizeSelect.addEventListener("change", updatePrice);
     qtyInput.addEventListener("change", updatePrice);
-    clipTypeSelect.addEventListener("change", () => { updateClipColorOptions(); updatePrice(); });
+
+    clipTypeSelect.addEventListener("change", () => {
+      updateClipColorOptions();
+      updatePrice();
+    });
+
     document.getElementById("submitBtn").addEventListener("click", submitOrder);
 
-    // Initialize
+    //-----------------------------
+    // INITIAL LOAD
+    //-----------------------------
     loadBraceletTypes();
     updateClipColorOptions();
+
   </script>
+
 </body>
 </html>
