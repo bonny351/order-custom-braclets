@@ -1,4 +1,4 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -40,6 +40,34 @@ form {
   box-shadow: 0 0 15px #ff0000;
 }
 
+#imagePreviewContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+#imagePreviewContainer img {
+  border-radius: 8px;
+  border: 2px solid #ff0000;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+#mainBraceletImg {
+  width: 200px;
+  height: 200px;
+  border-radius: 16px;
+  border-width: 3px;
+}
+
+.sideImg {
+  width: 80px;
+  height: 80px;
+}
+
 label { display: block; margin-top: 12px; font-weight: 500; }
 
 input, select, button {
@@ -79,6 +107,21 @@ button:hover { background: darkred; }
 </nav>
 
 <h1>Bracelet Preorder</h1>
+
+<!-- IMAGE PREVIEW SECTION -->
+<div id="imagePreviewContainer">
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <img id="sideImg1" class="sideImg" src="default.png">
+    <img id="sideImg2" class="sideImg" src="default.png">
+  </div>
+
+  <img id="mainBraceletImg" src="default.png">
+
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <img id="sideImg3" class="sideImg" src="default.png">
+    <img id="sideImg4" class="sideImg" src="default.png">
+  </div>
+</div>
 
 <!-- OVERRIDE BOX -->
 <div id="overrideBox" style="
@@ -152,7 +195,7 @@ button:hover { background: darkred; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {  
+import {
   getFirestore, collection, getDocs, doc, getDoc, addDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -168,19 +211,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const knotSelect = document.getElementById("knotType");
-const sizeSelect = document.getElementById("braceletSize");
-const color1Select = document.getElementById("color1");
-const color2Select = document.getElementById("color2");
-const clipTypeSelect = document.getElementById("clipType");
-const clipColorSelect = document.getElementById("clipColor");
-const qtyInput = document.getElementById("braceletQty");
-const priceDisplay = document.getElementById("priceDisplay");
-const deliveryType = document.getElementById("deliveryType");
-const orderMsg = document.getElementById("orderMsg");
-
-let currentPriceMap = {};
 let overrideActive = false;
+
+const mainImg = document.getElementById("mainBraceletImg");
+const s1 = document.getElementById("sideImg1");
+const s2 = document.getElementById("sideImg2");
+const s3 = document.getElementById("sideImg3");
+const s4 = document.getElementById("sideImg4");
+
+function fadeIn(img, src) {
+  img.style.opacity = 0;
+  img.src = src;
+  setTimeout(() => { img.style.opacity = 1; }, 100);
+}
 
 // LONG PRESS OVERRIDE
 let pressTimer;
@@ -192,6 +235,7 @@ document.addEventListener("touchstart", () => {
 });
 document.addEventListener("touchend", () => clearTimeout(pressTimer));
 
+// DESKTOP OVERRIDE
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key === "o") {
     document.getElementById("overrideBox").style.display = "block";
@@ -210,7 +254,18 @@ document.getElementById("overrideBtn").addEventListener("click", () => {
   }
 });
 
-// LOAD TYPES
+// LOAD PRODUCTS
+const knotSelect = document.getElementById("knotType");
+const sizeSelect = document.getElementById("braceletSize");
+const color1Select = document.getElementById("color1");
+const color2Select = document.getElementById("color2");
+const clipTypeSelect = document.getElementById("clipType");
+const clipColorSelect = document.getElementById("clipColor");
+const qtyInput = document.getElementById("braceletQty");
+const deliveryType = document.getElementById("deliveryType");
+const priceDisplay = document.getElementById("priceDisplay");
+let currentPriceMap = {};
+
 async function loadBraceletTypes() {
   knotSelect.innerHTML = '<option value="">Select Bracelet</option>';
   const snap = await getDocs(collection(db, "products_bracelets"));
@@ -218,7 +273,7 @@ async function loadBraceletTypes() {
     const data = docSnap.data();
     const opt = document.createElement("option");
     opt.value = docSnap.id;
-    opt.textContent = data.type || docSnap.id;
+    opt.textContent = data.type;
     knotSelect.appendChild(opt);
   });
 }
@@ -227,28 +282,29 @@ async function loadBraceletData(typeKey) {
   if (!typeKey) return;
 
   const snap = await getDoc(doc(db, "products_bracelets", typeKey));
-
-  sizeSelect.innerHTML = "";
-  color1Select.innerHTML = "";
-  color2Select.innerHTML = "";
-
   if (!snap.exists()) return;
 
   const data = snap.data();
   currentPriceMap = data.price || {};
 
-  const colors = (data.colorOptions || "")
-    .split(",")
-    .map(c => c.trim())
-    .filter(Boolean);
+  sizeSelect.innerHTML = "";
+  color1Select.innerHTML = "";
+  color2Select.innerHTML = "";
 
-  const sizes = Array.isArray(data.sizeOptions) ? data.sizeOptions : [];
+  data.sizeOptions.forEach(s => sizeSelect.add(new Option(s, s)));
 
-  sizes.forEach(size => sizeSelect.add(new Option(size, size)));
-  colors.forEach(color => {
-    color1Select.add(new Option(color, color));
-    color2Select.add(new Option(color, color));
+  const colors = data.colorOptions.split(",").map(c => c.trim());
+  colors.forEach(c => {
+    color1Select.add(new Option(c, c));
+    color2Select.add(new Option(c, c));
   });
+
+  // IMAGE LOADING
+  fadeIn(mainImg, `${typeKey}-main.png`);
+  fadeIn(s1, `${typeKey}-side1.png`);
+  fadeIn(s2, `${typeKey}-side2.png`);
+  fadeIn(s3, `${typeKey}-side3.png`);
+  fadeIn(s4, `${typeKey}-side4.png`);
 
   updatePrice();
 }
@@ -256,7 +312,6 @@ async function loadBraceletData(typeKey) {
 function updateClipColorOptions() {
   const type = clipTypeSelect.value;
   clipColorSelect.innerHTML = "";
-  let allowed = [];
 
   if (type === "Metal" || type === "Adjustable Knot") {
     clipColorSelect.disabled = true;
@@ -264,11 +319,8 @@ function updateClipColorOptions() {
     return;
   }
 
-  allowed = ["Black", "Dark Green", "Army Green", "Tan", "Orange", "Light Green"];
-
   clipColorSelect.disabled = false;
-  clipColorSelect.add(new Option("Select Clip Color", ""));
-  allowed.forEach(c => clipColorSelect.add(new Option(c, c)));
+  clipColorSelect.add(new Option("Black", "Black"));
 }
 
 function updatePrice() {
@@ -319,17 +371,13 @@ async function submitOrder() {
     shipping = 0;
   }
 
-  let total = subtotal + shipping;
+  const total = subtotal + shipping;
 
   await addDoc(collection(db, "braceletOrders"), {
     name, phone, email,
-    type, size, color1, color2,
-    clipType, clipColor,
-    qty,
-    deliveryMethod: delivery,
-    subtotal,
-    shipping,
-    total,
+    type, size, color1, color2, clipType, clipColor,
+    qty, deliveryMethod: delivery,
+    subtotal, shipping, total,
     createdAt: new Date()
   });
 
@@ -341,83 +389,12 @@ sizeSelect.addEventListener("change", updatePrice);
 qtyInput.addEventListener("change", updatePrice);
 clipTypeSelect.addEventListener("change", () => { updateClipColorOptions(); updatePrice(); });
 deliveryType.addEventListener("change", updatePrice);
-
 submitBtn.addEventListener("click", submitOrder);
 
-// INIT
+// INITIAL LOAD
 loadBraceletTypes();
 updateClipColorOptions();
 </script>
-
-</body>
-</html>
--------------------
-    // SUBMIT ORDER
-    //-----------------------------
-    async function submitOrder() {
-      const name = document.getElementById("braceletName").value.trim();
-      const phone = document.getElementById("braceletPhone").value.trim();
-      const email = document.getElementById("braceletEmail").value.trim();
-      const type = knotSelect.value;
-      const size = sizeSelect.value;
-      const color1 = color1Select.value;
-      const color2 = color2Select.value;
-      const clipType = clipTypeSelect.value;
-      const clipColor = clipColorSelect.value;
-      const qty = parseInt(qtyInput.value) || 1;
-
-      if (!phone) return alert("⚠️ Please enter your phone number.");
-      if (!name || !type || !size || !color1 || !color2 || !clipType || (!clipColor && !clipColorSelect.disabled))
-        return alert("⚠️ Please fill in all required fields.");
-
-      const base = parseFloat(currentPriceMap[size]) || 0;
-      const total = (clipType === "Metal" ? base + 1 : base) * qty;
-
-      try {
-        await addDoc(collection(db, "braceletOrders"), {
-          name, phone, email: email || null,
-          product: type, size, color1, color2,
-          clipType, clipColor,
-          qty, total,
-          createdAt: serverTimestamp(),
-          status: "Pending"
-        });
-        orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
-        document.getElementById("braceletForm").reset();
-        updateClipColorOptions();
-        priceDisplay.textContent = "Price: $0.00";
-      } catch (e) {
-        console.error(e);
-        alert("❌ Failed to submit order.");
-      }
-    }
-
-    //-----------------------------
-    // EVENT LISTENERS
-    //-----------------------------
-    knotSelect.addEventListener("change", () => {
-      const typeKey = knotSelect.value;
-      loadBraceletData(typeKey);
-      updateBraceletImages(typeKey);
-    });
-
-    sizeSelect.addEventListener("change", updatePrice);
-    qtyInput.addEventListener("change", updatePrice);
-
-    clipTypeSelect.addEventListener("change", () => {
-      updateClipColorOptions();
-      updatePrice();
-    });
-
-    document.getElementById("submitBtn").addEventListener("click", submitOrder);
-
-    //-----------------------------
-    // INITIAL LOAD
-    //-----------------------------
-    loadBraceletTypes();
-    updateClipColorOptions();
-
-  </script>
 
 </body>
 </html>
