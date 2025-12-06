@@ -1,456 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bracelets – Tactics & Treats Preorder</title>
-
+<title>Full Admin Panel – Tactics & Treats</title>
 <style>
-body {
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
-  color: white;
-  margin: 0;
-  padding: 20px;
+body{font-family:"Poppins",sans-serif;background:#111;color:white;margin:0;padding:20px;}
+h1,h2{text-align:center;color:#ff0000;margin-bottom:20px;}
+header{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,#7a0c0c,#000);padding:10px 20px;border-radius:10px;box-shadow:0 0 12px rgba(255,0,0,0.4);margin-bottom:20px;}
+header img{height:60px;width:60px;border-radius:50%;border:2px solid #ff0000;background:#000;}
+header h1{flex:1;text-align:center;color:#ff0000;margin:0;}
+section{background:#181818;padding:20px;border-radius:12px;box-shadow:0 0 12px rgba(255,0,0,0.2);margin-bottom:30px;}
+.tabs,.subTabs{display:flex;justify-content:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;}
+.tab,.subTab{padding:10px 20px;cursor:pointer;border-radius:5px;background:#222;color:#fff;font-weight:bold;transition:.2s;}
+.tab.active,.subTab.active{background:#ff0000;color:#fff;box-shadow:0 0 8px #ff0000;}
+.tab:hover,.subTab:hover{background:#ff4444;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{padding:10px;border:1px solid #ff0000;text-align:center;}
+th{background:#222;color:#ffb347;position:sticky;top:0;}
+tr:nth-child(even){background:#222;}
+tr:hover{background:#333;}
+td:focus{outline:2px solid #ff0000;background:#222;}
+#searchInput{width:100%;max-width:400px;margin:10px auto;display:block;padding:8px;border-radius:5px;border:none;font-size:14px;}
+button{padding:8px 12px;margin:5px;background:#ff0000;color:white;font-weight:bold;border:none;border-radius:8px;cursor:pointer;transition:.2s;}
+button:hover{background:darkred;box-shadow:0 0 8px #ff0000;}
+.message{color:#ffb347;font-weight:bold;text-align:center;margin-top:10px;}
+.loadingOverlay {
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.6);
+  display:flex;justify-content:center;align-items:center;
+  color:#ffb347;font-size:20px;font-weight:bold;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  border-radius:12px;
 }
-nav {
-  text-align: center;
-  background: #111;
-  padding: 10px 0;
-  border-bottom: 2px solid #ff0000;
-  box-shadow: 0 0 10px #ff0000;
-}
-nav a {
-  color: white;
-  margin: 0 15px;
-  font-weight: bold;
-  text-decoration: none;
-  transition: 0.2s;
-}
-nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
-
-h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
-
-form {
-  background: #111;
-  border-radius: 16px;
-  padding: 20px;
-  margin: 20px auto;
-  max-width: 500px;
-  box-shadow: 0 0 15px #ff0000;
-}
-
-/* IMAGE PREVIEW */
-#imagePreviewContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-#imagePreviewContainer img {
-  border-radius: 8px;
-  border: 2px solid #ff0000;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-#mainBraceletImg {
-  width: 200px;
-  height: 200px;
-  border-radius: 16px;
-  border-width: 3px;
-}
-
-.sideImg {
-  width: 80px;
-  height: 80px;
-}
-
-label { display: block; margin-top: 12px; font-weight: 500; }
-
-input, select, textarea, button {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  margin-top: 5px;
-  font-size: 14px;
-}
-
-button {
-  margin-top: 20px;
-  padding: 12px;
-  background: #ff0000;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-button:hover { background: darkred; }
-
-#priceDisplay {
-  margin-top: 5px;
-  font-weight: bold;
-  color: #ffb347;
-}
-
-/* OVERRIDE BOX */
-#overrideBox {
-  display:none;
-  position:fixed;
-  top:50%; left:50%;
-  transform:translate(-50%, -50%);
-  background:#111;
-  padding:20px;
-  border-radius:10px;
-  box-shadow:0 0 12px red;
-  z-index:100000;
-}
+.loadingOverlay.show {opacity:1;pointer-events:auto;}
+.addRow input{background:#222;color:white;border:1px solid #ff0000;border-radius:5px;padding:4px;text-align:center;}
 </style>
 </head>
 <body>
 
-<nav>
-  <a href="cookies.html">Cookies</a>
-  <a href="bracelets.html">Bracelets</a>
-  <a href="spiritwear.html">Spirit Wear</a>
-</nav>
+<header>
+  <img src="logo.png" alt="Tactics & Treats Logo">
+  <h1>Tactics & Treats Admin Panel</h1>
+</header>
 
-<h1>Bracelet Preorder</h1>
+<div class="tabs" id="mainTabs"></div>
+<div class="subTabs" id="collectionTabs"></div>
 
-<!-- IMAGE PREVIEW -->
-<div id="imagePreviewContainer">
-  <div style="display:flex; flex-direction:column; gap:10px;">
-    <img id="sideImg1" class="sideImg" src="default.png">
-    <img id="sideImg2" class="sideImg" src="default.png">
-  </div>
+<section id="tableSection" style="position:relative;">
+  <h2 id="tableTitle">Loading...</h2>
+  <p id="orderCount" class="message"></p>
+  <input type="text" id="searchInput" placeholder="🔍 Search...">
+  <p id="tableMsg" class="message"></p>
+  <div class="loadingOverlay" id="loadingOverlay">⏳ Loading...</div>
+  <table id="dynamicTable"></table>
+  <div id="actionButtons" class="flex"></div>
 
-  <img id="mainBraceletImg" src="default.png">
-
-  <div style="display:flex; flex-direction:column; gap:10px;">
-    <img id="sideImg3" class="sideImg" src="default.png">
-    <img id="sideImg4" class="sideImg" src="default.png">
-  </div>
-</div>
-
-<!-- OVERRIDE POPUP -->
-<div id="overrideBox">
-  <h3 style="margin-top:0;">Admin Override</h3>
-  <input id="overrideInput" type="password" placeholder="Enter code">
-  <button id="overrideBtn">Submit</button>
-</div>
-
-<form id="braceletForm">
-
-  <label>Name</label>
-  <input id="braceletName" type="text" required>
-
-  <label>Phone Number</label>
-  <input id="braceletPhone" type="tel" required>
-
-  <label>Email</label>
-  <input id="braceletEmail" type="email">
-
-  <label>Bracelet Type</label>
-  <select id="knotType" required></select>
-
-  <label>Size</label>
-  <select id="braceletSize" required></select>
-
-  <p id="priceDisplay">Price: $0.00</p>
-
-  <label>Color 1</label>
-  <select id="color1" required></select>
-
-  <label>Color 2</label>
-  <select id="color2" required></select>
-
-  <label>Clip Type</label>
-  <select id="clipType" required>
-    <option value="">Select Clip Type</option>
-    <option value="Regular">Regular Clip</option>
-    <option value="Flint & Steel">Flint & Steel Clip</option>
-    <option value="Super Small">Super Small Clip</option>
-    <option value="Metal">Metal Clip</option>
-    <option value="Adjustable Knot">Adjustable Knot</option>
-  </select>
-
-  <label>Clip Color</label>
-  <select id="clipColor" required></select>
-
-  <label>Quantity</label>
-  <input id="braceletQty" type="number" min="1" value="1" required>
-
-  <label>Delivery Method</label>
-  <select id="deliveryType" required>
-    <option value="">Choose Delivery</option>
-    <option value="pickup">Pickup at SHS (Free)</option>
-    <option value="shipping">Ship Order (+$10)</option>
-  </select>
-
-  <!-- SHIPPING ADDRESS FIELD -->
-  <label id="addressLabel" style="display:none;">Delivery Address</label>
-  <textarea id="deliveryAddress"
-            placeholder="Enter full shipping address"
-            style="display:none; height:70px;"></textarea>
-
-  <button type="button" id="submitBtn">Submit Bracelet Order</button>
-
-</form>
-
-<p id="orderMsg" style="text-align:center; color:#ffb347; font-weight:bold;"></p>
+  <hr style="border-color:#ff4444;">
+  <button id="toggleMaintenanceBtn">⚠️ Toggle Under Construction</button>
+  <button id="printCardsBtn">🖨 Print Business Cards</button>
+  <p id="maintenanceMsg" class="message"></p>
+</section>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, getDoc, addDoc
+  getFirestore,collection,getDocs,doc,getDoc,setDoc,deleteDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-  authDomain: "bracelets-and-color.firebaseapp.com",
-  projectId: "bracelets-and-color",
-  storageBucket: "bracelets-and-color.appspot.com",
-  messagingSenderId: "382292570673",
-  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+const firebaseConfig={
+  apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain:"bracelets-and-color.firebaseapp.com",
+  projectId:"bracelets-and-color",
+  storageBucket:"bracelets-and-color.appspot.com",
+  messagingSenderId:"382292570673",
+  appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-let overrideActive = false;
-
-/* IMAGE ELEMENTS */
-const mainImg = document.getElementById("mainBraceletImg");
-const s1 = document.getElementById("sideImg1");
-const s2 = document.getElementById("sideImg2");
-const s3 = document.getElementById("sideImg3");
-const s4 = document.getElementById("sideImg4");
-
-function fadeIn(img, src) {
-  img.style.opacity = 0;
-  img.src = src;
-  setTimeout(() => { img.style.opacity = 1; }, 100);
+function convertTimestamp(ts){
+  if(ts && ts.seconds) return new Date(ts.seconds*1000).toLocaleString();
+  return ts;
 }
 
-/* LONG PRESS OVERRIDE */
-let pressTimer;
-document.addEventListener("touchstart", () => {
-  pressTimer = setTimeout(() => {
-    document.getElementById("overrideBox").style.display = "block";
-  }, 3000);
+// Collections
+const allCollections={
+  "Products":["products","products_bracelets","products_cookies","products_spirit"],
+  "Orders":["braceletOrders","cookieOrders","spiritOrders"],
+  "Users":["users"],
+  "Settings":["siteSettings","adminSettings"]
+};
+
+const mainTabs=document.getElementById("mainTabs");
+const subTabs=document.getElementById("collectionTabs");
+const tableTitle=document.getElementById("tableTitle");
+const table=document.getElementById("dynamicTable");
+const search=document.getElementById("searchInput");
+const loading=document.getElementById("loadingOverlay");
+const orderCount=document.getElementById("orderCount");
+const tableMsg=document.getElementById("tableMsg");
+const actionButtons=document.getElementById("actionButtons");
+const maintenanceDoc=doc(db,"siteSettings","maintenance");
+
+let currentCategory="",currentCollection="";
+
+// Tabs
+Object.keys(allCollections).forEach(cat=>{
+  const tab=document.createElement("div");
+  tab.className="tab";
+  tab.textContent=cat;
+  tab.onclick=()=>{
+    currentCategory=cat;
+    [...mainTabs.children].forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+    loadSubTabs();
+  };
+  mainTabs.appendChild(tab);
 });
-document.addEventListener("touchend", () => clearTimeout(pressTimer));
+mainTabs.children[0].click();
 
-/* DESKTOP OVERRIDE */
-document.addEventListener("keydown", (e) => {
-  if (e.ctrlKey && e.key === "o") {
-    document.getElementById("overrideBox").style.display = "block";
-    document.getElementById("overrideInput").focus();
-  }
-});
-
-/* OVERRIDE SUBMIT */
-document.getElementById("overrideBtn").addEventListener("click", () => {
-  if (document.getElementById("overrideInput").value.trim() === "20903") {
-    overrideActive = !overrideActive;
-    alert("Override toggled: " + (overrideActive ? "FREE MODE" : "NORMAL MODE"));
-    document.getElementById("overrideBox").style.display = "none";
-    updatePrice();
-  } else {
-    alert("Incorrect code.");
-  }
-});
-
-/* FIRESTORE PRODUCT LOADING */
-const knotSelect = document.getElementById("knotType");
-const sizeSelect = document.getElementById("braceletSize");
-const color1Select = document.getElementById("color1");
-const color2Select = document.getElementById("color2");
-const clipTypeSelect = document.getElementById("clipType");
-const clipColorSelect = document.getElementById("clipColor");
-const qtyInput = document.getElementById("braceletQty");
-const deliveryType = document.getElementById("deliveryType");
-const priceDisplay = document.getElementById("priceDisplay");
-const addressLabel = document.getElementById("addressLabel");
-const addressBox = document.getElementById("deliveryAddress");
-
-let currentPriceMap = {};
-
-async function loadBraceletTypes() {
-  knotSelect.innerHTML = '<option value="">Select Bracelet</option>';
-  const snap = await getDocs(collection(db, "products_bracelets"));
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const opt = document.createElement("option");
-    opt.value = docSnap.id;
-    opt.textContent = data.type;
-    knotSelect.appendChild(opt);
+function loadSubTabs(){
+  subTabs.innerHTML="";
+  allCollections[currentCategory].forEach(col=>{
+    const st=document.createElement("div");
+    st.className="subTab";
+    st.textContent=col;
+    st.onclick=()=>{
+      currentCollection=col;
+      [...subTabs.children].forEach(t=>t.classList.remove("active"));
+      st.classList.add("active");
+      loadTable();
+    };
+    subTabs.appendChild(st);
   });
+  subTabs.children[0].click();
 }
 
-/* FIX: KING COBRA IMAGE FILENAMES */
-function getImageKey(typeKey) {
-  const k = typeKey.toLowerCase();
-  if (k.includes("king") && k.includes("cobra")) return "king-cobra";
-  return typeKey;
+document.getElementById("toggleMaintenanceBtn").onclick=async()=>{
+  const snap=await getDoc(maintenanceDoc);
+  const enabled=snap.exists()?snap.data().enabled:false;
+  await setDoc(maintenanceDoc,{enabled:!enabled});
+  document.getElementById("maintenanceMsg").textContent=
+    enabled?"✅ Site is LIVE":"🛠️ Site is UNDER CONSTRUCTION";
+};
+
+document.getElementById("printCardsBtn").onclick=()=>{
+  const win=window.open("Tactics & Treats.pdf","_blank");
+  if(win) win.print();
+  else alert("Enable popups.");
+};
+
+async function totalOrders(){
+  const cols=["braceletOrders","cookieOrders","spiritOrders"];
+  let total=0;
+  for(const c of cols){
+    const snap=await getDocs(collection(db,c));
+    total+=snap.size;
+  }
+  return total;
 }
 
-async function loadBraceletData(typeKey) {
-  if (!typeKey) return;
+// ⭐ SAFE PARSE FOR EDITED VALUES
+function smartParse(value){
+  value=value.trim();
 
-  const snap = await getDoc(doc(db, "products_bracelets", typeKey));
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-  currentPriceMap = data.price || {};
-
-  sizeSelect.innerHTML = "";
-  color1Select.innerHTML = "";
-  color2Select.innerHTML = "";
-
-  data.sizeOptions.forEach(s => sizeSelect.add(new Option(s, s)));
-
-  const colors = data.colorOptions.split(",").map(c => c.trim());
-  colors.forEach(c => {
-    color1Select.add(new Option(c, c));
-    color2Select.add(new Option(c, c));
-  });
-
-  const imgKey = getImageKey(typeKey);
-
-  fadeIn(mainImg, `${imgKey}-main.png`);
-  fadeIn(s1, `${imgKey}-side1.png`);
-  fadeIn(s2, `${imgKey}-side2.png`);
-  fadeIn(s3, `${imgKey}-side3.png`);
-  fadeIn(s4, `${imgKey}-side4.png`);
-
-  updatePrice();
-}
-
-/* CLIP COLOR OPTIONS */
-function updateClipColorOptions() {
-  const type = clipTypeSelect.value;
-  clipColorSelect.innerHTML = "";
-
-  if (type === "Metal" || type === "Adjustable Knot") {
-    clipColorSelect.disabled = true;
-    clipColorSelect.innerHTML = '<option value="">No Color Option</option>';
-    return;
+  // Try JSON
+  try{
+    if(value.startsWith("{")||value.startsWith("[")){
+      return JSON.parse(value);
+    }
+  }catch(e){
+    // Invalid JSON → save as string (Option B)
+    return value;
   }
 
-  clipColorSelect.disabled = false;
-  clipColorSelect.add(new Option("Black", "Black"));
+  // Try number
+  if(!isNaN(value) && value !== "") return Number(value);
+
+  return value; // fallback to string
 }
 
-/* SHOW/HIDE ADDRESS */
-deliveryType.addEventListener("change", () => {
-  if (deliveryType.value === "shipping") {
-    addressLabel.style.display = "block";
-    addressBox.style.display = "block";
-  } else {
-    addressLabel.style.display = "none";
-    addressBox.style.display = "none";
-    addressBox.value = "";
+async function loadTable(){
+  loading.classList.add("show");
+  table.innerHTML="";
+  tableMsg.textContent="";
+  orderCount.textContent="";
+
+  tableTitle.textContent=currentCollection;
+
+  const snap=await getDocs(collection(db,currentCollection));
+  const rows=snap.docs;
+
+  if(currentCategory==="Orders"){
+    orderCount.textContent=`📦 Orders: ${rows.length}`;
   }
 
-  updatePrice();
-});
+  // Auto-detect keys
+  const keysSet=new Set();
+  rows.forEach(r=>Object.keys(r.data()).forEach(k=>keysSet.add(k)));
+  const keys=[...keysSet];
 
-/* PRICE UPDATE */
-function updatePrice() {
-  const size = sizeSelect.value;
-  const clipType = clipTypeSelect.value;
-  const qty = parseInt(qtyInput.value) || 1;
-  const delivery = deliveryType.value;
-
-  let base = parseFloat(currentPriceMap[size]) || 0;
-  if (clipType === "Metal") base += 1;
-
-  let subtotal = base * qty;
-  let shipping = delivery === "shipping" ? 10 : 0;
-
-  if (overrideActive) {
-    subtotal = 0;
-    shipping = 0;
-  }
-
-  const total = subtotal + shipping;
-  priceDisplay.textContent = `Price: $${total.toFixed(2)}`;
-}
-
-/* SUBMIT ORDER */
-async function submitOrder() {
-  const name = braceletName.value.trim();
-  const phone = braceletPhone.value.trim();
-  const email = braceletEmail.value.trim();
-  const type = knotType.value;
-  const size = braceletSize.value;
-  const color1 = color1Select.value;
-  const color2 = color2Select.value;
-  const clipType = clipTypeSelect.value;
-  const clipColor = clipColorSelect.value;
-  const qty = parseInt(braceletQty.value) || 1;
-  const delivery = deliveryType.value;
-  const addr = deliveryAddress.value.trim();
-
-  if (!name || !phone || !type || !size || !color1 || !color2 || !clipType || !delivery)
-    return alert("Fill all required fields.");
-
-  if (delivery === "shipping" && addr.length < 5)
-    return alert("Please enter a valid shipping address.");
-
-  let base = parseFloat(currentPriceMap[size]) || 0;
-  if (clipType === "Metal") base += 1;
-
-  let subtotal = base * qty;
-  let shipping = delivery === "shipping" ? 10 : 0;
-
-  if (overrideActive) {
-    subtotal = 0;
-    shipping = 0;
-  }
-
-  const total = subtotal + shipping;
-
-  await addDoc(collection(db, "braceletOrders"), {
-    name, phone, email,
-    productType: type,
-    size,
-    color1,
-    color2,
-    clipType,
-    clipColor,
-    qty,
-    deliveryMethod: delivery,
-    address: delivery === "shipping" ? addr : null,
-    subtotal,
-    shipping,
-    total,
-    createdAt: new Date()
+  // Header
+  const header=table.insertRow();
+  header.insertCell().textContent="ID";
+  keys.forEach(k=>{
+    const th=document.createElement("th");
+    th.textContent=k;
+    header.appendChild(th);
   });
 
-  orderMsg.textContent = `Order submitted! Total: $${total.toFixed(2)}`;
+  // Rows
+  rows.forEach(docSnap=>{
+    const row=table.insertRow();
+    row.dataset.id=docSnap.id;
+
+    const idCell=row.insertCell();
+    idCell.textContent=docSnap.id;
+
+    const data=docSnap.data();
+
+    keys.forEach(k=>{
+      const cell=row.insertCell();
+      let val=data[k];
+
+      if(val && val.seconds) val=convertTimestamp(val);
+      else if(typeof val==="object") val=JSON.stringify(val);
+      else if(Array.isArray(val)) val=val.join(", ");
+
+      cell.textContent=val ?? "";
+      cell.contentEditable=true;
+
+      cell.onblur=async()=>{
+        const newVal=smartParse(cell.textContent);
+        let updated={...data,[k]:newVal};
+
+        try{
+          await setDoc(doc(db,currentCollection,docSnap.id),updated);
+          tableMsg.textContent=`✔ Updated ${k}`;
+        }catch(e){
+          console.error(e);
+          tableMsg.textContent="❌ Error updating";
+        }
+      };
+    });
+  });
+
+  // Search
+  search.oninput=()=>{
+    const t=search.value.toLowerCase();
+    [...table.rows].forEach((r,i)=>{
+      if(i===0) return;
+      r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";
+    });
+  };
+
+  loading.classList.remove("show");
 }
 
-knotSelect.addEventListener("change", () => loadBraceletData(knotSelect.value));
-sizeSelect.addEventListener("change", updatePrice);
-qtyInput.addEventListener("change", updatePrice);
-clipTypeSelect.addEventListener("change", () => {
-  updateClipColorOptions();
-  updatePrice();
-});
-deliveryType.addEventListener("change", updatePrice);
-submitBtn.addEventListener("click", submitOrder);
+// ✔ DELETE + COPY SELECTED
+function addActionButtons(){
+  actionButtons.innerHTML="";
 
-/* INIT */
-loadBraceletTypes();
-updateClipColorOptions();
+  const del=document.createElement("button");
+  del.textContent="🗑 Delete Selected";
+  del.onclick=async()=>{
+    const rows=[...table.rows].slice(1);
+    const selected=rows.filter(r=>r.querySelector("input[type=checkbox]")?.checked);
+
+    if(selected.length===0) return alert("No rows selected.");
+    if(!confirm("Delete selected items?")) return;
+
+    for(const r of selected){
+      await deleteDoc(doc(db,currentCollection,r.dataset.id));
+    }
+    loadTable();
+  };
+
+  const copy=document.createElement("button");
+  copy.textContent="📋 Copy Selected";
+  copy.onclick=()=>{
+    const rows=[...table.rows].slice(1);
+    const selected=rows.filter(r=>r.querySelector("input[type=checkbox]")?.checked);
+
+    const result=[];
+    selected.forEach(r=>{
+      const obj={ID:r.dataset.id};
+      [...r.cells].slice(1).forEach((c,i)=>{
+        obj[keys[i]]=c.textContent;
+      });
+      result.push(obj);
+    });
+
+    navigator.clipboard.writeText(JSON.stringify(result,null,2));
+    alert("Copied!");
+  };
+
+  actionButtons.appendChild(del);
+  actionButtons.appendChild(copy);
+}
+
 </script>
-
 </body>
 </html>
