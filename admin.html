@@ -3,72 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Full Admin Panel – Tactics & Treats</title>
+<title>Tactics & Treats – Admin Panel</title>
+
 <style>
-body{font-family:"Poppins",sans-serif;background:#111;color:white;margin:0;padding:20px;}
-h1,h2{text-align:center;color:#ff0000;margin-bottom:20px;}
-header{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,#7a0c0c,#000);padding:10px 20px;border-radius:10px;box-shadow:0 0 12px rgba(255,0,0,0.4);margin-bottom:20px;}
-header img{height:60px;width:60px;border-radius:50%;border:2px solid #ff0000;background:#000;}
-header h1{flex:1;text-align:center;color:#ff0000;margin:0;}
-section{background:#181818;padding:20px;border-radius:12px;box-shadow:0 0 12px rgba(255,0,0,0.2);margin-bottom:30px;}
-.tabs,.subTabs{display:flex;justify-content:center;margin-bottom:15px;gap:10px;flex-wrap:wrap;}
-.tab,.subTab{padding:10px 20px;cursor:pointer;border-radius:5px;background:#222;color:#fff;font-weight:bold;transition:.2s;}
-.tab.active,.subTab.active{background:#ff0000;color:#fff;box-shadow:0 0 8px #ff0000;}
-.tab:hover,.subTab:hover{background:#ff4444;}
-table{width:100%;border-collapse:collapse;margin-top:10px;}
-th,td{padding:10px;border:1px solid #ff0000;text-align:center;}
-th{background:#222;color:#ffb347;position:sticky;top:0;}
-tr:nth-child(even){background:#222;}
-tr:hover{background:#333;}
-td:focus{outline:2px solid #ff0000;background:#222;}
-#searchInput{width:100%;max-width:400px;margin:10px auto;display:block;padding:8px;border-radius:5px;border:none;font-size:14px;}
-button{padding:8px 12px;margin:5px;background:#ff0000;color:white;font-weight:bold;border:none;border-radius:8px;cursor:pointer;transition:.2s;}
-button:hover{background:darkred;box-shadow:0 0 8px #ff0000;}
-.message{color:#ffb347;font-weight:bold;text-align:center;margin-top:10px;}
-.loadingOverlay {
-  position:absolute;top:0;left:0;right:0;bottom:0;
-  background:rgba(0,0,0,0.6);
-  display:flex;justify-content:center;align-items:center;
-  color:#ffb347;font-size:20px;font-weight:bold;
-  opacity:0;pointer-events:none;transition:opacity .3s;
-  border-radius:12px;
+body {
+  font-family:"Poppins",sans-serif;
+  background:#111;
+  color:white;
+  margin:0;
+  padding:20px;
 }
-.loadingOverlay.show {opacity:1;pointer-events:auto;}
-.addRow input{background:#222;color:white;border:1px solid #ff0000;border-radius:5px;padding:4px;text-align:center;}
+h1,h2 {
+  text-align:center;
+  color:#ff0000;
+  margin-bottom:20px;
+}
+
+header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(90deg,#7a0c0c,#000);
+  padding:10px 20px;
+  border-radius:10px;
+  box-shadow:0 0 12px rgba(255,0,0,0.4);
+  margin-bottom:20px;
+}
+header img {
+  height:60px;
+  width:60px;
+  border-radius:50%;
+  border:2px solid #ff0000;
+}
+header h1 {
+  flex:1;
+  text-align:center;
+  margin:0;
+  color:#ff0000;
+}
+
+section {
+  background:#181818;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 0 12px rgba(255,0,0,0.2);
+  margin-bottom:30px;
+  position:relative;
+}
+
+.tabs,.subTabs {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+
+.tab,.subTab {
+  padding:10px 20px;
+  cursor:pointer;
+  border-radius:5px;
+  background:#222;
+  color:white;
+  font-weight:bold;
+  transition:.2s;
+}
+
+.tab.active,.subTab.active {
+  background:#ff0000;
+  color:white;
+  box-shadow:0 0 8px #ff0000;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+th,td {
+  padding:10px;
+  border:1px solid #ff0000;
+  text-align:center;
+}
+th {
+  background:#222;
+  color:#ffb347;
+}
+tr:nth-child(even) { background:#222; }
+
+img.admin-thumb {
+  height:70px;
+  border-radius:6px;
+  border:2px solid #ff0000;
+}
+
+#searchInput {
+  width:100%;
+  max-width:400px;
+  margin:10px auto;
+  display:block;
+  padding:8px;
+  border-radius:5px;
+  border:none;
+  font-size:14px;
+}
+
+.loadingOverlay {
+  position:absolute;
+  top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.6);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:20px;
+  color:#ffb347;
+  opacity:0;
+  pointer-events:none;
+  transition:.3s;
+}
+.loadingOverlay.show {
+  opacity:1;
+  pointer-events:auto;
+}
+
+button {
+  padding:8px 12px;
+  background:#ff0000;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:.2s;
+}
+button:hover {
+  background:darkred;
+  box-shadow:0 0 8px #ff0000;
+}
+
 </style>
 </head>
 <body>
 
 <header>
-  <img src="logo.png" alt="Tactics & Treats Logo">
-  <h1>Tactics & Treats Admin Panel</h1>
+  <img src="logo.png">
+  <h1>Tactics & Treats – Admin Panel</h1>
 </header>
 
 <div class="tabs" id="mainTabs"></div>
-<div class="subTabs" id="collectionTabs"></div>
+<div class="subTabs" id="subTabs"></div>
 
-<section id="tableSection" style="position:relative;">
+<section>
   <h2 id="tableTitle">Loading...</h2>
-  <p id="orderCount" class="message"></p>
-  <input type="text" id="searchInput" placeholder="🔍 Search...">
-  <p id="tableMsg" class="message"></p>
-  <div class="loadingOverlay" id="loadingOverlay">⏳ Loading...</div>
-  <table id="dynamicTable"></table>
-  <div id="actionButtons" class="flex"></div>
+  <input type="text" id="searchInput" placeholder="Search...">
+  <p id="tableMsg"></p>
 
-  <hr style="border-color:#ff4444;">
-  <button id="toggleMaintenanceBtn">⚠️ Toggle Under Construction</button>
-  <button id="printCardsBtn">🖨 Print Business Cards</button>
-  <p id="maintenanceMsg" class="message"></p>
+  <div class="loadingOverlay" id="loadOverlay">Loading...</div>
+
+  <table id="dataTable"></table>
+
 </section>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore,collection,getDocs,doc,getDoc,setDoc,deleteDoc
+  getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const firebaseConfig={
+const firebaseConfig = {
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain:"bracelets-and-color.firebaseapp.com",
   projectId:"bracelets-and-color",
@@ -77,230 +180,185 @@ const firebaseConfig={
   appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-function convertTimestamp(ts){
-  if(ts && ts.seconds) return new Date(ts.seconds*1000).toLocaleString();
-  return ts;
-}
+const GH_RAW = ""; // OPTIONAL: if your site is hosted by GitHub Pages, relative paths work already.
 
-// Collections
-const allCollections={
-  "Products":["products","products_bracelets","products_cookies","products_spirit"],
-  "Orders":["braceletOrders","cookieOrders","spiritOrders"],
-  "Users":["users"],
-  "Settings":["siteSettings","adminSettings"]
+const mainTabs = document.getElementById("mainTabs");
+const subTabs = document.getElementById("subTabs");
+const tableTitle = document.getElementById("tableTitle");
+const tableMsg = document.getElementById("tableMsg");
+const table = document.getElementById("dataTable");
+const overlay = document.getElementById("loadOverlay");
+
+const collections = {
+  "Products": ["products", "products_bracelets", "products_cookies", "products_spirit"],
+  "Orders": ["braceletOrders", "cookieOrders", "spiritOrders"],
+  "Users": ["users"],
+  "Settings": ["siteSettings"]
 };
 
-const mainTabs=document.getElementById("mainTabs");
-const subTabs=document.getElementById("collectionTabs");
-const tableTitle=document.getElementById("tableTitle");
-const table=document.getElementById("dynamicTable");
-const search=document.getElementById("searchInput");
-const loading=document.getElementById("loadingOverlay");
-const orderCount=document.getElementById("orderCount");
-const tableMsg=document.getElementById("tableMsg");
-const actionButtons=document.getElementById("actionButtons");
-const maintenanceDoc=doc(db,"siteSettings","maintenance");
+let currentCategory = "";
+let currentCollection = "";
 
-let currentCategory="",currentCollection="";
-
-// Tabs
-Object.keys(allCollections).forEach(cat=>{
-  const tab=document.createElement("div");
-  tab.className="tab";
-  tab.textContent=cat;
-  tab.onclick=()=>{
-    currentCategory=cat;
-    [...mainTabs.children].forEach(t=>t.classList.remove("active"));
-    tab.classList.add("active");
+/* Create main tabs */
+Object.keys(collections).forEach(cat => {
+  const t = document.createElement("div");
+  t.className = "tab";
+  t.textContent = cat;
+  t.onclick = () => {
+    [...mainTabs.children].forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    currentCategory = cat;
     loadSubTabs();
   };
-  mainTabs.appendChild(tab);
+  mainTabs.appendChild(t);
 });
 mainTabs.children[0].click();
 
-function loadSubTabs(){
-  subTabs.innerHTML="";
-  allCollections[currentCategory].forEach(col=>{
-    const st=document.createElement("div");
-    st.className="subTab";
-    st.textContent=col;
-    st.onclick=()=>{
-      currentCollection=col;
-      [...subTabs.children].forEach(t=>t.classList.remove("active"));
+/* Load Sub Tabs */
+function loadSubTabs() {
+  subTabs.innerHTML = "";
+  collections[currentCategory].forEach(col => {
+    const st = document.createElement("div");
+    st.className = "subTab";
+    st.textContent = col;
+
+    st.onclick = () => {
+      [...subTabs.children].forEach(x=>x.classList.remove("active"));
       st.classList.add("active");
+      currentCollection = col;
       loadTable();
     };
+
     subTabs.appendChild(st);
   });
   subTabs.children[0].click();
 }
 
-document.getElementById("toggleMaintenanceBtn").onclick=async()=>{
-  const snap=await getDoc(maintenanceDoc);
-  const enabled=snap.exists()?snap.data().enabled:false;
-  await setDoc(maintenanceDoc,{enabled:!enabled});
-  document.getElementById("maintenanceMsg").textContent=
-    enabled?"✅ Site is LIVE":"🛠️ Site is UNDER CONSTRUCTION";
-};
+/* Bracelet image loader */
+function braceletImage(name, side=0) {
+  if (!name) return "default.png";
 
-document.getElementById("printCardsBtn").onclick=()=>{
-  const win=window.open("Tactics & Treats.pdf","_blank");
-  if(win) win.print();
-  else alert("Enable popups.");
-};
-
-async function totalOrders(){
-  const cols=["braceletOrders","cookieOrders","spiritOrders"];
-  let total=0;
-  for(const c of cols){
-    const snap=await getDocs(collection(db,c));
-    total+=snap.size;
-  }
-  return total;
+  const key = name.toLowerCase().replace(/ /g,"-");
+  return side === 0 
+      ? `${key}-main.png`
+      : `${key}-side${side}.png`;
 }
 
-// ⭐ SAFE PARSE FOR EDITED VALUES
-function smartParse(value){
-  value=value.trim();
+/* Render custom bracelet row */
+function renderBraceletRow(row, data, id) {
+  const fields = [
+    "name","phone","email","type","size",
+    "color1","color2","clipType","clipColor",
+    "qty","delivery","address"
+  ];
 
-  // Try JSON
-  try{
-    if(value.startsWith("{")||value.startsWith("[")){
-      return JSON.parse(value);
-    }
-  }catch(e){
-    // Invalid JSON → save as string (Option B)
-    return value;
-  }
+  // IMAGES (5 previews)
+  const imgCell = row.insertCell();
+  imgCell.innerHTML = `
+    <img class="admin-thumb" src="${braceletImage(data.type,0)}">
+    <img class="admin-thumb" src="${braceletImage(data.type,1)}">
+    <img class="admin-thumb" src="${braceletImage(data.type,2)}">
+    <img class="admin-thumb" src="${braceletImage(data.type,3)}">
+    <img class="admin-thumb" src="${braceletImage(data.type,4)}">
+  `;
 
-  // Try number
-  if(!isNaN(value) && value !== "") return Number(value);
+  // Editable fields
+  fields.forEach(f => {
+    const cell = row.insertCell();
+    cell.textContent = data[f] ?? "";
+    cell.contentEditable = true;
 
-  return value; // fallback to string
+    cell.onblur = async () => {
+      const v = cell.textContent.trim();
+      try {
+        await setDoc(doc(db,currentCollection,id),{
+          ...data, [f]: v
+        });
+        tableMsg.textContent = `✔ Updated ${f}`;
+      } catch {
+        tableMsg.textContent = "❌ Update failed";
+      }
+    };
+  });
 }
 
-async function loadTable(){
-  loading.classList.add("show");
-  table.innerHTML="";
-  tableMsg.textContent="";
-  orderCount.textContent="";
+/* Load Table */
+async function loadTable() {
+  overlay.classList.add("show");
+  table.innerHTML = "";
+  tableTitle.textContent = currentCollection;
 
-  tableTitle.textContent=currentCollection;
+  const snap = await getDocs(collection(db,currentCollection));
+  const rows = snap.docs;
 
-  const snap=await getDocs(collection(db,currentCollection));
-  const rows=snap.docs;
+  if (currentCollection === "braceletOrders") {
+    // Custom bracelet header
+    const h = table.insertRow();
+    [
+      "Images","Name","Phone","Email","Type","Size",
+      "Color1","Color2","ClipType","ClipColor",
+      "Qty","Delivery","Address"
+    ].forEach(t=>{
+      const th=document.createElement("th");
+      th.textContent=t;
+      h.appendChild(th);
+    });
 
-  if(currentCategory==="Orders"){
-    orderCount.textContent=`📦 Orders: ${rows.length}`;
+    rows.forEach(docSnap=>{
+      const r = table.insertRow();
+      renderBraceletRow(r, docSnap.data(), docSnap.id);
+    });
+
+    overlay.classList.remove("show");
+    return;
   }
 
-  // Auto-detect keys
-  const keysSet=new Set();
-  rows.forEach(r=>Object.keys(r.data()).forEach(k=>keysSet.add(k)));
-  const keys=[...keysSet];
+  // Generic tables
+  const allKeys = new Set();
+  rows.forEach(d=> Object.keys(d.data()).forEach(k=>allKeys.add(k)));
+  const keys = [...allKeys];
 
-  // Header
-  const header=table.insertRow();
-  header.insertCell().textContent="ID";
+  const header = table.insertRow();
+  header.insertCell().textContent = "ID";
   keys.forEach(k=>{
     const th=document.createElement("th");
     th.textContent=k;
     header.appendChild(th);
   });
 
-  // Rows
   rows.forEach(docSnap=>{
-    const row=table.insertRow();
-    row.dataset.id=docSnap.id;
-
-    const idCell=row.insertCell();
-    idCell.textContent=docSnap.id;
-
-    const data=docSnap.data();
+    const r = table.insertRow();
+    r.insertCell().textContent = docSnap.id;
+    const data = docSnap.data();
 
     keys.forEach(k=>{
-      const cell=row.insertCell();
-      let val=data[k];
+      const c = r.insertCell();
+      c.textContent = typeof data[k] === "object" 
+        ? JSON.stringify(data[k]) 
+        : data[k];
 
-      if(val && val.seconds) val=convertTimestamp(val);
-      else if(typeof val==="object") val=JSON.stringify(val);
-      else if(Array.isArray(val)) val=val.join(", ");
-
-      cell.textContent=val ?? "";
-      cell.contentEditable=true;
-
-      cell.onblur=async()=>{
-        const newVal=smartParse(cell.textContent);
-        let updated={...data,[k]:newVal};
-
-        try{
-          await setDoc(doc(db,currentCollection,docSnap.id),updated);
+      c.contentEditable = true;
+      c.onblur = async ()=>{
+        let v = c.textContent.trim();
+        try {
+          await setDoc(doc(db,currentCollection,docSnap.id),{
+            ...data,[k]:v
+          });
           tableMsg.textContent=`✔ Updated ${k}`;
-        }catch(e){
-          console.error(e);
-          tableMsg.textContent="❌ Error updating";
+        } catch {
+          tableMsg.textContent="❌ Update failed";
         }
       };
     });
   });
 
-  // Search
-  search.oninput=()=>{
-    const t=search.value.toLowerCase();
-    [...table.rows].forEach((r,i)=>{
-      if(i===0) return;
-      r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";
-    });
-  };
-
-  loading.classList.remove("show");
-}
-
-// ✔ DELETE + COPY SELECTED
-function addActionButtons(){
-  actionButtons.innerHTML="";
-
-  const del=document.createElement("button");
-  del.textContent="🗑 Delete Selected";
-  del.onclick=async()=>{
-    const rows=[...table.rows].slice(1);
-    const selected=rows.filter(r=>r.querySelector("input[type=checkbox]")?.checked);
-
-    if(selected.length===0) return alert("No rows selected.");
-    if(!confirm("Delete selected items?")) return;
-
-    for(const r of selected){
-      await deleteDoc(doc(db,currentCollection,r.dataset.id));
-    }
-    loadTable();
-  };
-
-  const copy=document.createElement("button");
-  copy.textContent="📋 Copy Selected";
-  copy.onclick=()=>{
-    const rows=[...table.rows].slice(1);
-    const selected=rows.filter(r=>r.querySelector("input[type=checkbox]")?.checked);
-
-    const result=[];
-    selected.forEach(r=>{
-      const obj={ID:r.dataset.id};
-      [...r.cells].slice(1).forEach((c,i)=>{
-        obj[keys[i]]=c.textContent;
-      });
-      result.push(obj);
-    });
-
-    navigator.clipboard.writeText(JSON.stringify(result,null,2));
-    alert("Copied!");
-  };
-
-  actionButtons.appendChild(del);
-  actionButtons.appendChild(copy);
+  overlay.classList.remove("show");
 }
 
 </script>
+
 </body>
 </html>
