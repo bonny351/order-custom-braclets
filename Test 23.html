@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tactics & Treats – Admin Panel</title>
 
 <style>
 body{font-family:"Poppins",sans-serif;background:#111;color:white;margin:0;padding:20px;}
 h1,h2{text-align:center;color:#ff0000;}
-header{display:flex;justify-content:center;align-items:center;background:linear-gradient(90deg,#7a0c0c,#000);padding:15px;border-radius:10px;box-shadow:0 0 12px red;margin-bottom:20px;}
+header{background:linear-gradient(90deg,#7a0c0c,#000);padding:15px;border-radius:10px;margin-bottom:20px;text-align:center;box-shadow:0 0 12px red;}
 .tabs,.subTabs{display:flex;justify-content:center;gap:10px;margin-bottom:15px;flex-wrap:wrap;}
 .tab,.subTab{padding:10px 20px;background:#222;border-radius:6px;cursor:pointer;font-weight:bold;}
 .tab.active,.subTab.active{background:#ff0000;box-shadow:0 0 8px red;}
 table{width:100%;border-collapse:collapse;margin-top:15px;}
 th,td{padding:10px;border:1px solid #ff0000;text-align:center;}
 tr:nth-child(even){background:#222;}
-.statusSelect{padding:5px;background:#222;color:white;border:1px solid #ff0000;border-radius:6px;}
+.statusSelect{padding:6px;background:#222;color:white;border:1px solid #ff0000;border-radius:6px;}
 .paidRow{background:rgba(0,255,0,0.25)!important;}
 .unpaidRow{background:rgba(255,0,0,0.25)!important;}
 .pendingRow{background:rgba(255,255,0,0.25)!important;}
@@ -24,44 +24,43 @@ tr:nth-child(even){background:#222;}
 .actionBar button{background:#ff0000;border:none;padding:10px 14px;border-radius:6px;font-weight:bold;cursor:pointer;}
 .actionBar button:hover{background:#cc0000;box-shadow:0 0 10px red;}
 .summaryBar{background:#222;border-radius:10px;margin-top:10px;padding:10px;text-align:center;font-weight:bold;color:#ffb347;}
-#detailsModal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:none;justify-content:center;align-items:center;z-index:1000;}
-#detailsBox{background:#181818;padding:20px;border-radius:12px;width:90%;max-width:450px;box-shadow:0 0 10px red;}
+#detailsModal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:none;justify-content:center;align-items:center;z-index:1000;}
+#detailsBox{background:#181818;padding:20px;border-radius:12px;width:90%;max-width:450px;}
 .closeBtn{float:right;font-size:20px;color:#ff4444;cursor:pointer;}
 #printArea{display:none;background:white;color:black;padding:20px;}
 #dashboard{display:none;background:#181818;padding:20px;margin-top:20px;border-radius:12px;box-shadow:0 0 12px red;}
-.chartBox{background:#222;padding:10px;border-radius:12px;margin-top:20px;}
+.chartBox{background:#222;padding:15px;border-radius:12px;margin-top:20px;}
 </style>
 </head>
 
 <body>
 
-<header><h1>Tactics & Treats Admin Panel</h1></header>
+<header>
+  <h1>Tactics & Treats Admin Panel</h1>
+</header>
 
-<div class="tabs" id="mainTabs"></div>
-<div class="subTabs" id="subTabs"></div>
+<div id="mainTabs" class="tabs"></div>
+<div id="subTabs" class="subTabs"></div>
 
-<section>
-  <h2 id="tableTitle">Loading...</h2>
+<h2 id="tableTitle"></h2>
 
-  <input id="searchInput" type="text" placeholder="🔎 Search…" 
-         style="display:block;margin:auto;width:90%;max-width:400px;">
+<input id="searchInput" placeholder="🔎 Search…" style="display:block;margin:auto;width:90%;max-width:400px;padding:8px;border-radius:8px;border:none;margin-top:10px;" />
 
-  <div class="actionBar">
-    <button id="deleteSelected">🗑 Delete</button>
-    <button id="copySelected">📋 Copy</button>
-    <button id="exportCSV">📥 Export CSV</button>
-    <button id="sortUnpaid">⬆ Unpaid First</button>
-    <button id="openDashboard">📊 Dashboard</button>
-  </div>
+<div class="actionBar">
+  <button id="deleteSelected">🗑 Delete</button>
+  <button id="copySelected">📋 Copy</button>
+  <button id="exportCSV">📥 CSV</button>
+  <button id="sortUnpaid">⬆ Unpaid First</button>
+  <button id="openDashboard">📊 Dashboard</button>
+</div>
 
-  <p id="tableMsg" style="text-align:center;"></p>
+<p id="tableMsg" style="text-align:center;"></p>
 
-  <table id="dynamicTable"></table>
+<table id="dynamicTable"></table>
 
-  <div id="summaryBar" class="summaryBar"></div>
-</section>
+<div id="summaryBar" class="summaryBar"></div>
 
-<!-- Details Modal -->
+<!-- DETAILS MODAL -->
 <div id="detailsModal">
   <div id="detailsBox">
     <span class="closeBtn" onclick="closeDetails()">✖</span>
@@ -75,10 +74,10 @@ tr:nth-child(even){background:#222;}
 
 <div id="printArea"></div>
 
+<!-- DASHBOARD -->
 <div id="dashboard">
   <h2>📊 Dashboard</h2>
   <div id="dashTotals"></div>
-
   <div class="chartBox"><canvas id="chartStatus"></canvas></div>
   <div class="chartBox"><canvas id="chartProfit"></canvas></div>
 </div>
@@ -86,9 +85,11 @@ tr:nth-child(even){background:#222;}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {getFirestore,collection,getDocs,doc,setDoc,deleteDoc} 
-from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getFirestore, collection, doc, deleteDoc, setDoc,
+  onSnapshot, getDocs
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -102,7 +103,14 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-/* Main Tabs */
+/* UNIVERSAL TOTAL → NUMBER */
+function getOrderTotal(order){
+  let raw = order.total || 0;
+  if(typeof raw==="string") raw = raw.replace(/[^0-9.]/g,"");
+  const num = parseFloat(raw);
+  return isNaN(num)?0:num;
+}
+
 const collections={
   "Products":["products","products_bracelets","products_cookies","products_spirit"],
   "Orders":["braceletOrders","cookieOrders","spiritOrders"],
@@ -110,18 +118,16 @@ const collections={
   "Settings":["siteSettings"]
 };
 
+let currentCollection="", allOrders=[];
 const mainTabs=document.getElementById("mainTabs");
 const subTabs=document.getElementById("subTabs");
 const table=document.getElementById("dynamicTable");
 const summaryBar=document.getElementById("summaryBar");
-const msg=document.getElementById("tableMsg");
 const dashboard=document.getElementById("dashboard");
 
-let currentCollection="", allOrders=[];
-
-/* Build Main Tabs */
+/* TABS */
 Object.keys(collections).forEach(cat=>{
-  const t=document.createElement("div");
+  let t=document.createElement("div");
   t.className="tab"; t.textContent=cat;
   t.onclick=()=>{
     [...mainTabs.children].forEach(x=>x.classList.remove("active"));
@@ -132,73 +138,94 @@ Object.keys(collections).forEach(cat=>{
 });
 mainTabs.children[0].click();
 
-/* Build Sub Tabs */
+/* SUBTABS */
 function loadSubTabs(cat){
   subTabs.innerHTML="";
   collections[cat].forEach(sub=>{
-    const st=document.createElement("div");
+    let st=document.createElement("div");
     st.className="subTab"; st.textContent=sub;
     st.onclick=()=>{
       [...subTabs.children].forEach(x=>x.classList.remove("active"));
       st.classList.add("active");
-      loadTable(sub);
+      loadCollection(sub,cat);
     };
     subTabs.appendChild(st);
   });
   subTabs.children[0].click();
 }
 
-/* Color rows */
-function colorRow(row,status,date){
+/* REAL-TIME FOR ORDERS ONLY */
+function loadCollection(col,cat){
+  currentCollection=col;
+  document.getElementById("tableTitle").textContent=col;
+  table.innerHTML="";
+
+  if(cat==="Orders"){
+    onSnapshot(collection(db,col),snap=>{
+      const docs=snap.docs;
+      allOrders = docs.map(d=>({...d.data(), id:d.id}));
+      renderTable(docs);
+      updateSummary();
+    });
+  } else {
+    getDocs(collection(db,col)).then(snap=>{
+      const docs=snap.docs;
+      allOrders = docs.map(d=>({...d.data(), id:d.id}));
+      renderTable(docs);
+      updateSummary();
+    });
+  }
+}
+
+/* COLOR ROW */
+function applyRowColor(row,status,date){
   row.classList.remove("paidRow","unpaidRow","pendingRow","lateRow");
 
-  if(status.includes("Paid")) row.classList.add("paidRow");
+  if(status==="Paid in Cash" || status==="Paid by Card") row.classList.add("paidRow");
   else if(status==="Pending") row.classList.add("pendingRow");
   else if(status==="Unpaid") row.classList.add("unpaidRow");
 
   if(date){
-    const age=(Date.now()-new Date(date))/86400000;
-    if(age>5 && !status.includes("Paid")) row.classList.add("lateRow");
+    const age = (Date.now()-new Date(date)) / 86400000;
+    if(age>5 && status!=="Paid in Cash" && status!=="Paid by Card")
+      row.classList.add("lateRow");
   }
 }
 
-/* Status dropdown */
-function statusDropdown(row,data,id){
+/* STATUS DROPDOWN */
+function makeStatusDropdown(row,data,id){
   const s=document.createElement("select");
   s.className="statusSelect";
-
   ["Paid in Cash","Paid by Card","Pending","Unpaid"].forEach(st=>{
-    const o=new Option(st,st);
+    let o=new Option(st,st);
     if(data.status===st) o.selected=true;
     s.add(o);
   });
 
-  colorRow(row,data.status,data.createdAt);
+  applyRowColor(row,data.status,data.createdAt);
 
   s.onchange=async()=>{
     data.status=s.value;
-    colorRow(row,s.value,data.createdAt);
+    applyRowColor(row,data.status,data.createdAt);
     await setDoc(doc(db,currentCollection,id),data);
+    updateSummary();
   };
 
   return s;
 }
 
-/* Load table */
-async function loadTable(col){
-  currentCollection=col;
-  document.getElementById("tableTitle").textContent=col;
+/* TABLE RENDER */
+function renderTable(docs){
   table.innerHTML="";
 
-  const snap=await getDocs(collection(db,col));
-  const docs=snap.docs;
-
-  allOrders=docs.map(d=>({...d.data(),id:d.id}));
-
-  if(!docs.length){ table.innerHTML="<tr><td>No Data</td></tr>"; return; }
+  if(!docs.length){
+    table.innerHTML="<tr><td>No Data</td></tr>";
+    return;
+  }
 
   const keys=new Set(["status"]);
   docs.forEach(d=>Object.keys(d.data()).forEach(k=>keys.add(k)));
+
   const keyList=[...keys];
 
   const header=table.insertRow();
@@ -207,107 +234,102 @@ async function loadTable(col){
   header.insertCell().textContent="Details";
   keyList.forEach(k=>header.insertCell().textContent=k);
 
-  docs.forEach(docSnap=>{
-    const data=docSnap.data(), id=docSnap.id;
+  docs.forEach(d=>{
+    const data=d.data(), id=d.id;
     const row=table.insertRow();
 
-    /* checkbox */
     row.insertCell().innerHTML=`<input type="checkbox" class="cb" data-id="${id}">`;
-
-    /* status */
-    row.insertCell().appendChild(statusDropdown(row,data,id));
-
-    /* details */
+    row.insertCell().appendChild(makeStatusDropdown(row,data,id));
     row.insertCell().innerHTML=`<button onclick="openDetails('${id}')">📄</button>`;
 
-    /* fields */
     keyList.forEach(k=>{
       const c=row.insertCell();
       c.textContent=data[k] ?? "";
       c.contentEditable=true;
-
       c.onblur=()=>{
         data[k]=c.textContent.trim();
-        setDoc(doc(db,col,id),data);
+        setDoc(doc(db,currentCollection,id),data);
       };
     });
 
-    colorRow(row,data.status,data.createdAt);
+    applyRowColor(row,data.status,data.createdAt);
   });
-
-  updateSummary();
 }
 
-/* Summary + Profit */
+/* SUMMARY (PROFIT FIXED) */
 function updateSummary(){
   const rows=[...table.rows].slice(1);
-  let paid=0,unpaid=0,pending=0,totalProfit=0;
+
+  let paid=0, pending=0, unpaid=0, profitTotal=0;
 
   rows.forEach(r=>{
     const status=r.cells[1].innerText;
-    const price=parseFloat(r.cells[r.cells.length-1].innerText)||0;
-    const cost=price/2;
-    const profit=price-cost;
+    const id=r.querySelector(".cb")?.dataset.id;
+    const order=allOrders.find(o=>o.id===id) || {};
 
-    if(status.includes("Paid")){paid++; totalProfit+=profit;}
+    const total=getOrderTotal(order);
+    const cost=total/2;
+    const profit=total-cost;
+
+    if(status==="Paid in Cash" || status==="Paid by Card"){
+      paid++; profitTotal+=profit;
+    }
     else if(status==="Pending") pending++;
     else if(status==="Unpaid") unpaid++;
   });
 
   summaryBar.innerHTML=
-  `Total: ${rows.length} | Paid: ${paid} | Pending: ${pending} | Unpaid: ${unpaid} | Profit: $${totalProfit.toFixed(2)}`;
+  `Orders: ${rows.length} | Paid: ${paid} | Pending: ${pending} | Unpaid: ${unpaid} | Profit: $${profitTotal.toFixed(2)}`;
 }
 
-/* Delete */
-deleteSelected.onclick=async()=>{
-  const selected=[...document.querySelectorAll(".cb:checked")];
-  if(!selected.length)return alert("Nothing selected!");
-  if(!confirm("Delete selected orders?"))return;
+/* DELETE SELECTED */
+document.getElementById("deleteSelected").onclick=async()=>{
+  let selected=[...document.querySelectorAll(".cb:checked")];
+  if(!selected.length)return alert("Nothing selected.");
+  if(!confirm("Delete selected?"))return;
 
   for(const cb of selected)
     await deleteDoc(doc(db,currentCollection,cb.dataset.id));
-
-  loadTable(currentCollection);
 };
 
-/* Copy */
-copySelected.onclick=()=>{
+/* COPY SELECTED */
+document.getElementById("copySelected").onclick=()=>{
   const selected=[...document.querySelectorAll(".cb:checked")];
-  const rows=selected.map(cb=>{
+  const out=selected.map(cb=>{
     const r=cb.parentElement.parentElement;
     return [...r.cells].map(c=>c.innerText);
   });
-  navigator.clipboard.writeText(JSON.stringify(rows,null,2));
+  navigator.clipboard.writeText(JSON.stringify(out,null,2));
   alert("Copied!");
 };
 
-/* Export CSV */
-exportCSV.onclick=()=>{
+/* CSV EXPORT */
+document.getElementById("exportCSV").onclick=()=>{
   let csv="";
   [...table.rows].forEach(r=>{
     const cols=[...r.cells].map(c=>c.innerText.replace(/,/g,";"));
     csv+=cols.join(",")+"\n";
   });
-
-  const blob=new Blob([csv],{type:"text/csv"});
   const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
+  a.href=URL.createObjectURL(new Blob([csv]));
   a.download=currentCollection+".csv";
   a.click();
 };
 
-/* Sort unpaid */
-sortUnpaid.onclick=()=>{
+/* SORT UNPAID FIRST */
+document.getElementById("sortUnpaid").onclick=()=>{
   const rows=[...table.rows].slice(1);
+  const order={"Unpaid":0,"Pending":1,"Paid in Cash":2,"Paid by Card":2};
+
   rows.sort((a,b)=>{
     const A=a.cells[1].innerText, B=b.cells[1].innerText;
-    const order={"Unpaid":0,"Pending":1,"Paid in Cash":2,"Paid by Card":2};
     return order[A]-order[B];
   });
+
   rows.forEach(r=>table.appendChild(r));
 };
 
-/* Search */
+/* SEARCH */
 searchInput.oninput=()=>{
   const t=searchInput.value.toLowerCase();
   [...table.rows].forEach((r,i)=>{
@@ -327,16 +349,14 @@ window.openDetails=(id)=>{
   document.getElementById("detailsContent").innerHTML=html;
   document.getElementById("detailsModal").style.display="flex";
 };
-
-window.closeDetails=()=>{
-  document.getElementById("detailsModal").style.display="none";
-};
+window.closeDetails=()=>document.getElementById("detailsModal").style.display="none";
 
 /* PRINT */
 window.printOrder=()=>{
   const o=window.currentOrder;
   let html="<h2>Tactics & Treats Receipt</h2>";
   Object.keys(o).forEach(k=>html+=`<p><b>${k}:</b> ${o[k]}</p>`);
+
   const area=document.getElementById("printArea");
   area.innerHTML=html;
   area.style.display="block";
@@ -348,31 +368,31 @@ window.printOrder=()=>{
 window.sendSMS=()=>{
   const o=window.currentOrder;
   const num=o.phone||o.Phone||"";
-  const msg=encodeURIComponent("Your Tactics & Treats order update: "+o.status);
+  const msg=encodeURIComponent("Your Tactics & Treats order status: "+o.status);
   window.location.href=`sms:${num}?body=${msg}`;
 };
 
 /* DASHBOARD */
-openDashboard.onclick=()=>{
-  dashboard.style.display=dashboard.style.display==="none"?"block":"none";
+document.getElementById("openDashboard").onclick=()=>{
+  dashboard.style.display = dashboard.style.display==="none"?"block":"none";
   buildDashboard();
 };
 
 function buildDashboard(){
-  const paid=allOrders.filter(o=>o.status?.includes("Paid"));
-  const unpaid=allOrders.filter(o=>o.status==="Unpaid");
-  const pending=allOrders.filter(o=>o.status==="Pending");
+  const paid = allOrders.filter(o=>o.status==="Paid in Cash"||o.status==="Paid by Card");
+  const pending = allOrders.filter(o=>o.status==="Pending");
+  const unpaid = allOrders.filter(o=>o.status==="Unpaid");
 
-  const profits=paid.map(o=>{
-    const price=parseFloat(o.total)||0;
-    return price-(price/2);
+  const profits = paid.map(o=>{
+    const t=getOrderTotal(o);
+    return t - (t/2);
   });
 
-  document.getElementById("dashTotals").innerHTML=
-  `<p>Paid: ${paid.length}</p>
-   <p>Pending: ${pending.length}</p>
-   <p>Unpaid: ${unpaid.length}</p>
-   <p>Total Profit: $${profits.reduce((a,b)=>a+b,0).toFixed(2)}</p>`;
+  document.getElementById("dashTotals").innerHTML =
+    `<p>Paid: ${paid.length}</p>
+     <p>Pending: ${pending.length}</p>
+     <p>Unpaid: ${unpaid.length}</p>
+     <p>Total Profit: $${profits.reduce((a,b)=>a+b,0).toFixed(2)}</p>`;
 
   new Chart(document.getElementById("chartStatus"),{
     type:"pie",
