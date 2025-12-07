@@ -6,6 +6,7 @@
 <title>Tactics & Treats – Admin Panel</title>
 
 <style>
+/* UI styles (same look you requested) */
 body{font-family:"Poppins",sans-serif;background:#111;color:white;margin:0;padding:20px;}
 h1,h2{text-align:center;color:#ff0000;}
 header{background:linear-gradient(90deg,#7a0c0c,#000);padding:15px;border-radius:10px;margin-bottom:20px;text-align:center;box-shadow:0 0 12px red;}
@@ -54,13 +55,11 @@ tr:nth-child(even){background:#222;}
   <button id="openDashboard">📊 Dashboard</button>
 </div>
 
-<p id="tableMsg" style="text-align:center;"></p>
-
 <table id="dynamicTable"></table>
 
 <div id="summaryBar" class="summaryBar"></div>
 
-<!-- DETAILS MODAL -->
+<!-- DETAILS POPUP -->
 <div id="detailsModal">
   <div id="detailsBox">
     <span class="closeBtn" onclick="closeDetails()">✖</span>
@@ -85,6 +84,7 @@ tr:nth-child(even){background:#222;}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="module">
+/* FIREBASE SETUP */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
   getFirestore, collection, doc, deleteDoc, setDoc,
@@ -103,7 +103,7 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-/* UNIVERSAL TOTAL → NUMBER */
+/* UNIVERSAL TOTAL PARSER */
 function getOrderTotal(order){
   let raw = order.total || 0;
   if(typeof raw==="string") raw = raw.replace(/[^0-9.]/g,"");
@@ -111,6 +111,7 @@ function getOrderTotal(order){
   return isNaN(num)?0:num;
 }
 
+/* COLLECTIONS */
 const collections={
   "Products":["products","products_bracelets","products_cookies","products_spirit"],
   "Orders":["braceletOrders","cookieOrders","spiritOrders"],
@@ -119,13 +120,14 @@ const collections={
 };
 
 let currentCollection="", allOrders=[];
+
 const mainTabs=document.getElementById("mainTabs");
 const subTabs=document.getElementById("subTabs");
 const table=document.getElementById("dynamicTable");
 const summaryBar=document.getElementById("summaryBar");
 const dashboard=document.getElementById("dashboard");
 
-/* TABS */
+/* MAIN TABS */
 Object.keys(collections).forEach(cat=>{
   let t=document.createElement("div");
   t.className="tab"; t.textContent=cat;
@@ -138,7 +140,7 @@ Object.keys(collections).forEach(cat=>{
 });
 mainTabs.children[0].click();
 
-/* SUBTABS */
+/* SUB TABS */
 function loadSubTabs(cat){
   subTabs.innerHTML="";
   collections[cat].forEach(sub=>{
@@ -154,41 +156,41 @@ function loadSubTabs(cat){
   subTabs.children[0].click();
 }
 
-/* REAL-TIME FOR ORDERS ONLY */
+/* LOAD COLLECTION */
 function loadCollection(col,cat){
   currentCollection=col;
-  document.getElementById("tableTitle").textContent=col;
   table.innerHTML="";
+  document.getElementById("tableTitle").textContent=col;
 
   if(cat==="Orders"){
     onSnapshot(collection(db,col),snap=>{
-      const docs=snap.docs;
-      allOrders = docs.map(d=>({...d.data(), id:d.id}));
-      renderTable(docs);
+      snap.docChanges().forEach(change=>{
+        if(change.type==="added") addRow(change.doc);
+        if(change.type==="modified") updateRow(change.doc);
+        if(change.type==="removed") removeRow(change.doc.id);
+      });
       updateSummary();
     });
   } else {
     getDocs(collection(db,col)).then(snap=>{
       const docs=snap.docs;
-      allOrders = docs.map(d=>({...d.data(), id:d.id}));
+      allOrders=docs.map(d=>({...d.data(),id:d.id}));
       renderTable(docs);
       updateSummary();
     });
   }
 }
 
-/* COLOR ROW */
+/* COLOR LOGIC */
 function applyRowColor(row,status,date){
-  row.classList.remove("paidRow","unpaidRow","pendingRow","lateRow");
-
+  row.className="";
   if(status==="Paid in Cash" || status==="Paid by Card") row.classList.add("paidRow");
   else if(status==="Pending") row.classList.add("pendingRow");
   else if(status==="Unpaid") row.classList.add("unpaidRow");
 
   if(date){
-    const age = (Date.now()-new Date(date)) / 86400000;
-    if(age>5 && status!=="Paid in Cash" && status!=="Paid by Card")
-      row.classList.add("lateRow");
+    const age=(Date.now()-new Date(date))/86400000;
+    if(age>5 && !status.includes("Paid")) row.classList.add("lateRow");
   }
 }
 
@@ -197,24 +199,24 @@ function makeStatusDropdown(row,data,id){
   const s=document.createElement("select");
   s.className="statusSelect";
   ["Paid in Cash","Paid by Card","Pending","Unpaid"].forEach(st=>{
-    let o=new Option(st,st);
-    if(data.status===st) o.selected=true;
-    s.add(o);
+    const opt=new Option(st,st);
+    if(data.status===st) opt.selected=true;
+    s.add(opt);
   });
 
   applyRowColor(row,data.status,data.createdAt);
 
-  s.onchange=async()=>{
+  s.onchange=()=>{
     data.status=s.value;
     applyRowColor(row,data.status,data.createdAt);
-    await setDoc(doc(db,currentCollection,id),data);
+    setDoc(doc(db,currentCollection,id),data);
     updateSummary();
   };
 
   return s;
 }
 
-/* TABLE RENDER */
+/* RENDER FULL TABLE ON FIRST LOAD */
 function renderTable(docs){
   table.innerHTML="";
 
@@ -225,7 +227,6 @@ function renderTable(docs){
 
   const keys=new Set(["status"]);
   docs.forEach(d=>Object.keys(d.data()).forEach(k=>keys.add(k)));
-
   const keyList=[...keys];
 
   const header=table.insertRow();
@@ -234,46 +235,106 @@ function renderTable(docs){
   header.insertCell().textContent="Details";
   keyList.forEach(k=>header.insertCell().textContent=k);
 
-  docs.forEach(d=>{
-    const data=d.data(), id=d.id;
-    const row=table.insertRow();
-
-    row.insertCell().innerHTML=`<input type="checkbox" class="cb" data-id="${id}">`;
-    row.insertCell().appendChild(makeStatusDropdown(row,data,id));
-    row.insertCell().innerHTML=`<button onclick="openDetails('${id}')">📄</button>`;
-
-    keyList.forEach(k=>{
-      const c=row.insertCell();
-      c.textContent=data[k] ?? "";
-      c.contentEditable=true;
-      c.onblur=()=>{
-        data[k]=c.textContent.trim();
-        setDoc(doc(db,currentCollection,id),data);
-      };
-    });
-
-    applyRowColor(row,data.status,data.createdAt);
-  });
+  docs.forEach(d=>addRow(d));
 }
 
-/* SUMMARY (PROFIT FIXED) */
-function updateSummary(){
-  const rows=[...table.rows].slice(1);
+/* BUILD ONE ROW */
+function buildRow(docSnap){
+  const data=docSnap.data();
+  const id=docSnap.id;
 
-  let paid=0, pending=0, unpaid=0, profitTotal=0;
+  const row=document.createElement("tr");
+  row.dataset.id=id;
+
+  /* checkbox */
+  const c1=document.createElement("td");
+  c1.innerHTML=`<input type="checkbox" class="cb" data-id="${id}">`;
+  row.appendChild(c1);
+
+  /* status */
+  const c2=document.createElement("td");
+  c2.appendChild(makeStatusDropdown(row,data,id));
+  row.appendChild(c2);
+
+  /* details */
+  const c3=document.createElement("td");
+  c3.innerHTML=`<button onclick="openDetails('${id}')">📄</button>`;
+  row.appendChild(c3);
+
+  /* data fields */
+  Object.keys(data).forEach(k=>{
+    const c=document.createElement("td");
+    c.contentEditable=true;
+    c.innerText=data[k];
+    c.onblur=()=>{
+      data[k]=c.innerText.trim();
+      setDoc(doc(db,currentCollection,id),data);
+    };
+    row.appendChild(c);
+  });
+
+  applyRowColor(row,data.status,data.createdAt);
+  return row;
+}
+
+/* ADD ROW (REAL-TIME) */
+function addRow(docSnap){
+  const row=buildRow(docSnap);
+  table.appendChild(row);
+  const data=docSnap.data();
+  allOrders.push({...data,id:docSnap.id});
+}
+
+/* UPDATE ROW (REAL-TIME) */
+function updateRow(docSnap){
+  const id=docSnap.id;
+  const data=docSnap.data();
+
+  const row=document.querySelector(`tr[data-id="${id}"]`);
+  if(!row) return;
+
+  /* update stored */
+  const i=allOrders.findIndex(o=>o.id===id);
+  allOrders[i]={...data,id};
+
+  /* update status */
+  const statusCell=row.cells[1];
+  statusCell.innerHTML="";
+  statusCell.appendChild(makeStatusDropdown(row,data,id));
+
+  /* update fields */
+  let colIndex=3;
+  Object.keys(data).forEach(k=>{
+    row.cells[colIndex].innerText=data[k];
+    colIndex++;
+  });
+
+  applyRowColor(row,data.status,data.createdAt);
+}
+
+/* REMOVE ROW (REAL-TIME) */
+function removeRow(id){
+  const row=document.querySelector(`tr[data-id="${id}"]`);
+  if(row) row.remove();
+  allOrders=allOrders.filter(o=>o.id!==id);
+}
+
+/* SUMMARY + PROFIT */
+function updateSummary(){
+  const rows=[...table.querySelectorAll("tr")].slice(1);
+
+  let paid=0,pending=0,unpaid=0,profitTotal=0;
 
   rows.forEach(r=>{
+    const id=r.dataset.id;
+    const order=allOrders.find(o=>o.id===id)||{};
     const status=r.cells[1].innerText;
-    const id=r.querySelector(".cb")?.dataset.id;
-    const order=allOrders.find(o=>o.id===id) || {};
 
     const total=getOrderTotal(order);
     const cost=total/2;
     const profit=total-cost;
 
-    if(status==="Paid in Cash" || status==="Paid by Card"){
-      paid++; profitTotal+=profit;
-    }
+    if(status==="Paid in Cash"||status==="Paid by Card"){paid++;profitTotal+=profit;}
     else if(status==="Pending") pending++;
     else if(status==="Unpaid") unpaid++;
   });
@@ -318,7 +379,7 @@ document.getElementById("exportCSV").onclick=()=>{
 
 /* SORT UNPAID FIRST */
 document.getElementById("sortUnpaid").onclick=()=>{
-  const rows=[...table.rows].slice(1);
+  const rows=[...table.querySelectorAll("tr")].slice(1);
   const order={"Unpaid":0,"Pending":1,"Paid in Cash":2,"Paid by Card":2};
 
   rows.sort((a,b)=>{
@@ -374,25 +435,25 @@ window.sendSMS=()=>{
 
 /* DASHBOARD */
 document.getElementById("openDashboard").onclick=()=>{
-  dashboard.style.display = dashboard.style.display==="none"?"block":"none";
+  dashboard.style.display=dashboard.style.display==="none"?"block":"none";
   buildDashboard();
 };
 
 function buildDashboard(){
-  const paid = allOrders.filter(o=>o.status==="Paid in Cash"||o.status==="Paid by Card");
-  const pending = allOrders.filter(o=>o.status==="Pending");
-  const unpaid = allOrders.filter(o=>o.status==="Unpaid");
+  const paid=allOrders.filter(o=>o.status==="Paid in Cash"||o.status==="Paid by Card");
+  const pending=allOrders.filter(o=>o.status==="Pending");
+  const unpaid=allOrders.filter(o=>o.status==="Unpaid");
 
-  const profits = paid.map(o=>{
+  const profits=paid.map(o=>{
     const t=getOrderTotal(o);
-    return t - (t/2);
+    return t-(t/2);
   });
 
-  document.getElementById("dashTotals").innerHTML =
-    `<p>Paid: ${paid.length}</p>
-     <p>Pending: ${pending.length}</p>
-     <p>Unpaid: ${unpaid.length}</p>
-     <p>Total Profit: $${profits.reduce((a,b)=>a+b,0).toFixed(2)}</p>`;
+  document.getElementById("dashTotals").innerHTML=
+  `<p>Paid: ${paid.length}</p>
+   <p>Pending: ${pending.length}</p>
+   <p>Unpaid: ${unpaid.length}</p>
+   <p>Total Profit: $${profits.reduce((a,b)=>a+b,0).toFixed(2)}</p>`;
 
   new Chart(document.getElementById("chartStatus"),{
     type:"pie",
