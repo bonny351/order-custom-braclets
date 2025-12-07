@@ -6,160 +6,30 @@
 <title>Tactics & Treats – Admin Panel</title>
 
 <style>
-body{
-  font-family:"Poppins",sans-serif;
-  background:#111;
-  color:white;
-  margin:0;
-  padding:20px;
-}
-h1,h2{
-  text-align:center;
-  color:#ff0000;
-}
-
-/* header */
-header{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(90deg,#7a0c0c,#000);
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
-  box-shadow:0 0 12px rgba(255,0,0,0.4);
-}
-
-/* tabs */
-.tabs,.subTabs{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-bottom:15px;
-}
-.tab,.subTab{
-  padding:10px 20px;
-  background:#222;
-  border-radius:6px;
-  cursor:pointer;
-  font-weight:bold;
-  transition:0.2s;
-}
-.tab.active,.subTab.active{
-  background:#ff0000;
-  box-shadow:0 0 8px red;
-}
-
-/* table */
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-}
-th,td{
-  padding:10px;
-  border:1px solid #ff0000;
-  text-align:center;
-}
+body{font-family:"Poppins",sans-serif;background:#111;color:white;margin:0;padding:20px;}
+h1,h2{text-align:center;color:#ff0000;}
+header{display:flex;justify-content:center;align-items:center;background:linear-gradient(90deg,#7a0c0c,#000);padding:15px;border-radius:10px;box-shadow:0 0 12px red;margin-bottom:20px;}
+.tabs,.subTabs{display:flex;justify-content:center;gap:10px;margin-bottom:15px;flex-wrap:wrap;}
+.tab,.subTab{padding:10px 20px;background:#222;border-radius:6px;cursor:pointer;font-weight:bold;}
+.tab.active,.subTab.active{background:#ff0000;box-shadow:0 0 8px red;}
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th,td{padding:10px;border:1px solid #ff0000;text-align:center;}
 tr:nth-child(even){background:#222;}
-
-/* status dropdown */
-.statusSelect{
-  padding:6px;
-  background:#222;
-  color:white;
-  border-radius:6px;
-  border:1px solid #ff0000;
-}
-
-/* row colors */
+.statusSelect{padding:5px;background:#222;color:white;border:1px solid #ff0000;border-radius:6px;}
 .paidRow{background:rgba(0,255,0,0.25)!important;}
-.pendingRow{background:rgba(255,255,0,0.25)!important;}
 .unpaidRow{background:rgba(255,0,0,0.25)!important;}
+.pendingRow{background:rgba(255,255,0,0.25)!important;}
 .lateRow{outline:2px solid orange;}
-
-/* Action buttons */
-.actionBar{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin:15px 0;
-}
-.actionBar button{
-  background:#ff0000;
-  border:none;
-  padding:10px 15px;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
-}
-.actionBar button:hover{
-  background:#cc0000;
-  box-shadow:0 0 10px red;
-}
-
-/* summary bar */
-.summaryBar{
-  background:#222;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-  margin-top:10px;
-  font-weight:bold;
-  color:#ffb347;
-}
-
-/* DETAILS POPUP */
-#detailsModal{
-  position:fixed;
-  top:0;left:0;right:0;bottom:0;
-  background:rgba(0,0,0,0.8);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:2000;
-}
-#detailsBox{
-  background:#181818;
-  padding:20px;
-  border-radius:12px;
-  width:90%;
-  max-width:500px;
-  box-shadow:0 0 15px red;
-}
-.closeBtn{
-  float:right;
-  cursor:pointer;
-  font-size:20px;
-  color:#ff4444;
-}
-
-/* PRINT RECEIPT WINDOW */
-#printArea{
-  display:none;
-  background:white;
-  color:black;
-  padding:20px;
-}
-
-/* DASHBOARD */
-#dashboard{
-  background:#181818;
-  border-radius:12px;
-  padding:20px;
-  margin-top:20px;
-  box-shadow:0 0 10px rgba(255,0,0,0.3);
-  display:none;
-}
-
-.chartBox{
-  margin:20px auto;
-  width:90%;
-  max-width:400px;
-  background:#222;
-  padding:15px;
-  border-radius:10px;
-}
+.actionBar{display:flex;justify-content:center;gap:10px;margin-top:15px;}
+.actionBar button{background:#ff0000;border:none;padding:10px 14px;border-radius:6px;font-weight:bold;cursor:pointer;}
+.actionBar button:hover{background:#cc0000;box-shadow:0 0 10px red;}
+.summaryBar{background:#222;border-radius:10px;margin-top:10px;padding:10px;text-align:center;font-weight:bold;color:#ffb347;}
+#detailsModal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:none;justify-content:center;align-items:center;z-index:1000;}
+#detailsBox{background:#181818;padding:20px;border-radius:12px;width:90%;max-width:450px;box-shadow:0 0 10px red;}
+.closeBtn{float:right;font-size:20px;color:#ff4444;cursor:pointer;}
+#printArea{display:none;background:white;color:black;padding:20px;}
+#dashboard{display:none;background:#181818;padding:20px;margin-top:20px;border-radius:12px;box-shadow:0 0 12px red;}
+.chartBox{background:#222;padding:10px;border-radius:12px;margin-top:20px;}
 </style>
 </head>
 
@@ -171,15 +41,14 @@ tr:nth-child(even){background:#222;}
 <div class="subTabs" id="subTabs"></div>
 
 <section>
-  <h2 id="tableTitle"></h2>
+  <h2 id="tableTitle">Loading...</h2>
 
-  <input type="text" id="searchInput"
-   placeholder="🔍 Search..."
-   style="width:90%;max-width:400px;margin:auto;display:block;">
+  <input id="searchInput" type="text" placeholder="🔎 Search…" 
+         style="display:block;margin:auto;width:90%;max-width:400px;">
 
   <div class="actionBar">
-    <button id="deleteSelected">🗑 Delete Selected</button>
-    <button id="copySelected">📋 Copy Selected</button>
+    <button id="deleteSelected">🗑 Delete</button>
+    <button id="copySelected">📋 Copy</button>
     <button id="exportCSV">📥 Export CSV</button>
     <button id="sortUnpaid">⬆ Unpaid First</button>
     <button id="openDashboard">📊 Dashboard</button>
@@ -189,45 +58,37 @@ tr:nth-child(even){background:#222;}
 
   <table id="dynamicTable"></table>
 
-  <div class="summaryBar" id="summaryBar"></div>
+  <div id="summaryBar" class="summaryBar"></div>
 </section>
 
-<!-- DETAILS POPUP -->
+<!-- Details Modal -->
 <div id="detailsModal">
   <div id="detailsBox">
     <span class="closeBtn" onclick="closeDetails()">✖</span>
     <h2>Order Details</h2>
     <div id="detailsContent"></div>
     <br>
-    <button onclick="printOrder()">🖨 Print This Order</button>
-    <button onclick="sendSMS()">📲 Text Customer</button>
+    <button onclick="printOrder()">🖨 Print</button>
+    <button onclick="sendSMS()">📲 SMS</button>
   </div>
 </div>
 
-<!-- PRINT AREA -->
 <div id="printArea"></div>
 
-<!-- DASHBOARD -->
 <div id="dashboard">
-  <h2>📊 Analytics Dashboard</h2>
+  <h2>📊 Dashboard</h2>
   <div id="dashTotals"></div>
 
-  <div class="chartBox">
-    <canvas id="chartStatus"></canvas>
-  </div>
-
-  <div class="chartBox">
-    <canvas id="chartProfit"></canvas>
-  </div>
+  <div class="chartBox"><canvas id="chartStatus"></canvas></div>
+  <div class="chartBox"><canvas id="chartProfit"></canvas></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getFirestore,collection,getDocs,doc,setDoc,deleteDoc
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {getFirestore,collection,getDocs,doc,setDoc,deleteDoc} 
+from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
@@ -241,7 +102,7 @@ const firebaseConfig={
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-/* TAB SYSTEM */
+/* Main Tabs */
 const collections={
   "Products":["products","products_bracelets","products_cookies","products_spirit"],
   "Orders":["braceletOrders","cookieOrders","spiritOrders"],
@@ -252,19 +113,16 @@ const collections={
 const mainTabs=document.getElementById("mainTabs");
 const subTabs=document.getElementById("subTabs");
 const table=document.getElementById("dynamicTable");
-const title=document.getElementById("tableTitle");
-const msg=document.getElementById("tableMsg");
 const summaryBar=document.getElementById("summaryBar");
+const msg=document.getElementById("tableMsg");
 const dashboard=document.getElementById("dashboard");
 
-let currentCollection="";
-let currentOrders=[];
+let currentCollection="", allOrders=[];
 
-/* MAIN TABS */
+/* Build Main Tabs */
 Object.keys(collections).forEach(cat=>{
   const t=document.createElement("div");
-  t.className="tab";
-  t.textContent=cat;
+  t.className="tab"; t.textContent=cat;
   t.onclick=()=>{
     [...mainTabs.children].forEach(x=>x.classList.remove("active"));
     t.classList.add("active");
@@ -274,13 +132,12 @@ Object.keys(collections).forEach(cat=>{
 });
 mainTabs.children[0].click();
 
-/* SUB TABS */
+/* Build Sub Tabs */
 function loadSubTabs(cat){
   subTabs.innerHTML="";
   collections[cat].forEach(sub=>{
     const st=document.createElement("div");
-    st.className="subTab";
-    st.textContent=sub;
+    st.className="subTab"; st.textContent=sub;
     st.onclick=()=>{
       [...subTabs.children].forEach(x=>x.classList.remove("active"));
       st.classList.add("active");
@@ -291,115 +148,87 @@ function loadSubTabs(cat){
   subTabs.children[0].click();
 }
 
-/* COLOR ROWS */
-function colorRow(row,status,createdAt){
-  row.classList.remove("paidRow","pendingRow","unpaidRow","lateRow");
+/* Color rows */
+function colorRow(row,status,date){
+  row.classList.remove("paidRow","unpaidRow","pendingRow","lateRow");
 
-  if(status==="Paid in Cash"||status==="Paid by Card") row.classList.add("paidRow");
+  if(status.includes("Paid")) row.classList.add("paidRow");
   else if(status==="Pending") row.classList.add("pendingRow");
   else if(status==="Unpaid") row.classList.add("unpaidRow");
 
-  // LATE ORDER (older than 5 days)
-  if(createdAt){
-    const age=(Date.now()-new Date(createdAt))/86400000;
-    if(age>5 && status!=="Paid in Cash" && status!=="Paid by Card"){
-      row.classList.add("lateRow");
-    }
+  if(date){
+    const age=(Date.now()-new Date(date))/86400000;
+    if(age>5 && !status.includes("Paid")) row.classList.add("lateRow");
   }
 }
 
-/* STATUS DROPDOWN */
+/* Status dropdown */
 function statusDropdown(row,data,id){
-  const select=document.createElement("select");
-  select.className="statusSelect";
+  const s=document.createElement("select");
+  s.className="statusSelect";
 
-  ["Paid in Cash","Paid by Card","Unpaid","Pending"].forEach(s=>{
-    const opt=new Option(s,s);
-    if(data.status===s) opt.selected=true;
-    select.add(opt);
+  ["Paid in Cash","Paid by Card","Pending","Unpaid"].forEach(st=>{
+    const o=new Option(st,st);
+    if(data.status===st) o.selected=true;
+    s.add(o);
   });
 
   colorRow(row,data.status,data.createdAt);
 
-  select.onchange=async()=>{
-    data.status=select.value;
-    colorRow(row,select.value);
-
-    try{
-      await setDoc(doc(db,currentCollection,id),data);
-      msg.textContent="✔ Status Updated";
-    }catch{
-      msg.textContent="❌ Failed to Update";
-    }
+  s.onchange=async()=>{
+    data.status=s.value;
+    colorRow(row,s.value,data.createdAt);
+    await setDoc(doc(db,currentCollection,id),data);
   };
 
-  return select;
+  return s;
 }
 
-/* LOAD TABLE */
+/* Load table */
 async function loadTable(col){
   currentCollection=col;
-  title.textContent=col;
+  document.getElementById("tableTitle").textContent=col;
   table.innerHTML="";
-  currentOrders=[];
 
   const snap=await getDocs(collection(db,col));
   const docs=snap.docs;
 
-  if(!docs.length){
-    table.innerHTML="<tr><td>No Data</td></tr>";
-    return;
-  }
+  allOrders=docs.map(d=>({...d.data(),id:d.id}));
 
-  /* Collect keys */
+  if(!docs.length){ table.innerHTML="<tr><td>No Data</td></tr>"; return; }
+
   const keys=new Set(["status"]);
   docs.forEach(d=>Object.keys(d.data()).forEach(k=>keys.add(k)));
   const keyList=[...keys];
 
-  /* Header */
   const header=table.insertRow();
   header.insertCell().textContent="Select";
   header.insertCell().textContent="Status";
   header.insertCell().textContent="Details";
-  keyList.forEach(k=>{
-    const th=document.createElement("th");
-    th.textContent=k;
-    header.appendChild(th);
-  });
+  keyList.forEach(k=>header.insertCell().textContent=k);
 
   docs.forEach(docSnap=>{
-    const data=docSnap.data();
+    const data=docSnap.data(), id=docSnap.id;
     const row=table.insertRow();
-    currentOrders.push({...data,id:docSnap.id});
 
-    /* Checkbox */
-    const cbCell=row.insertCell();
-    cbCell.innerHTML=`<input type="checkbox" class="rowCB" data-id="${docSnap.id}">`;
+    /* checkbox */
+    row.insertCell().innerHTML=`<input type="checkbox" class="cb" data-id="${id}">`;
 
-    /* Status */
-    const statusCell=row.insertCell();
-    statusCell.appendChild(statusDropdown(row,data,docSnap.id));
+    /* status */
+    row.insertCell().appendChild(statusDropdown(row,data,id));
 
-    /* DETAILS BUTTON */
-    const details=row.insertCell();
-    details.innerHTML=`<button onclick="openDetails('${docSnap.id}')">📄</button>`;
+    /* details */
+    row.insertCell().innerHTML=`<button onclick="openDetails('${id}')">📄</button>`;
 
-    /* DATA CELLS */
+    /* fields */
     keyList.forEach(k=>{
       const c=row.insertCell();
       c.textContent=data[k] ?? "";
       c.contentEditable=true;
 
-      c.onblur=async()=>{
-        const newVal=c.textContent.trim();
-        data[k]=newVal;
-
-        try{
-          await setDoc(doc(db,col,docSnap.id),data);
-          msg.textContent=`✔ Updated ${k}`;
-        }catch{
-          msg.textContent="❌ Failed";
-        }
+      c.onblur=()=>{
+        data[k]=c.textContent.trim();
+        setDoc(doc(db,col,id),data);
       };
     });
 
@@ -409,114 +238,93 @@ async function loadTable(col){
   updateSummary();
 }
 
-/* SUMMARY BAR */
+/* Summary + Profit */
 function updateSummary(){
   const rows=[...table.rows].slice(1);
-
   let paid=0,unpaid=0,pending=0,totalProfit=0;
 
   rows.forEach(r=>{
-    const st=r.cells[1].innerText.trim();
-    const totalCell=r.cells[r.cells.length-1]?.innerText;
+    const status=r.cells[1].innerText;
+    const price=parseFloat(r.cells[r.cells.length-1].innerText)||0;
+    const cost=price/2;
+    const profit=price-cost;
 
-    const price=parseFloat(totalCell)||0;
-
-    if(st.includes("Paid")){paid++; totalProfit+=price;}
-    else if(st==="Pending") pending++;
-    else if(st==="Unpaid") unpaid++;
+    if(status.includes("Paid")){paid++; totalProfit+=profit;}
+    else if(status==="Pending") pending++;
+    else if(status==="Unpaid") unpaid++;
   });
 
   summaryBar.innerHTML=
-    `Total Orders: ${rows.length} | 
-     Paid: ${paid} |
-     Pending: ${pending} |
-     Unpaid: ${unpaid} |
-     Profit: $${totalProfit.toFixed(2)}`;
+  `Total: ${rows.length} | Paid: ${paid} | Pending: ${pending} | Unpaid: ${unpaid} | Profit: $${totalProfit.toFixed(2)}`;
 }
 
-/* DELETE */
+/* Delete */
 deleteSelected.onclick=async()=>{
-  const selected=[...document.querySelectorAll(".rowCB:checked")];
-
-  if(!selected.length)return alert("No rows selected.");
+  const selected=[...document.querySelectorAll(".cb:checked")];
+  if(!selected.length)return alert("Nothing selected!");
   if(!confirm("Delete selected orders?"))return;
 
-  for(const cb of selected){
+  for(const cb of selected)
     await deleteDoc(doc(db,currentCollection,cb.dataset.id));
-  }
+
   loadTable(currentCollection);
 };
 
-/* COPY */
+/* Copy */
 copySelected.onclick=()=>{
-  const rows=[...table.rows].slice(1);
-  const selected=rows.filter(r=>r.querySelector(".rowCB").checked);
-
-  const output=selected.map(r=>{
-    const cells=[...r.cells].map(c=>c.innerText.trim());
-    return cells;
+  const selected=[...document.querySelectorAll(".cb:checked")];
+  const rows=selected.map(cb=>{
+    const r=cb.parentElement.parentElement;
+    return [...r.cells].map(c=>c.innerText);
   });
-
-  navigator.clipboard.writeText(JSON.stringify(output,null,2));
+  navigator.clipboard.writeText(JSON.stringify(rows,null,2));
   alert("Copied!");
 };
 
-/* CSV EXPORT */
+/* Export CSV */
 exportCSV.onclick=()=>{
-
   let csv="";
-  const rows=[...table.rows];
-
-  rows.forEach(row=>{
-    const cols=[...row.cells].map(c=>c.innerText.replace(/,/g,";"));
+  [...table.rows].forEach(r=>{
+    const cols=[...r.cells].map(c=>c.innerText.replace(/,/g,";"));
     csv+=cols.join(",")+"\n";
   });
 
   const blob=new Blob([csv],{type:"text/csv"});
-  const url=URL.createObjectURL(blob);
-
   const a=document.createElement("a");
-  a.href=url;
+  a.href=URL.createObjectURL(blob);
   a.download=currentCollection+".csv";
   a.click();
 };
 
-/* SORT UNPAID FIRST */
+/* Sort unpaid */
 sortUnpaid.onclick=()=>{
   const rows=[...table.rows].slice(1);
-
   rows.sort((a,b)=>{
-    const A=a.cells[1].innerText;
-    const B=b.cells[1].innerText;
-    const order={ "Unpaid":0, "Pending":1, "Paid in Cash":2, "Paid by Card":2 };
+    const A=a.cells[1].innerText, B=b.cells[1].innerText;
+    const order={"Unpaid":0,"Pending":1,"Paid in Cash":2,"Paid by Card":2};
     return order[A]-order[B];
   });
-
   rows.forEach(r=>table.appendChild(r));
 };
 
-/* SEARCH */
+/* Search */
 searchInput.oninput=()=>{
   const t=searchInput.value.toLowerCase();
   [...table.rows].forEach((r,i)=>{
     if(i===0)return;
-    r.style.display=r.innerText.toLowerCase().includes(t) ? "" : "none";
+    r.style.display=r.innerText.toLowerCase().includes(t)?"":"none";
   });
 };
 
 /* DETAILS POPUP */
 window.openDetails=(id)=>{
-  const order=currentOrders.find(o=>o.id===id);
-  const box=document.getElementById("detailsContent");
+  const o=allOrders.find(x=>x.id===id);
+  window.currentOrder=o;
 
   let html="";
-  Object.keys(order).forEach(k=>{
-    html+=`<p><b>${k}:</b> ${order[k]}</p>`;
-  });
+  Object.keys(o).forEach(k=>html+=`<p><b>${k}:</b> ${o[k]}</p>`);
 
-  box.innerHTML=html;
-  window.currentDetailOrder=order;
-
+  document.getElementById("detailsContent").innerHTML=html;
   document.getElementById("detailsModal").style.display="flex";
 };
 
@@ -524,79 +332,60 @@ window.closeDetails=()=>{
   document.getElementById("detailsModal").style.display="none";
 };
 
-/* PRINT ORDER */
+/* PRINT */
 window.printOrder=()=>{
-  const o=window.currentDetailOrder;
-
-  let html="<h2>Tactics & Treats Order Receipt</h2>";
-  Object.keys(o).forEach(k=>{
-    html+=`<p><b>${k}:</b> ${o[k]}</p>`;
-  });
-
-  const printArea=document.getElementById("printArea");
-  printArea.innerHTML=html;
-  printArea.style.display="block";
-
+  const o=window.currentOrder;
+  let html="<h2>Tactics & Treats Receipt</h2>";
+  Object.keys(o).forEach(k=>html+=`<p><b>${k}:</b> ${o[k]}</p>`);
+  const area=document.getElementById("printArea");
+  area.innerHTML=html;
+  area.style.display="block";
   window.print();
-
-  printArea.style.display="none";
+  area.style.display="none";
 };
 
 /* SMS */
 window.sendSMS=()=>{
-  const o=window.currentDetailOrder;
-
-  const number=o.phone||o.Phone||"";
-  const msgText=encodeURIComponent("Hi! Your Tactics & Treats order update: " + o.status);
-
-  window.location.href=`sms:${number}?body=${msgText}`;
+  const o=window.currentOrder;
+  const num=o.phone||o.Phone||"";
+  const msg=encodeURIComponent("Your Tactics & Treats order update: "+o.status);
+  window.location.href=`sms:${num}?body=${msg}`;
 };
 
 /* DASHBOARD */
 openDashboard.onclick=()=>{
-  dashboard.style.display = dashboard.style.display==="none" ? "block" : "none";
+  dashboard.style.display=dashboard.style.display==="none"?"block":"none";
   buildDashboard();
 };
 
 function buildDashboard(){
-  const paid=currentOrders.filter(o=>o.status?.includes("Paid"));
-  const unpaid=currentOrders.filter(o=>o.status==="Unpaid");
-  const pending=currentOrders.filter(o=>o.status==="Pending");
+  const paid=allOrders.filter(o=>o.status?.includes("Paid"));
+  const unpaid=allOrders.filter(o=>o.status==="Unpaid");
+  const pending=allOrders.filter(o=>o.status==="Pending");
 
-  const profits=paid.map(o=>parseFloat(o.total)||0);
+  const profits=paid.map(o=>{
+    const price=parseFloat(o.total)||0;
+    return price-(price/2);
+  });
 
   document.getElementById("dashTotals").innerHTML=
-    `<p>Total Orders: ${currentOrders.length}</p>
-     <p>Paid: ${paid.length}</p>
-     <p>Pending: ${pending.length}</p>
-     <p>Unpaid: ${unpaid.length}</p>
-     <p>Total Profit: $${profits.reduce((a,b)=>a+b,0).toFixed(2)}</p>`;
+  `<p>Paid: ${paid.length}</p>
+   <p>Pending: ${pending.length}</p>
+   <p>Unpaid: ${unpaid.length}</p>
+   <p>Total Profit: $${profits.reduce((a,b)=>a+b,0).toFixed(2)}</p>`;
 
-  new Chart(document.getElementById("chartStatus").getContext("2d"),{
+  new Chart(document.getElementById("chartStatus"),{
     type:"pie",
-    data:{
-      labels:["Paid","Pending","Unpaid"],
-      datasets:[{
-        data:[paid.length,pending.length,unpaid.length],
-        backgroundColor:["green","yellow","red"]
-      }]
-    }
+    data:{labels:["Paid","Pending","Unpaid"],
+    datasets:[{data:[paid.length,pending.length,unpaid.length],backgroundColor:["green","yellow","red"]}]}
   });
 
-  new Chart(document.getElementById("chartProfit").getContext("2d"),{
+  new Chart(document.getElementById("chartProfit"),{
     type:"bar",
-    data:{
-      labels:["Profit"],
-      datasets:[{
-        label:"Total Profit",
-        data:[profits.reduce((a,b)=>a+b,0)],
-        backgroundColor:"orange"
-      }]
-    }
+    data:{labels:["Profit"],
+    datasets:[{data:[profits.reduce((a,b)=>a+b,0)],backgroundColor:"orange"}]}
   });
 }
-
 </script>
-
 </body>
 </html>
