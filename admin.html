@@ -1,301 +1,174 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tactics & Treats – Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Dashboard</title>
 
 <style>
 body {
-  font-family: "Poppins", sans-serif;
-  background:#111;
-  color:white;
-  margin:0;
-  padding:20px;
+  margin: 0;
+  background: #f2f2f2;
+  font-family: system-ui, sans-serif;
 }
 
-h1,h2 {
-  text-align:center;
-  color:#ff0000;
-  margin-bottom:20px;
+.app {
+  max-width: 520px;
+  margin: auto;
+  padding: 16px;
 }
 
-header {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(90deg,#7a0c0c,#000);
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
-  box-shadow:0 0 12px rgba(255,0,0,0.4);
+h2 {
+  text-align: center;
 }
 
-.tabs, .subTabs {
-  display:flex;
-  justify-content:center;
-  margin-bottom:15px;
-  gap:10px;
-  flex-wrap:wrap;
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
-.tab, .subTab {
-  padding:10px 20px;
-  cursor:pointer;
-  border-radius:5px;
-  background:#222;
-  color:white;
-  font-weight:bold;
+.filters button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #ddd;
 }
 
-.tab.active, .subTab.active {
-  background:#ff0000;
-  box-shadow:0 0 8px #ff0000;
+.filters button.active {
+  background: black;
+  color: white;
 }
 
-section {
-  background:#181818;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 0 12px rgba(255,0,0,0.2);
+.card {
+  background: white;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
 }
 
-table {
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: none;
+  background: black;
+  color: white;
 }
 
-th,td {
-  border:1px solid #ff0000;
-  padding:10px;
-  text-align:center;
+.danger {
+  background: #c0392b;
 }
 
-tr:nth-child(even) {
-  background:#222;
+.tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #eee;
+  margin-bottom: 6px;
 }
-
-.statusSelect {
-  padding:6px;
-  background:#222;
-  color:white;
-  border:1px solid #ff0000;
-  border-radius:5px;
-}
-
-/* Color coded rows */
-.paidRow    { background:rgba(0,255,0,0.25) !important; }
-.pendingRow { background:rgba(255,255,0,0.25) !important; }
-.unpaidRow  { background:rgba(255,0,0,0.25) !important; }
-
 </style>
 </head>
+
 <body>
+<div class="app">
+  <h2>Admin Orders</h2>
 
-<header><h1>Tactics & Treats Admin Panel</h1></header>
+  <div class="filters">
+    <button onclick="setFilter('all')" class="active" id="f-all">All</button>
+    <button onclick="setFilter('bracelet')" id="f-bracelet">Bracelets</button>
+    <button onclick="setFilter('cookie')" id="f-cookie">Cookies</button>
+    <button onclick="setFilter('spiritwear')" id="f-spiritwear">Spirit Wear</button>
+  </div>
 
-<div class="tabs" id="mainTabs"></div>
-<div class="subTabs" id="subTabs"></div>
-
-<section>
-  <h2 id="tableTitle">Loading...</h2>
-  <input type="text" id="searchInput" placeholder="🔍 Search..." style="width:90%;max-width:400px;margin:auto;display:block;">
-  <p id="tableMsg" style="text-align:center;color:#ffb347;"></p>
-
-  <table id="dynamicTable"></table>
-</section>
+  <div id="orders"></div>
+</div>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import {
-  getFirestore,collection,getDocs,doc,setDoc
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-  authDomain:"bracelets-and-color.firebaseapp.com",
-  projectId:"bracelets-and-color",
-  storageBucket:"bracelets-and-color.appspot.com",
-  messagingSenderId:"382292570673",
-  appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
+/* 🔥 YOUR FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.appspot.com",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+/* 🔐 ADMIN EMAILS */
+const ADMINS = [
+  "your@email.com"   // 🔴 replace with your real email
+];
 
-const collections={
-  "Products":["products","products_bracelets","products_cookies","products_spirit"],
-  "Orders":["braceletOrders","cookieOrders","spiritOrders"],
-  "Users":["users"],
-  "Settings":["siteSettings"]
-};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-const mainTabs=document.getElementById("mainTabs");
-const subTabs=document.getElementById("subTabs");
-const table=document.getElementById("dynamicTable");
-const title=document.getElementById("tableTitle");
-const msg=document.getElementById("tableMsg");
+const ordersDiv = document.getElementById("orders");
+let allOrders = [];
+let currentFilter = "all";
 
-/* Create Main Tabs */
-Object.keys(collections).forEach(cat=>{
-  const t=document.createElement("div");
-  t.className="tab";
-  t.textContent=cat;
-
-  t.onclick=()=>{
-    [...mainTabs.children].forEach(x=>x.classList.remove("active"));
-    t.classList.add("active");
-    loadSubTabs(cat);
-  };
-
-  mainTabs.appendChild(t);
-});
-mainTabs.children[0].click();
-
-/* Load Sub Tabs */
-function loadSubTabs(cat){
-  subTabs.innerHTML="";
-  collections[cat].forEach(sub=>{
-    const st=document.createElement("div");
-    st.className="subTab";
-    st.textContent=sub;
-
-    st.onclick=()=>{
-      [...subTabs.children].forEach(x=>x.classList.remove("active"));
-      st.classList.add("active");
-      loadTable(sub);
-    };
-
-    subTabs.appendChild(st);
-  });
-  subTabs.children[0].click();
-}
-
-/* Apply Color Based on Status */
-function colorRow(row, status) {
-  row.classList.remove("paidRow","pendingRow","unpaidRow");
-
-  if (status === "Paid in Cash" || status === "Paid by Card")
-    row.classList.add("paidRow");
-  else if (status === "Pending")
-    row.classList.add("pendingRow");
-  else if (status === "Unpaid")
-    row.classList.add("unpaidRow");
-}
-
-/* Status Dropdown Generator */
-function makeStatusDropdown(row, data, id) {
-  const select=document.createElement("select");
-  select.className="statusSelect";
-
-  ["Paid in Cash","Paid by Card","Unpaid","Pending"].forEach(s=>{
-    const opt=new Option(s,s);
-    if(data.status===s) opt.selected=true;
-    select.add(opt);
-  });
-
-  // Apply color immediately
-  colorRow(row,data.status);
-
-  select.onchange=async()=>{
-    const newStatus=select.value;
-    try {
-      await setDoc(doc(db,currentCollection,id),{
-        ...data, status:newStatus
-      });
-
-      data.status=newStatus;
-      colorRow(row,newStatus);
-      msg.textContent="✔ Status Updated";
-    } catch {
-      msg.textContent="❌ Failed to Update Status";
-    }
-  };
-
-  return select;
-}
-
-let currentCollection="";
-
-/* Load Table */
-async function loadTable(col){
-  currentCollection=col;
-  table.innerHTML="";
-  title.textContent=col;
-
-  const snap=await getDocs(collection(db,col));
-  const docs=snap.docs;
-
-  if (docs.length===0){
-    table.innerHTML="<tr><td>No Data</td></tr>";
+/* 🔐 AUTH CHECK */
+onAuthStateChanged(auth, user => {
+  if (!user || !ADMINS.includes(user.email)) {
+    alert("Not authorized");
     return;
   }
 
-  const keys=new Set(["status"]); // always include status
-  docs.forEach(d=>Object.keys(d.data()).forEach(k=>keys.add(k)));
-  const keyList=[...keys];
-
-  // Header Row
-  const header=table.insertRow();
-
-  header.insertCell().textContent="Select";
-  header.insertCell().textContent="Status";
-  keyList.forEach(k=>{
-    const th=document.createElement("th");
-    th.textContent=k;
-    header.appendChild(th);
-  });
-
-  // Table Rows
-  docs.forEach(docSnap=>{
-    const row=table.insertRow();
-    const data=docSnap.data();
-
-    // Checkbox Column
-    const checkboxCell=row.insertCell();
-    checkboxCell.innerHTML=`<input type="checkbox" class="rowSelect">`;
-
-    // Status Column
-    const statusCell=row.insertCell();
-    statusCell.appendChild(makeStatusDropdown(row,data,docSnap.id));
-
-    // Data Columns
-    keyList.forEach(k=>{
-      const c=row.insertCell();
-      c.textContent=data[k] ?? "";
-      c.contentEditable=true;
-
-      c.onblur=async()=>{
-        const newVal=c.textContent.trim();
-        try {
-          await setDoc(doc(db,col,docSnap.id),{
-            ...data,
-            [k]:newVal
-          });
-          data[k]=newVal;
-          msg.textContent=`✔ Updated ${k}`;
-        } catch {
-          msg.textContent="❌ Update Failed";
-        }
-      };
+  onSnapshot(collection(db, "orders"), snap => {
+    allOrders = [];
+    snap.forEach(d => {
+      allOrders.push({ id: d.id, ...d.data() });
     });
-
-    // Apply color on load
-    colorRow(row,data.status);
+    render();
   });
+});
+
+/* 🧠 RENDER */
+function render() {
+  ordersDiv.innerHTML = "";
+
+  allOrders
+    .filter(o => currentFilter === "all" || o.category === currentFilter)
+    .sort((a,b) => b.createdAt - a.createdAt)
+    .forEach(o => {
+      ordersDiv.innerHTML += `
+        <div class="card">
+          <div class="tag">${o.category || "unknown"}</div><br>
+          <b>${o.name || ""}</b><br>
+          ${o.braceletType || o.item || ""}<br>
+          $${o.price || 0}<br>
+          ${o.colors || ""} ${o.size ? "(" + o.size + ")" : ""}<br>
+          Status: <b>${o.status}</b>
+
+          <button onclick="markDone('${o.id}')">Mark Done</button>
+          <button class="danger" onclick="remove('${o.id}')">Delete</button>
+        </div>
+      `;
+    });
 }
 
-/* Search Filtering */
-document.getElementById("searchInput").oninput=()=>{
-  const term=searchInput.value.toLowerCase();
-
-  [...table.rows].forEach((r,i)=>{
-    if (i===0) return; 
-    r.style.display=r.textContent.toLowerCase().includes(term) ? "" : "none";
-  });
+/* 🎯 FILTER */
+window.setFilter = type => {
+  currentFilter = type;
+  document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
+  document.getElementById("f-" + type).classList.add("active");
+  render();
 };
 
+/* ✅ ACTIONS */
+window.markDone = id =>
+  updateDoc(doc(db,"orders",id), { status: "done" });
+
+window.remove = id =>
+  confirm("Delete this order?") && deleteDoc(doc(db,"orders",id));
 </script>
 </body>
 </html>
