@@ -17,6 +17,8 @@ body {
 h1,h2 { text-align:center; color:#ff0000; }
 
 header {
+  display:flex;
+  justify-content:center;
   background:linear-gradient(90deg,#7a0c0c,#000);
   padding:15px;
   border-radius:10px;
@@ -29,13 +31,14 @@ header {
   justify-content:center;
   gap:10px;
   margin-bottom:15px;
+  flex-wrap:wrap;
 }
 
 .tab {
   padding:10px 20px;
-  background:#222;
-  border-radius:5px;
   cursor:pointer;
+  border-radius:5px;
+  background:#222;
   font-weight:bold;
 }
 
@@ -83,12 +86,17 @@ th,td {
 
 tr:nth-child(even) { background:#222; }
 
-select {
+.statusSelect {
   background:#222;
   color:white;
   border:1px solid #ff0000;
   border-radius:5px;
 }
+
+/* STATUS COLORS */
+.newRow { background:rgba(255,255,0,0.25)!important; }
+.doneRow { background:rgba(0,255,0,0.25)!important; }
+.unpaidRow { background:rgba(255,0,0,0.25)!important; }
 </style>
 </head>
 
@@ -97,32 +105,32 @@ select {
 <header><h1>Tactics & Treats Admin Panel</h1></header>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('orders')">Orders</div>
-  <div class="tab" onclick="switchTab('products')">Products</div>
-  <div class="tab" onclick="switchTab('audit')">Audit</div>
+  <div class="tab active" onclick="switchCollection('braceletOrders')">Bracelet Orders</div>
+  <div class="tab" onclick="switchCollection('cookieOrders')">Cookie Orders</div>
+  <div class="tab" onclick="switchCollection('spiritOrders')">Spirit Wear</div>
+  <div class="tab" onclick="switchCollection('products_bracelets')">Bracelet Products</div>
+  <div class="tab" onclick="switchCollection('auditLog')">Audit Log</div>
 </div>
 
-<!-- DASHBOARD -->
-<div class="dashboard">
+<div class="dashboard" id="dashboard">
   <div class="stat"><h3>Today</h3><p id="todayCount">0</p></div>
   <div class="stat"><h3>This Week</h3><p id="weekCount">0</p></div>
   <div class="stat"><h3>Revenue</h3><p id="revenue">$0</p></div>
-  <div class="stat"><h3>Top Product</h3><p id="topProduct">—</p></div>
 </div>
 
 <section>
-  <h2 id="tableTitle">Orders</h2>
+  <h2 id="tableTitle">Bracelet Orders</h2>
   <table id="table"></table>
 </section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, addDoc,
-  doc, setDoc
+  getFirestore, collection, getDocs,
+  doc, setDoc, addDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* FIREBASE */
+/* 🔥 FIREBASE */
 const firebaseConfig = {
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain:"bracelets-and-color.firebaseapp.com",
@@ -135,91 +143,120 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let mode="orders";
-const table=document.getElementById("table");
+let currentCollection = "braceletOrders";
+const table = document.getElementById("table");
 
-/* TAB SWITCH */
-window.switchTab = t=>{
-  mode=t;
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+/* SWITCH */
+window.switchCollection = col => {
+  currentCollection = col;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   event.target.classList.add("active");
-  load();
+  document.getElementById("tableTitle").textContent = col;
+  loadTable();
 };
 
 /* DASHBOARD */
-function updateDashboard(orders){
-  const now=new Date();
+function updateDashboard(rows){
   let today=0, week=0, revenue=0;
-  const counts={};
+  const now=new Date();
 
-  orders.forEach(o=>{
-    const d=o.createdAt?.toDate?.()||new Date(o.createdAt);
+  rows.forEach(r=>{
+    const d=r.createdAt?.toDate?.() || new Date(r.createdAt);
     const diff=(now-d)/86400000;
+
     if(diff<1) today++;
     if(diff<7) week++;
-    if(o.status!=="deleted"){
-      revenue+= (o.price||0)*(o.qty||1);
-      counts[o.productName]=(counts[o.productName]||0)+(o.qty||1);
-    }
+    if(r.price && r.qty) revenue += r.price * r.qty;
   });
 
   todayCount.textContent=today;
   weekCount.textContent=week;
   revenue.textContent="$"+revenue.toFixed(2);
-  topProduct.textContent=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||"—";
 }
 
-/* AUDIT LOG */
-async function logAudit(type, details){
-  await addDoc(collection(db,"auditLog"),{
-    type,
-    details,
-    at:new Date()
-  });
+/* STATUS COLOR */
+function colorRow(row,status){
+  row.classList.remove("newRow","doneRow","unpaidRow");
+  if(status==="new") row.classList.add("newRow");
+  if(status==="done") row.classList.add("doneRow");
+  if(status==="unpaid") row.classList.add("unpaidRow");
 }
 
 /* LOAD TABLE */
-async function load(){
+async function loadTable(){
   table.innerHTML="";
-  document.getElementById("tableTitle").textContent=mode.toUpperCase();
 
-  const snap=await getDocs(collection(db,mode==="audit"?"auditLog":mode));
-  const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const snap = await getDocs(collection(db,currentCollection));
+  const rows = snap.docs.map(d=>({id:d.id,...d.data()}));
 
-  if(mode==="orders") updateDashboard(rows);
+  if(currentCollection.includes("Orders")) updateDashboard(rows);
 
   if(rows.length===0){
-    table.innerHTML="<tr><td>No data</td></tr>";
+    table.innerHTML="<tr><td>No Data</td></tr>";
     return;
   }
 
-  const keys=new Set();
+  const keys=new Set(["status"]);
   rows.forEach(r=>Object.keys(r).forEach(k=>keys.add(k)));
   const cols=[...keys];
 
-  const head=table.insertRow();
-  cols.forEach(c=>head.insertCell().textContent=c);
+  const header=table.insertRow();
+  cols.forEach(c=>header.insertCell().textContent=c);
 
   rows.forEach(r=>{
     const row=table.insertRow();
+
     cols.forEach(c=>{
       const cell=row.insertCell();
-      cell.textContent=r[c]||"";
-      if(mode!=="audit"){
+
+      if(c==="status"){
+        const s=document.createElement("select");
+        s.className="statusSelect";
+        ["new","done","unpaid"].forEach(v=>{
+          const o=new Option(v,v);
+          if(r.status===v) o.selected=true;
+          s.add(o);
+        });
+        s.onchange=async()=>{
+          const old=r.status;
+          r.status=s.value;
+          await setDoc(doc(db,currentCollection,r.id),r);
+          await addDoc(collection(db,"auditLog"),{
+            type:"status_change",
+            collection:currentCollection,
+            id:r.id,
+            from:old,
+            to:r.status,
+            at:new Date()
+          });
+          colorRow(row,r.status);
+        };
+        cell.appendChild(s);
+      } else {
+        cell.textContent=r[c] ?? "";
         cell.contentEditable=true;
         cell.onblur=async()=>{
           const old=r[c];
-          r[c]=cell.textContent;
-          await setDoc(doc(db,mode,r.id),r);
-          await logAudit("edit",{mode,id:r.id,field:c,from:old,to:r[c]});
+          r[c]=cell.textContent.trim();
+          await setDoc(doc(db,currentCollection,r.id),r);
+          await addDoc(collection(db,"auditLog"),{
+            type:"edit",
+            collection:currentCollection,
+            id:r.id,
+            field:c,
+            from:old,
+            to:r[c],
+            at:new Date()
+          });
         };
       }
     });
+
+    colorRow(row,r.status);
   });
 }
 
-load();
+loadTable();
 </script>
 </body>
 </html>
-
