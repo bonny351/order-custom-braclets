@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Dashboard</title>
 
@@ -12,7 +13,7 @@ body {
 }
 
 .app {
-  max-width: 520px;
+  max-width: 560px;
   margin: auto;
   padding: 16px;
 }
@@ -21,31 +22,39 @@ h2 {
   text-align: center;
 }
 
-.filters {
+.tabs {
   display: flex;
   gap: 6px;
   margin-bottom: 12px;
 }
 
-.filters button {
+.tabs button {
   flex: 1;
   padding: 10px;
-  border-radius: 10px;
   border: none;
+  border-radius: 10px;
   background: #ddd;
 }
 
-.filters button.active {
+.tabs button.active {
   background: black;
   color: white;
 }
 
 .card {
   background: white;
-  padding: 16px;
+  padding: 14px;
   margin-bottom: 12px;
   border-radius: 14px;
   box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 button {
@@ -64,35 +73,75 @@ button {
 
 .tag {
   display: inline-block;
+  font-size: 12px;
   padding: 4px 8px;
   border-radius: 8px;
-  font-size: 12px;
   background: #eee;
   margin-bottom: 6px;
+}
+
+.small {
+  font-size: 12px;
+  opacity: .7;
 }
 </style>
 </head>
 
 <body>
 <div class="app">
-  <h2>Admin Orders</h2>
+  <h2>Admin Dashboard</h2>
 
-  <div class="filters">
-    <button onclick="setFilter('all')" class="active" id="f-all">All</button>
-    <button onclick="setFilter('bracelet')" id="f-bracelet">Bracelets</button>
-    <button onclick="setFilter('cookie')" id="f-cookie">Cookies</button>
-    <button onclick="setFilter('spiritwear')" id="f-spiritwear">Spirit Wear</button>
+  <div class="tabs">
+    <button id="t-orders" class="active" onclick="showTab('orders')">Orders</button>
+    <button id="t-products" onclick="showTab('products')">Products</button>
   </div>
 
-  <div id="orders"></div>
+  <!-- ORDERS TAB -->
+  <div id="ordersTab"></div>
+
+  <!-- PRODUCTS TAB -->
+  <div id="productsTab" style="display:none">
+
+    <div class="card">
+      <h3>Add / Edit Product</h3>
+      <input id="pid" placeholder="Product ID (auto)" disabled>
+      <input id="pname" placeholder="Product name">
+      <input id="pprice" type="number" placeholder="Price">
+      <input id="pimage" placeholder="Image filename or URL">
+      <input id="pstock" type="number" placeholder="Stock">
+      <select id="pcategory">
+        <option value="bracelet">Bracelet</option>
+        <option value="cookie">Cookie</option>
+        <option value="spiritwear">Spirit Wear</option>
+      </select>
+      <select id="pactive">
+        <option value="true">Active</option>
+        <option value="false">Hidden</option>
+      </select>
+      <button onclick="saveProduct()">Save Product</button>
+    </div>
+
+    <div id="productList"></div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* 🔥 YOUR FIREBASE CONFIG */
+/* 🔥 FIREBASE CONFIG (YOURS) */
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -104,16 +153,12 @@ const firebaseConfig = {
 
 /* 🔐 ADMIN EMAILS */
 const ADMINS = [
-  "your@email.com"   // 🔴 replace with your real email
+  "your@email.com" // 🔴 replace with your real admin email
 ];
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-
-const ordersDiv = document.getElementById("orders");
-let allOrders = [];
-let currentFilter = "all";
 
 /* 🔐 AUTH CHECK */
 onAuthStateChanged(auth, user => {
@@ -121,54 +166,105 @@ onAuthStateChanged(auth, user => {
     alert("Not authorized");
     return;
   }
-
-  onSnapshot(collection(db, "orders"), snap => {
-    allOrders = [];
-    snap.forEach(d => {
-      allOrders.push({ id: d.id, ...d.data() });
-    });
-    render();
-  });
+  loadOrders();
+  loadProducts();
 });
 
-/* 🧠 RENDER */
-function render() {
-  ordersDiv.innerHTML = "";
+/* ---------- TABS ---------- */
+window.showTab = tab => {
+  ordersTab.style.display = tab === "orders" ? "block" : "none";
+  productsTab.style.display = tab === "products" ? "block" : "none";
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+  document.getElementById("t-" + tab).classList.add("active");
+};
 
-  allOrders
-    .filter(o => currentFilter === "all" || o.category === currentFilter)
-    .sort((a,b) => b.createdAt - a.createdAt)
-    .forEach(o => {
-      ordersDiv.innerHTML += `
+/* ---------- ORDERS ---------- */
+function loadOrders() {
+  onSnapshot(collection(db, "orders"), snap => {
+    ordersTab.innerHTML = "";
+    snap.forEach(d => {
+      const o = d.data();
+      ordersTab.innerHTML += `
         <div class="card">
-          <div class="tag">${o.category || "unknown"}</div><br>
+          <span class="tag">${o.category}</span><br>
           <b>${o.name || ""}</b><br>
-          ${o.braceletType || o.item || ""}<br>
-          $${o.price || 0}<br>
-          ${o.colors || ""} ${o.size ? "(" + o.size + ")" : ""}<br>
+          ${o.productName || o.item || ""}<br>
+          $${o.price}<br>
           Status: <b>${o.status}</b>
-
-          <button onclick="markDone('${o.id}')">Mark Done</button>
-          <button class="danger" onclick="remove('${o.id}')">Delete</button>
+          <button onclick="markDone('${d.id}')">Mark Done</button>
+          <button class="danger" onclick="deleteOrder('${d.id}')">Delete</button>
         </div>
       `;
     });
+  });
 }
 
-/* 🎯 FILTER */
-window.setFilter = type => {
-  currentFilter = type;
-  document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
-  document.getElementById("f-" + type).classList.add("active");
-  render();
+window.markDone = id =>
+  updateDoc(doc(db, "orders", id), { status: "done" });
+
+window.deleteOrder = id =>
+  confirm("Delete order?") && deleteDoc(doc(db, "orders", id));
+
+/* ---------- PRODUCTS ---------- */
+function loadProducts() {
+  onSnapshot(collection(db, "products"), snap => {
+    productList.innerHTML = "";
+    snap.forEach(d => {
+      const p = d.data();
+      productList.innerHTML += `
+        <div class="card">
+          <b>${p.name}</b><br>
+          $${p.price} | Stock: ${p.stock}<br>
+          <span class="tag">${p.category}</span>
+          <div class="small">${p.image}</div>
+          <div class="small">Active: ${p.active !== false}</div>
+          <button onclick="editProduct(
+            '${d.id}',
+            '${p.name}',
+            ${p.price},
+            '${p.image}',
+            ${p.stock},
+            '${p.category}',
+            ${p.active !== false}
+          )">Edit</button>
+          <button class="danger" onclick="deleteProduct('${d.id}')">Delete</button>
+        </div>
+      `;
+    });
+  });
+}
+
+window.editProduct = (id, name, price, image, stock, category, active) => {
+  pid.value = id;
+  pname.value = name;
+  pprice.value = price;
+  pimage.value = image;
+  pstock.value = stock;
+  pcategory.value = category;
+  pactive.value = active ? "true" : "false";
 };
 
-/* ✅ ACTIONS */
-window.markDone = id =>
-  updateDoc(doc(db,"orders",id), { status: "done" });
+window.saveProduct = async () => {
+  const data = {
+    name: pname.value,
+    price: Number(pprice.value),
+    image: pimage.value,
+    stock: Number(pstock.value),
+    category: pcategory.value,
+    active: pactive.value === "true"
+  };
 
-window.remove = id =>
-  confirm("Delete this order?") && deleteDoc(doc(db,"orders",id));
+  if (pid.value) {
+    await updateDoc(doc(db, "products", pid.value), data);
+  } else {
+    await addDoc(collection(db, "products"), data);
+  }
+
+  pid.value = pname.value = pprice.value = pimage.value = pstock.value = "";
+};
+
+window.deleteProduct = id =>
+  confirm("Delete product?") && deleteDoc(doc(db, "products", id));
 </script>
 </body>
 </html>
