@@ -1,160 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bracelets – Tactics & Treats Preorder</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Bracelets</title>
 
 <style>
 body {
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
-  color: white; margin: 0; padding: 20px;
-}
-nav {
-  text-align: center; background: #111; padding: 10px 0;
-  border-bottom: 2px solid #ff0000; box-shadow: 0 0 10px #ff0000;
-}
-nav a { color: white; margin: 0 15px; font-weight: bold;
-  text-decoration: none; transition: 0.2s; }
-nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
-
-h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
-
-form {
-  background: #111; border-radius: 16px; padding: 20px; margin: 20px auto;
-  max-width: 500px; box-shadow: 0 0 15px #ff0000;
+  margin: 0;
+  background: #f2f2f2;
+  font-family: system-ui, sans-serif;
 }
 
-/* IMAGE PREVIEW */
-#imagePreviewContainer {
-  display: flex; justify-content: center; gap: 20px; margin-bottom: 20px;
+.app {
+  max-width: 420px;
+  margin: auto;
+  padding: 16px;
 }
-#imagePreviewContainer img {
-  border-radius: 8px; border: 2px solid #ff0000;
-  object-fit: cover; opacity: 0; transition: opacity .4s;
-}
-#mainBraceletImg { width: 200px; height: 200px; border-radius: 16px; }
-.sideImg { width: 80px; height: 80px; }
 
-label { display: block; margin-top: 12px; font-weight: 500; }
-
-input, select, textarea, button {
-  width: 100%; padding: 10px; margin-top: 5px;
-  border-radius: 8px; border: none; font-size: 14px;
+h2 {
+  text-align: center;
 }
-textarea { resize: none; height: 70px; }
+
+.card {
+  background: white;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+
+input, select, button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
 
 button {
-  background: #ff0000; color: white; margin-top: 20px; cursor: pointer;
-  font-weight: bold; transition: .2s; border-radius: 8px;
+  background: black;
+  color: white;
+  border: none;
 }
-button:hover { background: darkred; }
 
-#priceDisplay { margin-top: 5px; font-weight: bold; color: #ffb347; }
+.price {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
 
-/* OVERRIDE BOX */
-#overrideBox {
-  display:none; position:fixed; top:50%; left:50%;
-  transform:translate(-50%, -50%);
-  background:#111; padding:20px; border-radius:10px;
-  box-shadow:0 0 12px red; z-index:10000;
+.stock {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  display: none;
 }
 </style>
 </head>
+
 <body>
+<div class="app">
+  <h2>Custom Bracelets</h2>
 
-<nav>
-  <a href="cookies.html">Cookies</a>
-  <a href="bracelets.html">Bracelets</a>
-  <a href="spiritwear.html">Spirit Wear</a>
-</nav>
+  <div class="card">
+    <input id="customerName" placeholder="Your name">
 
-<h1>Bracelet Preorder</h1>
+    <select id="productSelect"></select>
 
-<!-- IMAGE PREVIEW -->
-<div id="imagePreviewContainer">
-  <div style="display:flex; flex-direction:column; gap:10px;">
-    <img id="sideImg1" class="sideImg" src="default.png">
-    <img id="sideImg2" class="sideImg" src="default.png">
-  </div>
+    <img id="preview">
 
-  <img id="mainBraceletImg" src="default.png">
+    <div class="price">
+      Price: $<span id="price">0.00</span>
+    </div>
 
-  <div style="display:flex; flex-direction:column; gap:10px;">
-    <img id="sideImg3" class="sideImg" src="default.png">
-    <img id="sideImg4" class="sideImg" src="default.png">
+    <div class="stock" id="stock"></div>
+
+    <input id="colors" placeholder="Colors (ex: red / black)">
+
+    <select id="size">
+      <option>Youth</option>
+      <option>Adult</option>
+    </select>
+
+    <button onclick="placeOrder()">Place Order</button>
   </div>
 </div>
-
-<!-- OVERRIDE POPUP -->
-<div id="overrideBox">
-  <h3>Admin Override</h3>
-  <input id="overrideInput" type="password" placeholder="Enter code">
-  <button id="overrideBtn">Submit</button>
-</div>
-
-<form id="braceletForm">
-  <label>Name</label>
-  <input id="braceletName" required>
-
-  <label>Phone Number</label>
-  <input id="braceletPhone" type="tel" required>
-
-  <label>Email</label>
-  <input id="braceletEmail" type="email">
-
-  <label>Bracelet Type</label>
-  <select id="knotType" required></select>
-
-  <label>Size</label>
-  <select id="braceletSize" required></select>
-
-  <p id="priceDisplay">Price: $0.00</p>
-
-  <label>Color 1</label>
-  <select id="color1" required></select>
-
-  <label>Color 2</label>
-  <select id="color2" required></select>
-
-  <label>Clip Type</label>
-  <select id="clipType" required>
-    <option value="">Select Clip Type</option>
-    <option value="Regular">Regular</option>
-    <option value="Flint & Steel">Flint & Steel</option>
-    <option value="Super Small">Super Small</option>
-    <option value="Metal">Metal</option>
-    <option value="Adjustable Knot">Adjustable Knot</option>
-  </select>
-
-  <label>Clip Color</label>
-  <select id="clipColor" required></select>
-
-  <label>Quantity</label>
-  <input id="braceletQty" type="number" min="1" value="1">
-
-  <label>Delivery Method</label>
-  <select id="deliveryType" required>
-    <option value="">Choose Delivery</option>
-    <option value="pickup">Pickup at SHS (Free)</option>
-    <option value="shipping">Shipping (+$10)</option>
-  </select>
-
-  <label id="addressLabel" style="display:none;">Delivery Address</label>
-  <textarea id="deliveryAddress" placeholder="Enter address" style="display:none;"></textarea>
-
-  <button type="button" id="submitBtn">Submit Bracelet Order</button>
-</form>
-
-<p id="orderMsg" style="text-align:center; font-weight:bold;"></p>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, getDoc, doc, addDoc
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  getFirestore,
+  collection,
+  onSnapshot,
+  addDoc,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* 🔥 FIREBASE CONFIG (YOUR PROJECT) */
 const firebaseConfig = {
   apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain: "bracelets-and-color.firebaseapp.com",
@@ -167,176 +116,102 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let overrideActive = false;
+/* 🧠 STATE */
+let products = {};
+let selectedProductId = null;
 
-/* IMAGE FADE-IN */
-function fadeIn(img, src) {
-  img.style.opacity = 0;
-  img.src = src;
-  setTimeout(() => img.style.opacity = 1, 100);
-}
+/* 📦 LOAD PRODUCTS (LIVE FROM ADMIN) */
+onSnapshot(collection(db, "products"), snap => {
+  productSelect.innerHTML = "";
+  products = {};
+  selectedProductId = null;
+  preview.style.display = "none";
+  price.innerText = "0.00";
+  stock.innerText = "";
 
-/* IMAGE LOADING (Correct for your files) */
-function loadImages(typeKey) {
-  let key = typeKey.toLowerCase().replace(/ /g, "-");
+  snap.forEach(d => {
+    const p = d.data();
 
-  fadeIn(mainBraceletImg, `${key}-main.png`);
-  fadeIn(sideImg1, `${key}-side1.png`);
-  fadeIn(sideImg2, `${key}-side2.png`);
-  fadeIn(sideImg3, `${key}-side3.png`);
-  fadeIn(sideImg4, `${key}-side4.png`);
-}
+    // ONLY SHOW BRACELETS
+    if (p.category !== "bracelet") return;
 
-/* LOAD TYPES */
-const knotSelect = document.getElementById("knotType");
-const sizeSelect = document.getElementById("braceletSize");
-const color1Select = document.getElementById("color1");
-const color2Select = document.getElementById("color2");
+    // HIDE INACTIVE PRODUCTS
+    if (p.active === false) return;
 
-async function loadBraceletTypes() {
-  knotSelect.innerHTML = '<option value="">Select Bracelet</option>';
-  const snap = await getDocs(collection(db, "products_bracelets"));
-  snap.forEach(docSnap => {
-    const d = docSnap.data();
-    knotSelect.add(new Option(d.type, docSnap.id));
-  });
-}
+    // HIDE OUT OF STOCK
+    if (p.stock <= 0) return;
 
-let currentPriceMap = {};
+    products[d.id] = { id: d.id, ...p };
 
-/* LOAD SELECTED PRODUCT */
-async function loadBraceletData(id) {
-  const snap = await getDoc(doc(db, "products_bracelets", id));
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-  currentPriceMap = data.price;
-
-  sizeSelect.innerHTML = "";
-  data.sizeOptions.forEach(s => sizeSelect.add(new Option(s, s)));
-
-  color1Select.innerHTML = "";
-  color2Select.innerHTML = "";
-  data.colorOptions.split(",").forEach(c => {
-    color1Select.add(new Option(c, c));
-    color2Select.add(new Option(c, c));
+    productSelect.innerHTML += `
+      <option value="${d.id}">${p.name}</option>
+    `;
   });
 
-  loadImages(data.type);
-  updatePrice();
-}
-
-/* DELIVERY HANDLING */
-const deliveryType = document.getElementById("deliveryType");
-const addressLabel = document.getElementById("addressLabel");
-const deliveryAddress = document.getElementById("deliveryAddress");
-
-deliveryType.addEventListener("change", () => {
-  if (deliveryType.value === "shipping") {
-    addressLabel.style.display = "block";
-    deliveryAddress.style.display = "block";
+  if (productSelect.options.length > 0) {
+    selectProduct(productSelect.value);
   } else {
-    addressLabel.style.display = "none";
-    deliveryAddress.style.display = "none";
-    deliveryAddress.value = "";
-  }
-  updatePrice();
-});
-
-/* CLIP COLOR LOGIC */
-const clipTypeSelect = document.getElementById("clipType");
-const clipColorSelect = document.getElementById("clipColor");
-
-function updateClipColors() {
-  let type = clipTypeSelect.value;
-  clipColorSelect.innerHTML = "";
-
-  if (type === "Metal" || type === "Adjustable Knot") {
-    clipColorSelect.disabled = true;
-    clipColorSelect.innerHTML = '<option value="">No Color</option>';
-  } else {
-    clipColorSelect.disabled = false;
-    clipColorSelect.add(new Option("Black","Black"));
-  }
-}
-
-/* PRICE */
-function updatePrice() {
-  const size = sizeSelect.value;
-  const clipType = clipTypeSelect.value;
-  const qty = parseInt(braceletQty.value) || 1;
-  const delivery = deliveryType.value;
-
-  let base = parseFloat(currentPriceMap[size]) || 0;
-  if (clipType === "Metal") base += 1;
-
-  let subtotal = base * qty;
-  let shipping = delivery === "shipping" ? 10 : 0;
-
-  if (overrideActive) subtotal = shipping = 0;
-
-  priceDisplay.textContent = `Price: $${(subtotal + shipping).toFixed(2)}`;
-}
-
-/* OVERRIDE */
-document.addEventListener("keydown", e => {
-  if (e.ctrlKey && e.key === "o") {
-    document.getElementById("overrideBox").style.display = "block";
+    productSelect.innerHTML = `<option>No bracelets available</option>`;
   }
 });
 
-overrideBtn.onclick = () => {
-  if (overrideInput.value.trim() === "20903") {
-    overrideActive = !overrideActive;
-    alert("Override: " + (overrideActive ? "ON" : "OFF"));
-    updatePrice();
+/* 🔁 PRODUCT CHANGE */
+productSelect.addEventListener("change", e => {
+  selectProduct(e.target.value);
+});
+
+function selectProduct(id) {
+  const p = products[id];
+  if (!p) return;
+
+  selectedProductId = id;
+  price.innerText = p.price.toFixed(2);
+  stock.innerText = `In stock: ${p.stock}`;
+  preview.src = p.image;
+  preview.style.display = "block";
+}
+
+/* 🛒 PLACE ORDER */
+window.placeOrder = async () => {
+  if (!selectedProductId) {
+    alert("No product selected");
+    return;
   }
-  document.getElementById("overrideBox").style.display = "none";
-};
 
-/* SUBMIT */
-submitBtn.onclick = async () => {
-  const name = braceletName.value.trim();
-  const phone = braceletPhone.value.trim();
-  const type = knotType.value;
-  const size = braceletSize.value;
-  const delivery = deliveryType.value;
+  const p = products[selectedProductId];
 
-  if (!name || !phone || !type || !size || !delivery)
-    return alert("Please fill all required fields.");
+  if (!customerName.value) {
+    alert("Please enter your name");
+    return;
+  }
 
-  if (delivery === "shipping" && deliveryAddress.value.trim() === "")
-    return alert("Enter an address for shipping.");
+  if (p.stock <= 0) {
+    alert("Sorry, this item is out of stock");
+    return;
+  }
 
-  await addDoc(collection(db, "braceletOrders"), {
-    name,
-    phone,
-    type,
-    size,
-    color1: color1Select.value,
-    color2: color2Select.value,
-    clipType: clipTypeSelect.value,
-    clipColor: clipColorSelect.value,
-    qty: parseInt(braceletQty.value),
-    delivery,
-    address: delivery === "shipping" ? deliveryAddress.value : null,
-    createdAt: new Date()
+  // SAVE ORDER
+  await addDoc(collection(db, "orders"), {
+    category: "bracelet",
+    productId: p.id,
+    productName: p.name,
+    price: p.price,
+    image: p.image,
+    name: customerName.value,
+    colors: colors.value,
+    size: size.value,
+    status: "new",
+    createdAt: Date.now()
   });
 
-  orderMsg.textContent = "Order Submitted!";
+  // DECREASE STOCK
+  await updateDoc(doc(db, "products", p.id), {
+    stock: p.stock - 1
+  });
+
+  // CONFIRMATION
+  location.href = "confirmation.html";
 };
-
-/* INIT */
-loadBraceletTypes();
-updateClipColors();
-
-knotType.addEventListener("change", () => loadBraceletData(knotType.value));
-sizeSelect.addEventListener("change", updatePrice);
-braceletQty.addEventListener("change", updatePrice);
-clipTypeSelect.addEventListener("change", () => { updateClipColors(); updatePrice(); });
-deliveryType.addEventListener("change", updatePrice);
-
 </script>
-
 </body>
 </html>
