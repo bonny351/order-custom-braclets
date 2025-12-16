@@ -1,270 +1,230 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tactics & Treats – Admin Panel</title>
 
 <style>
 body {
-  margin: 0;
-  background: #f2f2f2;
-  font-family: system-ui, sans-serif;
+  font-family: "Poppins", sans-serif;
+  background:#111;
+  color:white;
+  margin:0;
+  padding:20px;
 }
 
-.app {
-  max-width: 560px;
-  margin: auto;
-  padding: 16px;
+h1,h2 {
+  text-align:center;
+  color:#ff0000;
+  margin-bottom:20px;
 }
 
-h2 {
-  text-align: center;
+header {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(90deg,#7a0c0c,#000);
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+  box-shadow:0 0 12px rgba(255,0,0,0.4);
 }
 
-.tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
+.tabs, .subTabs {
+  display:flex;
+  justify-content:center;
+  margin-bottom:15px;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
-.tabs button {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 10px;
-  background: #ddd;
+.tab, .subTab {
+  padding:10px 20px;
+  cursor:pointer;
+  border-radius:5px;
+  background:#222;
+  color:white;
+  font-weight:bold;
 }
 
-.tabs button.active {
-  background: black;
-  color: white;
+.tab.active, .subTab.active {
+  background:#ff0000;
+  box-shadow:0 0 8px #ff0000;
 }
 
-.card {
-  background: white;
-  padding: 14px;
-  margin-bottom: 12px;
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+section {
+  background:#181818;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 0 12px rgba(255,0,0,0.2);
 }
 
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
 }
 
-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 10px;
-  border: none;
-  background: black;
-  color: white;
+th,td {
+  border:1px solid #ff0000;
+  padding:10px;
+  text-align:center;
 }
 
-.danger {
-  background: #c0392b;
+tr:nth-child(even) { background:#222; }
+
+.statusSelect {
+  padding:6px;
+  background:#222;
+  color:white;
+  border:1px solid #ff0000;
+  border-radius:5px;
 }
 
-.tag {
-  display: inline-block;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: #eee;
-  margin-bottom: 6px;
-}
-
-.small {
-  font-size: 12px;
-  opacity: .7;
-}
+/* STATUS COLORS */
+.doneRow    { background:rgba(0,255,0,0.25)!important; }
+.newRow     { background:rgba(255,255,0,0.25)!important; }
+.deletedRow { background:rgba(255,0,0,0.25)!important; }
 </style>
 </head>
-
 <body>
-<div class="app">
-  <h2>Admin Dashboard</h2>
 
-  <div class="tabs">
-    <button id="t-orders" class="active" onclick="showTab('orders')">Orders</button>
-    <button id="t-products" onclick="showTab('products')">Products</button>
-  </div>
+<header><h1>Tactics & Treats Admin Panel</h1></header>
 
-  <!-- ORDERS TAB -->
-  <div id="ordersTab"></div>
-
-  <!-- PRODUCTS TAB -->
-  <div id="productsTab" style="display:none">
-
-    <div class="card">
-      <h3>Add / Edit Product</h3>
-      <input id="pid" placeholder="Product ID (auto)" disabled>
-      <input id="pname" placeholder="Product name">
-      <input id="pprice" type="number" placeholder="Price">
-      <input id="pimage" placeholder="Image filename or URL">
-      <input id="pstock" type="number" placeholder="Stock">
-      <select id="pcategory">
-        <option value="bracelet">Bracelet</option>
-        <option value="cookie">Cookie</option>
-        <option value="spiritwear">Spirit Wear</option>
-      </select>
-      <select id="pactive">
-        <option value="true">Active</option>
-        <option value="false">Hidden</option>
-      </select>
-      <button onclick="saveProduct()">Save Product</button>
-    </div>
-
-    <div id="productList"></div>
-  </div>
+<div class="tabs">
+  <div class="tab active" onclick="setMain('orders')">Orders</div>
+  <div class="tab" onclick="setMain('products')">Products</div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  onSnapshot,
-  addDoc,
-  doc,
-  updateDoc,
-  deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+<section>
+  <h2 id="tableTitle">Orders</h2>
+  <input id="searchInput" placeholder="🔍 Search..." style="width:90%;max-width:400px;margin:auto;display:block;">
+  <p id="tableMsg" style="text-align:center;color:#ffb347;"></p>
+  <table id="dynamicTable"></table>
+</section>
 
-/* 🔥 FIREBASE CONFIG (YOURS) */
-const firebaseConfig = {
-  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-  authDomain: "bracelets-and-color.firebaseapp.com",
-  projectId: "bracelets-and-color",
-  storageBucket: "bracelets-and-color.appspot.com",
-  messagingSenderId: "382292570673",
-  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import {
+  getFirestore, collection, getDocs,
+  doc, setDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+/* 🔥 FIREBASE */
+const firebaseConfig={
+  apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain:"bracelets-and-color.firebaseapp.com",
+  projectId:"bracelets-and-color",
+  storageBucket:"bracelets-and-color.appspot.com",
+  messagingSenderId:"382292570673",
+  appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 
-/* 🔐 ADMIN EMAILS */
-const ADMINS = [
-  "your@email.com" // 🔴 replace with your real admin email
-];
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+let currentMode="orders";
+let currentCollection="orders";
 
-/* 🔐 AUTH CHECK */
-onAuthStateChanged(auth, user => {
-  if (!user || !ADMINS.includes(user.email)) {
-    alert("Not authorized");
+const table=document.getElementById("dynamicTable");
+const title=document.getElementById("tableTitle");
+const msg=document.getElementById("tableMsg");
+
+/* MAIN TAB SWITCH */
+window.setMain = mode => {
+  currentMode=mode;
+  currentCollection = mode==="orders" ? "orders" : "products";
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  event.target.classList.add("active");
+  loadTable();
+};
+
+/* STATUS COLOR */
+function colorRow(row,status){
+  row.classList.remove("doneRow","newRow","deletedRow");
+  if(status==="done") row.classList.add("doneRow");
+  else if(status==="new") row.classList.add("newRow");
+  else if(status==="deleted") row.classList.add("deletedRow");
+}
+
+/* STATUS DROPDOWN */
+function statusDropdown(row,data,id){
+  const s=document.createElement("select");
+  s.className="statusSelect";
+  ["new","done","deleted"].forEach(v=>{
+    const o=new Option(v,v);
+    if(data.status===v) o.selected=true;
+    s.add(o);
+  });
+
+  colorRow(row,data.status);
+
+  s.onchange=async()=>{
+    data.status=s.value;
+    await setDoc(doc(db,currentCollection,id),data);
+    colorRow(row,data.status);
+    msg.textContent="✔ Status updated";
+  };
+  return s;
+}
+
+/* LOAD TABLE */
+async function loadTable(){
+  table.innerHTML="";
+  title.textContent=currentMode.toUpperCase();
+
+  const snap=await getDocs(collection(db,currentCollection));
+  if(snap.empty){
+    table.innerHTML="<tr><td>No data</td></tr>";
     return;
   }
-  loadOrders();
-  loadProducts();
-});
 
-/* ---------- TABS ---------- */
-window.showTab = tab => {
-  ordersTab.style.display = tab === "orders" ? "block" : "none";
-  productsTab.style.display = tab === "products" ? "block" : "none";
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
-  document.getElementById("t-" + tab).classList.add("active");
-};
+  const keys=new Set(["status"]);
+  snap.forEach(d=>Object.keys(d.data()).forEach(k=>keys.add(k)));
+  const cols=[...keys];
 
-/* ---------- ORDERS ---------- */
-function loadOrders() {
-  onSnapshot(collection(db, "orders"), snap => {
-    ordersTab.innerHTML = "";
-    snap.forEach(d => {
-      const o = d.data();
-      ordersTab.innerHTML += `
-        <div class="card">
-          <span class="tag">${o.category}</span><br>
-          <b>${o.name || ""}</b><br>
-          ${o.productName || o.item || ""}<br>
-          $${o.price}<br>
-          Status: <b>${o.status}</b>
-          <button onclick="markDone('${d.id}')">Mark Done</button>
-          <button class="danger" onclick="deleteOrder('${d.id}')">Delete</button>
-        </div>
-      `;
+  const header=table.insertRow();
+  header.insertCell().textContent="Status";
+  cols.forEach(k=>{
+    const th=document.createElement("th");
+    th.textContent=k;
+    header.appendChild(th);
+  });
+
+  snap.forEach(docSnap=>{
+    const data=docSnap.data();
+    const row=table.insertRow();
+
+    const sc=row.insertCell();
+    sc.appendChild(statusDropdown(row,data,docSnap.id));
+
+    cols.forEach(k=>{
+      const c=row.insertCell();
+      c.textContent=data[k] ?? "";
+      c.contentEditable=true;
+
+      c.onblur=async()=>{
+        data[k]=c.textContent.trim();
+        await setDoc(doc(db,currentCollection,docSnap.id),data);
+        msg.textContent=`✔ Updated ${k}`;
+      };
     });
+
+    colorRow(row,data.status);
   });
 }
 
-window.markDone = id =>
-  updateDoc(doc(db, "orders", id), { status: "done" });
-
-window.deleteOrder = id =>
-  confirm("Delete order?") && deleteDoc(doc(db, "orders", id));
-
-/* ---------- PRODUCTS ---------- */
-function loadProducts() {
-  onSnapshot(collection(db, "products"), snap => {
-    productList.innerHTML = "";
-    snap.forEach(d => {
-      const p = d.data();
-      productList.innerHTML += `
-        <div class="card">
-          <b>${p.name}</b><br>
-          $${p.price} | Stock: ${p.stock}<br>
-          <span class="tag">${p.category}</span>
-          <div class="small">${p.image}</div>
-          <div class="small">Active: ${p.active !== false}</div>
-          <button onclick="editProduct(
-            '${d.id}',
-            '${p.name}',
-            ${p.price},
-            '${p.image}',
-            ${p.stock},
-            '${p.category}',
-            ${p.active !== false}
-          )">Edit</button>
-          <button class="danger" onclick="deleteProduct('${d.id}')">Delete</button>
-        </div>
-      `;
-    });
+/* SEARCH */
+searchInput.oninput=()=>{
+  const t=searchInput.value.toLowerCase();
+  [...table.rows].forEach((r,i)=>{
+    if(i===0) return;
+    r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";
   });
-}
-
-window.editProduct = (id, name, price, image, stock, category, active) => {
-  pid.value = id;
-  pname.value = name;
-  pprice.value = price;
-  pimage.value = image;
-  pstock.value = stock;
-  pcategory.value = category;
-  pactive.value = active ? "true" : "false";
 };
 
-window.saveProduct = async () => {
-  const data = {
-    name: pname.value,
-    price: Number(pprice.value),
-    image: pimage.value,
-    stock: Number(pstock.value),
-    category: pcategory.value,
-    active: pactive.value === "true"
-  };
-
-  if (pid.value) {
-    await updateDoc(doc(db, "products", pid.value), data);
-  } else {
-    await addDoc(collection(db, "products"), data);
-  }
-
-  pid.value = pname.value = pprice.value = pimage.value = pstock.value = "";
-};
-
-window.deleteProduct = id =>
-  confirm("Delete product?") && deleteDoc(doc(db, "products", id));
+loadTable();
 </script>
 </body>
 </html>
