@@ -14,44 +14,53 @@ body {
   padding:20px;
 }
 
-h1,h2 {
-  text-align:center;
-  color:#ff0000;
-  margin-bottom:20px;
-}
+h1,h2 { text-align:center; color:#ff0000; }
 
 header {
-  display:flex;
-  align-items:center;
-  justify-content:center;
   background:linear-gradient(90deg,#7a0c0c,#000);
   padding:15px;
   border-radius:10px;
-  margin-bottom:20px;
   box-shadow:0 0 12px rgba(255,0,0,0.4);
+  margin-bottom:15px;
 }
 
-.tabs, .subTabs {
+.tabs {
   display:flex;
   justify-content:center;
-  margin-bottom:15px;
   gap:10px;
-  flex-wrap:wrap;
+  margin-bottom:15px;
 }
 
-.tab, .subTab {
+.tab {
   padding:10px 20px;
-  cursor:pointer;
-  border-radius:5px;
   background:#222;
-  color:white;
+  border-radius:5px;
+  cursor:pointer;
   font-weight:bold;
 }
 
-.tab.active, .subTab.active {
+.tab.active {
   background:#ff0000;
   box-shadow:0 0 8px #ff0000;
 }
+
+.dashboard {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
+  margin-bottom:15px;
+}
+
+.stat {
+  background:#181818;
+  padding:12px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(255,0,0,.25);
+  text-align:center;
+}
+
+.stat h3 { margin:0; color:#ffb347; }
+.stat p { font-size:20px; margin:5px 0 0; }
 
 section {
   background:#181818;
@@ -68,51 +77,53 @@ table {
 
 th,td {
   border:1px solid #ff0000;
-  padding:10px;
+  padding:8px;
   text-align:center;
 }
 
 tr:nth-child(even) { background:#222; }
 
-.statusSelect {
-  padding:6px;
+select {
   background:#222;
   color:white;
   border:1px solid #ff0000;
   border-radius:5px;
 }
-
-/* STATUS COLORS */
-.doneRow    { background:rgba(0,255,0,0.25)!important; }
-.newRow     { background:rgba(255,255,0,0.25)!important; }
-.deletedRow { background:rgba(255,0,0,0.25)!important; }
 </style>
 </head>
+
 <body>
 
 <header><h1>Tactics & Treats Admin Panel</h1></header>
 
 <div class="tabs">
-  <div class="tab active" onclick="setMain('orders')">Orders</div>
-  <div class="tab" onclick="setMain('products')">Products</div>
+  <div class="tab active" onclick="switchTab('orders')">Orders</div>
+  <div class="tab" onclick="switchTab('products')">Products</div>
+  <div class="tab" onclick="switchTab('audit')">Audit</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+  <div class="stat"><h3>Today</h3><p id="todayCount">0</p></div>
+  <div class="stat"><h3>This Week</h3><p id="weekCount">0</p></div>
+  <div class="stat"><h3>Revenue</h3><p id="revenue">$0</p></div>
+  <div class="stat"><h3>Top Product</h3><p id="topProduct">—</p></div>
 </div>
 
 <section>
   <h2 id="tableTitle">Orders</h2>
-  <input id="searchInput" placeholder="🔍 Search..." style="width:90%;max-width:400px;margin:auto;display:block;">
-  <p id="tableMsg" style="text-align:center;color:#ffb347;"></p>
-  <table id="dynamicTable"></table>
+  <table id="table"></table>
 </section>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import {
-  getFirestore, collection, getDocs,
-  doc, setDoc, deleteDoc
+  getFirestore, collection, getDocs, addDoc,
+  doc, setDoc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* 🔥 FIREBASE */
-const firebaseConfig={
+/* FIREBASE */
+const firebaseConfig = {
   apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
   authDomain:"bracelets-and-color.firebaseapp.com",
   projectId:"bracelets-and-color",
@@ -121,110 +132,94 @@ const firebaseConfig={
   appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-let currentMode="orders";
-let currentCollection="orders";
+let mode="orders";
+const table=document.getElementById("table");
 
-const table=document.getElementById("dynamicTable");
-const title=document.getElementById("tableTitle");
-const msg=document.getElementById("tableMsg");
-
-/* MAIN TAB SWITCH */
-window.setMain = mode => {
-  currentMode=mode;
-  currentCollection = mode==="orders" ? "orders" : "products";
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+/* TAB SWITCH */
+window.switchTab = t=>{
+  mode=t;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
   event.target.classList.add("active");
-  loadTable();
+  load();
 };
 
-/* STATUS COLOR */
-function colorRow(row,status){
-  row.classList.remove("doneRow","newRow","deletedRow");
-  if(status==="done") row.classList.add("doneRow");
-  else if(status==="new") row.classList.add("newRow");
-  else if(status==="deleted") row.classList.add("deletedRow");
-}
+/* DASHBOARD */
+function updateDashboard(orders){
+  const now=new Date();
+  let today=0, week=0, revenue=0;
+  const counts={};
 
-/* STATUS DROPDOWN */
-function statusDropdown(row,data,id){
-  const s=document.createElement("select");
-  s.className="statusSelect";
-  ["new","done","deleted"].forEach(v=>{
-    const o=new Option(v,v);
-    if(data.status===v) o.selected=true;
-    s.add(o);
+  orders.forEach(o=>{
+    const d=o.createdAt?.toDate?.()||new Date(o.createdAt);
+    const diff=(now-d)/86400000;
+    if(diff<1) today++;
+    if(diff<7) week++;
+    if(o.status!=="deleted"){
+      revenue+= (o.price||0)*(o.qty||1);
+      counts[o.productName]=(counts[o.productName]||0)+(o.qty||1);
+    }
   });
 
-  colorRow(row,data.status);
+  todayCount.textContent=today;
+  weekCount.textContent=week;
+  revenue.textContent="$"+revenue.toFixed(2);
+  topProduct.textContent=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||"—";
+}
 
-  s.onchange=async()=>{
-    data.status=s.value;
-    await setDoc(doc(db,currentCollection,id),data);
-    colorRow(row,data.status);
-    msg.textContent="✔ Status updated";
-  };
-  return s;
+/* AUDIT LOG */
+async function logAudit(type, details){
+  await addDoc(collection(db,"auditLog"),{
+    type,
+    details,
+    at:new Date()
+  });
 }
 
 /* LOAD TABLE */
-async function loadTable(){
+async function load(){
   table.innerHTML="";
-  title.textContent=currentMode.toUpperCase();
+  document.getElementById("tableTitle").textContent=mode.toUpperCase();
 
-  const snap=await getDocs(collection(db,currentCollection));
-  if(snap.empty){
+  const snap=await getDocs(collection(db,mode==="audit"?"auditLog":mode));
+  const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  if(mode==="orders") updateDashboard(rows);
+
+  if(rows.length===0){
     table.innerHTML="<tr><td>No data</td></tr>";
     return;
   }
 
-  const keys=new Set(["status"]);
-  snap.forEach(d=>Object.keys(d.data()).forEach(k=>keys.add(k)));
+  const keys=new Set();
+  rows.forEach(r=>Object.keys(r).forEach(k=>keys.add(k)));
   const cols=[...keys];
 
-  const header=table.insertRow();
-  header.insertCell().textContent="Status";
-  cols.forEach(k=>{
-    const th=document.createElement("th");
-    th.textContent=k;
-    header.appendChild(th);
-  });
+  const head=table.insertRow();
+  cols.forEach(c=>head.insertCell().textContent=c);
 
-  snap.forEach(docSnap=>{
-    const data=docSnap.data();
+  rows.forEach(r=>{
     const row=table.insertRow();
-
-    const sc=row.insertCell();
-    sc.appendChild(statusDropdown(row,data,docSnap.id));
-
-    cols.forEach(k=>{
-      const c=row.insertCell();
-      c.textContent=data[k] ?? "";
-      c.contentEditable=true;
-
-      c.onblur=async()=>{
-        data[k]=c.textContent.trim();
-        await setDoc(doc(db,currentCollection,docSnap.id),data);
-        msg.textContent=`✔ Updated ${k}`;
-      };
+    cols.forEach(c=>{
+      const cell=row.insertCell();
+      cell.textContent=r[c]||"";
+      if(mode!=="audit"){
+        cell.contentEditable=true;
+        cell.onblur=async()=>{
+          const old=r[c];
+          r[c]=cell.textContent;
+          await setDoc(doc(db,mode,r.id),r);
+          await logAudit("edit",{mode,id:r.id,field:c,from:old,to:r[c]});
+        };
+      }
     });
-
-    colorRow(row,data.status);
   });
 }
 
-/* SEARCH */
-searchInput.oninput=()=>{
-  const t=searchInput.value.toLowerCase();
-  [...table.rows].forEach((r,i)=>{
-    if(i===0) return;
-    r.style.display=r.textContent.toLowerCase().includes(t)?"":"none";
-  });
-};
-
-loadTable();
+load();
 </script>
 </body>
 </html>
+
