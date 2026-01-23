@@ -5,15 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Tactics & Treats – Admin Panel (Test)</title>
 
+<!-- ✅ FIX: load Poppins (prevents “skinny words”) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
   body{
-    font-family:"Poppins",sans-serif;
+    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    font-weight:500; /* ✅ thicker default */
     background:#111;
     color:#fff;
     margin:0;
     padding:20px;
   }
-  h1,h2{ text-align:center; color:#ff0000; margin:0; }
+
+  h1,h2{
+    text-align:center;
+    color:#ff0000;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.2px;
+  }
+
   header{
     display:flex;
     justify-content:center;
@@ -23,6 +37,7 @@
     box-shadow:0 0 12px rgba(255,0,0,0.4);
     margin-bottom:15px;
   }
+
   .tabs{
     display:flex;
     justify-content:center;
@@ -30,12 +45,13 @@
     margin-bottom:15px;
     flex-wrap:wrap;
   }
+
   .tab{
     padding:10px 20px;
     cursor:pointer;
     border-radius:6px;
     background:#222;
-    font-weight:bold;
+    font-weight:700; /* ✅ */
     user-select:none;
   }
   .tab.active{
@@ -56,8 +72,16 @@
     box-shadow:0 0 10px rgba(255,0,0,.25);
     text-align:center;
   }
-  .stat h3{ margin:0; color:#ffb347; }
-  .stat p{ font-size:20px; margin:5px 0 0; }
+  .stat h3{
+    margin:0;
+    color:#ffb347;
+    font-weight:700;
+  }
+  .stat p{
+    font-size:20px;
+    margin:5px 0 0;
+    font-weight:700;
+  }
 
   section{
     background:#181818;
@@ -80,17 +104,18 @@
     background:#111;
     color:#fff;
     border:1px solid #ff0000;
-    border-radius:8px;
-    padding:10px;
+    border-radius:10px;
+    padding:10px 12px;
     outline:none;
+    font-weight:500;
   }
   .toolbar button{
     background:#ff0000;
     color:#fff;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
     padding:10px 14px;
-    font-weight:bold;
+    font-weight:800;
     cursor:pointer;
   }
   .toolbar button:hover{ background:darkred; }
@@ -103,7 +128,7 @@
   }
   th,td{
     border:1px solid #ff0000;
-    padding:8px;
+    padding:10px 8px; /* ✅ more breathing room */
     text-align:center;
     word-wrap:break-word;
   }
@@ -112,6 +137,11 @@
     position:sticky;
     top:0;
     z-index:2;
+    font-weight:800;   /* ✅ thicker headers */
+    letter-spacing:.2px;
+  }
+  td{
+    font-weight:500;   /* ✅ thicker body text */
   }
   tr:nth-child(even){ background:#222; }
 
@@ -119,8 +149,9 @@
     background:#222;
     color:white;
     border:1px solid #ff0000;
-    border-radius:6px;
-    padding:6px;
+    border-radius:8px;
+    padding:7px;
+    font-weight:700;
   }
 
   /* STATUS COLORS */
@@ -176,7 +207,6 @@
     onSnapshot, query, orderBy
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // 🔥 FIREBASE CONFIG (yours)
   const firebaseConfig = {
     apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
     authDomain:"bracelets-and-color.firebaseapp.com",
@@ -202,7 +232,6 @@
   let unsub = null;
   let lastRows = [];
 
-  // Collection setups (keeps columns clean + status options)
   const COLLECTION_CONFIG = {
     braceletOrders: {
       title: "Bracelet Orders",
@@ -213,7 +242,6 @@
     cookieOrders: {
       title: "Cookie Orders",
       showDashboard: true,
-      // supports both your “Pending” and lowercase
       statusValues: ["new","pending","done","unpaid","Pending","Completed"],
       columns: ["status","createdAt","name","phone","email","product","type","qty","total","id"]
     },
@@ -246,12 +274,10 @@
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   }
-
   function formatDate(v){
     const d = safeDate(v);
     return d ? d.toLocaleString() : "";
   }
-
   function normalizeStatus(s){
     if(!s) return "";
     const lower = String(s).toLowerCase();
@@ -261,7 +287,6 @@
     if(lower === "unpaid") return "unpaid";
     return String(s);
   }
-
   function colorRow(row,status){
     row.classList.remove("newRow","doneRow","unpaidRow","pendingRow");
     const s = normalizeStatus(status);
@@ -270,14 +295,12 @@
     if(s==="unpaid") row.classList.add("unpaidRow");
     if(s==="pending") row.classList.add("pendingRow");
   }
-
   function stringifyCell(val){
     if(val === null || val === undefined) return "";
     if(Array.isArray(val)) return val.join(", ");
     if(typeof val === "object") return JSON.stringify(val);
     return String(val);
   }
-
   function parseMaybeJSON(text){
     const t = text.trim();
     if(!t) return "";
@@ -288,7 +311,6 @@
     if(!Number.isNaN(n) && t === String(n)) return n;
     return t;
   }
-
   function applySearch(rows){
     const q = searchBox.value.trim().toLowerCase();
     if(!q) return rows;
@@ -297,7 +319,6 @@
       return blob.includes(q);
     });
   }
-
   function updateDashboard(rows){
     let today=0, week=0, revenue=0;
     const now = new Date();
@@ -309,8 +330,6 @@
         if(diffDays < 1) today++;
         if(diffDays < 7) week++;
       }
-
-      // revenue: prefer total; else price*qty
       const total = parseFloat(r.total);
       if(!isNaN(total)) revenue += total;
       else {
@@ -324,16 +343,13 @@
     weekCountEl.textContent = week;
     revenueEl.textContent = "$" + revenue.toFixed(2);
   }
-
   function getColumns(rows){
     const cfg = COLLECTION_CONFIG[currentCollection];
     if(cfg?.columns?.length) return cfg.columns;
-
     const keys = new Set(["id"]);
     rows.forEach(r=>Object.keys(r).forEach(k=>keys.add(k)));
     return [...keys];
   }
-
   function setTitleAndDashboard(){
     const cfg = COLLECTION_CONFIG[currentCollection] || {};
     tableTitle.textContent = cfg.title || currentCollection;
@@ -342,7 +358,6 @@
 
   function buildTable(rows){
     table.innerHTML = "";
-
     if(!rows.length){
       table.innerHTML = "<tr><td style='padding:14px;'>No Data</td></tr>";
       return;
@@ -366,14 +381,11 @@
         if(col === "status"){
           const cfg = COLLECTION_CONFIG[currentCollection] || {};
           const allowed = cfg.statusValues || ["new","pending","done","unpaid"];
-
           const sel = document.createElement("select");
           sel.className = "statusSelect";
 
           const current = r.status ?? "";
           const normalized = normalizeStatus(current);
-
-          // include current even if weird
           const options = [...new Set([normalized, ...allowed.map(normalizeStatus)])].filter(Boolean);
 
           options.forEach(v=>{
@@ -405,10 +417,9 @@
         else if(col === "createdAt" || col === "at"){
           cell.textContent = formatDate(r[col]);
         }
-        else {
+        else{
           cell.textContent = stringifyCell(r[col]);
 
-          // don't allow editing doc id column
           if(col !== "id"){
             cell.contentEditable = true;
 
@@ -419,7 +430,6 @@
             cell.onblur = async () => {
               const before = cell.dataset.before ?? "";
               const after = cell.textContent;
-
               if(before === after) return;
 
               const oldVal = r[col] ?? null;
@@ -454,11 +464,8 @@
     table.innerHTML = "<tr><td style='padding:14px;'>Loading...</td></tr>";
 
     const wantsOrder = currentCollection.includes("Orders") || currentCollection === "auditLog";
-
     const colRef = collection(db, currentCollection);
 
-    // If orderBy fails because some docs don't have the field,
-    // you can remove orderBy and it will still work.
     let qRef = colRef;
     if(wantsOrder){
       const field = (currentCollection === "auditLog") ? "at" : "createdAt";
@@ -481,7 +488,6 @@
     });
   }
 
-  // Tabs
   document.querySelectorAll(".tab").forEach(tab=>{
     tab.addEventListener("click", e=>{
       document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
@@ -491,7 +497,6 @@
     });
   });
 
-  // Search
   searchBox.addEventListener("input", ()=>{
     const filtered = applySearch(lastRows);
     if(currentCollection.includes("Orders")) updateDashboard(filtered);
@@ -500,8 +505,8 @@
 
   refreshBtn.addEventListener("click", subscribe);
 
-  // Start
   subscribe();
 </script>
+
 </body>
 </html>
