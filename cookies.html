@@ -2,506 +2,371 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Tactics & Treats – Admin Panel (Test)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookies – Tactics & Treats Preorder</title>
 
 <style>
-  body{
-    font-family:"Poppins",sans-serif;
-    background:#111;
-    color:#fff;
-    margin:0;
-    padding:20px;
-  }
-  h1,h2{ text-align:center; color:#ff0000; margin:0; }
-  header{
-    display:flex;
-    justify-content:center;
-    background:linear-gradient(90deg,#7a0c0c,#000);
-    padding:15px;
-    border-radius:10px;
-    box-shadow:0 0 12px rgba(255,0,0,0.4);
-    margin-bottom:15px;
-  }
-  .tabs{
-    display:flex;
-    justify-content:center;
-    gap:10px;
-    margin-bottom:15px;
-    flex-wrap:wrap;
-  }
-  .tab{
-    padding:10px 20px;
-    cursor:pointer;
-    border-radius:6px;
-    background:#222;
-    font-weight:bold;
-    user-select:none;
-  }
-  .tab.active{
-    background:#ff0000;
-    box-shadow:0 0 8px #ff0000;
-  }
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(to right, #7a0c0c, #000, #7a0c0c);
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
+nav {
+  text-align: center;
+  background: #111;
+  padding: 10px 0;
+  border-bottom: 2px solid #ff0000;
+  box-shadow: 0 0 10px #ff0000;
+}
+nav a {
+  color: white;
+  margin: 0 15px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
+}
+nav a:hover { color: #ff0000; text-shadow: 0 0 6px #ff0000; }
 
-  .dashboard{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-    gap:12px;
-    margin-bottom:15px;
-  }
-  .stat{
-    background:#181818;
-    padding:12px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(255,0,0,.25);
-    text-align:center;
-  }
-  .stat h3{ margin:0; color:#ffb347; }
-  .stat p{ font-size:20px; margin:5px 0 0; }
+h1 { text-align: center; color: #ff0000; margin-bottom: 30px; }
 
-  section{
-    background:#181818;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 0 12px rgba(255,0,0,0.2);
-  }
+form {
+  background: #111;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 500px;
+  box-shadow: 0 0 15px #ff0000;
+}
 
-  .toolbar{
-    display:flex;
-    gap:10px;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    margin-top:12px;
-  }
-  .toolbar input{
-    flex:1;
-    min-width:220px;
-    background:#111;
-    color:#fff;
-    border:1px solid #ff0000;
-    border-radius:8px;
-    padding:10px;
-    outline:none;
-  }
-  .toolbar button{
-    background:#ff0000;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    padding:10px 14px;
-    font-weight:bold;
-    cursor:pointer;
-  }
-  .toolbar button:hover{ background:darkred; }
+label { display: block; margin-top: 10px; font-weight: 500; }
 
-  table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:12px;
-    table-layout:fixed;
-  }
-  th,td{
-    border:1px solid #ff0000;
-    padding:8px;
-    text-align:center;
-    word-wrap:break-word;
-  }
-  th{
-    background:#111;
-    position:sticky;
-    top:0;
-    z-index:2;
-  }
-  tr:nth-child(even){ background:#222; }
+input, select, button {
+  width: 100%; padding: 10px; border-radius: 8px; border: none; margin-top: 5px; font-size: 14px;
+}
 
-  .statusSelect{
-    background:#222;
-    color:white;
-    border:1px solid #ff0000;
-    border-radius:6px;
-    padding:6px;
-  }
+button {
+  margin-top: 20px; padding: 12px; background: #ff0000; color: #fff;
+  font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s;
+}
+button:hover { background: darkred; }
 
-  /* STATUS COLORS */
-  .newRow{ background:rgba(255,255,0,0.25)!important; }
-  .doneRow{ background:rgba(0,255,0,0.25)!important; }
-  .unpaidRow{ background:rgba(255,0,0,0.25)!important; }
-  .pendingRow{ background:rgba(0,170,255,0.22)!important; }
+.low-stock { color:#ffa500; }
+.out-of-stock { color:#ff0000; }
 
-  .note{
-    text-align:center;
-    font-size:12px;
-    opacity:.85;
-    margin-top:10px;
-  }
+#orderMsg { text-align:center; color:#ffb347; font-weight:bold; margin-top:15px; }
 </style>
 </head>
-
 <body>
-<header><h1>Tactics & Treats Admin Panel</h1></header>
 
-<div class="tabs">
-  <div class="tab active" data-col="braceletOrders">Bracelet Orders</div>
-  <div class="tab" data-col="cookieOrders">Cookie Orders</div>
-  <div class="tab" data-col="spiritOrders">Spirit Wear</div>
-  <div class="tab" data-col="products_bracelets">Bracelet Products</div>
-  <div class="tab" data-col="products_cookies">Cookie Products</div>
-  <div class="tab" data-col="auditLog">Audit Log</div>
+<!-- 🔐 CAMPUS LOCK WITH OVERRIDE SYSTEM -->
+<div id="lockScreen" style="
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:black; color:white; display:flex;
+  align-items:center; justify-content:center;
+  font-size:22px; z-index:99999;">
+  Checking your location...
 </div>
 
-<div class="dashboard" id="dashboard">
-  <div class="stat"><h3>Today</h3><p id="todayCount">0</p></div>
-  <div class="stat"><h3>This Week</h3><p id="weekCount">0</p></div>
-  <div class="stat"><h3>Revenue</h3><p id="revenue">$0</p></div>
+<!-- Hidden override box -->
+<div id="overrideBox" style="
+  display:none; position:fixed; top:50%; left:50%;
+  transform:translate(-50%, -50%);
+  background:#111; padding:20px; border-radius:10px;
+  box-shadow:0 0 12px red; z-index:100000;">
+  <h3 style="color:white; margin-top:0;">Admin Override</h3>
+  <input id="overrideInput" type="password" placeholder="Enter override code"
+    style="padding:10px; width:100%; border-radius:6px; border:none; margin-bottom:10px;">
+  <button id="overrideBtn" style="
+    padding:10px; background:red; color:white; border:none;
+    border-radius:6px; width:100%; cursor:pointer;">
+    Unlock Page
+  </button>
 </div>
 
-<section>
-  <h2 id="tableTitle">Bracelet Orders</h2>
+<script>
+// SHS coordinates
+const SHS_LAT = 48.29923;
+const SHS_LON = -116.57302;
+const ALLOWED_RADIUS = 0.25; // 250 meters
 
-  <div class="toolbar">
-    <input id="searchBox" placeholder="Search (name, phone, product, etc.)" />
-    <button id="refreshBtn">Refresh</button>
-  </div>
+// Override code
+const OVERRIDE_CODE = "20903";
 
-  <table id="table"></table>
-  <div class="note">Click a cell to edit → click off to save. Status changes + edits get logged.</div>
-</section>
+let overrideActive = false;
+
+// Distance calculator
+function distance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat/2)**2 +
+        Math.cos(lat1*Math.PI/180) *
+        Math.cos(lat2*Math.PI/180) *
+        Math.sin(dLon/2)**2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+function checkSHSLocation() {
+    if (overrideActive) {
+        document.getElementById("lockScreen").style.display = "none";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const dist = distance(lat, lon, SHS_LAT, SHS_LON);
+
+            if (dist > ALLOWED_RADIUS) {
+                alert("You are not at Sandpoint High School.");
+                window.location.replace("index.html");
+            } else {
+                document.getElementById("lockScreen").style.display = "none";
+            }
+        },
+        (error) => {
+            // Silent retry on deny
+            if (error.code === error.PERMISSION_DENIED) {
+                window.location.reload();
+            } else {
+                window.location.reload();
+            }
+        }
+    );
+}
+
+/* -------------------------
+   🔐 OVERRIDE TRIGGERS
+------------------------- */
+
+// DESKTOP OVERRIDE: CTRL + O
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "o") {
+        document.getElementById("overrideBox").style.display = "block";
+        document.getElementById("overrideInput").focus();
+    }
+});
+
+// MOBILE OVERRIDE: Long press for 3 seconds
+let pressTimer;
+document.addEventListener("touchstart", () => {
+    pressTimer = setTimeout(() => {
+        document.getElementById("overrideBox").style.display = "block";
+        document.getElementById("overrideInput").focus();
+    }, 3000);
+});
+document.addEventListener("touchend", () => {
+    clearTimeout(pressTimer);
+});
+
+// Unlock button
+document.getElementById("overrideBtn").addEventListener("click", () => {
+    const entered = document.getElementById("overrideInput").value.trim();
+    if (entered === OVERRIDE_CODE) {
+        overrideActive = true;
+        document.getElementById("overrideBox").style.display = "none";
+        document.getElementById("lockScreen").style.display = "none";
+        alert("Override accepted. GPS lock disabled for this session.");
+    } else {
+        alert("Incorrect override code.");
+    }
+});
+
+// Start GPS lock cycle
+document.addEventListener("DOMContentLoaded", () => {
+    checkSHSLocation();
+    setInterval(checkSHSLocation, 5000);
+});
+</script>
+
+<nav>
+  <a href="cookies.html">Cookies</a>
+  <a href="bracelets.html">Bracelets</a>
+  <a href="spiritwear.html">Spirit Wear</a>
+</nav>
+
+<h1>Cookie Preorder</h1>
+
+<form id="cookieForm">
+  <label>Name</label>
+  <input id="cookieName" type="text" required />
+
+  <label>Phone Number</label>
+  <input id="cookiePhone" type="tel" />
+
+  <label>Email</label>
+  <input id="cookieEmail" type="email" />
+
+  <label>Choose Cookie</label>
+  <select id="cookieSelect" required></select>
+  <span id="stockStatus"></span>
+
+  <label>Quantity</label>
+  <input id="cookieQty" type="number" min="1" value="1" required />
+
+  <button type="button" id="submitBtn">Submit Cookie Order</button>
+</form>
+
+<div style="text-align:center; margin-top:20px;">
+  <button id="donateBtn" style="background:#ffb347;">💖 Donate</button>
+</div>
+
+<div id="donateBox" style="display:none; text-align:center; background:#111; border-radius:12px; box-shadow:0 0 12px #ff0000; padding:20px; max-width:400px; margin:20px auto;">
+  <h3 style="color:#ffb347;">Make a Donation</h3>
+  <input id="donateName" type="text" placeholder="Your Name" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+  <input id="donateEmail" type="email" placeholder="Your Email (optional)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+  <input id="donateAmount" type="number" min="1" placeholder="Donation Amount ($)" style="width:90%; padding:10px; border-radius:8px; margin-bottom:10px;">
+  <button id="confirmDonateBtn" style="background:#ff0000; color:white; padding:10px 20px; border-radius:8px; margin-right:10px;">Submit Donation</button>
+  <button id="cancelDonateBtn" style="background:gray; color:white; padding:10px 20px; border-radius:8px;">Cancel</button>
+</div>
+
+<p id="orderMsg"></p>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import {
-    getFirestore,
-    collection, doc, setDoc, addDoc,
-    onSnapshot, query, orderBy
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  // 🔥 FIREBASE CONFIG (yours)
-  const firebaseConfig = {
-    apiKey:"AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
-    authDomain:"bracelets-and-color.firebaseapp.com",
-    projectId:"bracelets-and-color",
-    storageBucket:"bracelets-and-color.appspot.com",
-    messagingSenderId:"382292570673",
-    appId:"1:382292570673:web:1c966e2e7e8fc2efa31b10"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCiZuaANb1lrgdn-aARGJ_TRhgzPPUug58",
+  authDomain: "bracelets-and-color.firebaseapp.com",
+  projectId: "bracelets-and-color",
+  storageBucket: "bracelets-and-color.appspot.com",
+  messagingSenderId: "382292570673",
+  appId: "1:382292570673:web:1c966e2e7e8fc2efa31b10"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  const table = document.getElementById("table");
-  const tableTitle = document.getElementById("tableTitle");
-  const todayCountEl = document.getElementById("todayCount");
-  const weekCountEl = document.getElementById("weekCount");
-  const revenueEl = document.getElementById("revenue");
-  const dashboardEl = document.getElementById("dashboard");
-  const searchBox = document.getElementById("searchBox");
-  const refreshBtn = document.getElementById("refreshBtn");
+const cookieSelect = document.getElementById("cookieSelect");
+const stockStatus = document.getElementById("stockStatus");
+const orderMsg = document.getElementById("orderMsg");
 
-  let currentCollection = "braceletOrders";
-  let unsub = null;
-  let lastRows = [];
+let currentCookieData = null;
 
-  // Collection setups (keeps columns clean + status options)
-  const COLLECTION_CONFIG = {
-    braceletOrders: {
-      title: "Bracelet Orders",
-      showDashboard: true,
-      statusValues: ["new","pending","done","unpaid"],
-      columns: ["status","createdAt","name","phone","type","size","color1","color2","qty","price","total","id"]
-    },
-    cookieOrders: {
-      title: "Cookie Orders",
-      showDashboard: true,
-      // supports both your “Pending” and lowercase
-      statusValues: ["new","pending","done","unpaid","Pending","Completed"],
-      columns: ["status","createdAt","name","phone","email","product","type","qty","total","id"]
-    },
-    spiritOrders: {
-      title: "Spirit Wear",
-      showDashboard: true,
-      statusValues: ["new","pending","done","unpaid"],
-      columns: ["status","createdAt","name","phone","email","item","size","qty","price","total","id"]
-    },
-    products_bracelets: {
-      title: "Bracelet Products",
-      showDashboard: false,
-      columns: ["type","sizeOptions","colorOptions","price","id"]
-    },
-    products_cookies: {
-      title: "Cookie Products",
-      showDashboard: false,
-      columns: ["name","price","stock","id"]
-    },
-    auditLog: {
-      title: "Audit Log",
-      showDashboard: false,
-      columns: ["at","type","collection","id","field","from","to"]
-    }
-  };
-
-  function safeDate(v){
-    if(!v) return null;
-    if(typeof v?.toDate === "function") return v.toDate();
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
+// SITE STATUS
+onSnapshot(doc(db, "siteSettings", "maintenance"), docSnap => {
+  if (docSnap.exists() && docSnap.data().enabled) {
+    window.location.href = "under-construction.html";
   }
+});
 
-  function formatDate(v){
-    const d = safeDate(v);
-    return d ? d.toLocaleString() : "";
-  }
-
-  function normalizeStatus(s){
-    if(!s) return "";
-    const lower = String(s).toLowerCase();
-    if(lower === "pending") return "pending";
-    if(lower === "new") return "new";
-    if(lower === "done" || lower === "completed") return "done";
-    if(lower === "unpaid") return "unpaid";
-    return String(s);
-  }
-
-  function colorRow(row,status){
-    row.classList.remove("newRow","doneRow","unpaidRow","pendingRow");
-    const s = normalizeStatus(status);
-    if(s==="new") row.classList.add("newRow");
-    if(s==="done") row.classList.add("doneRow");
-    if(s==="unpaid") row.classList.add("unpaidRow");
-    if(s==="pending") row.classList.add("pendingRow");
-  }
-
-  function stringifyCell(val){
-    if(val === null || val === undefined) return "";
-    if(Array.isArray(val)) return val.join(", ");
-    if(typeof val === "object") return JSON.stringify(val);
-    return String(val);
-  }
-
-  function parseMaybeJSON(text){
-    const t = text.trim();
-    if(!t) return "";
-    if((t.startsWith("{") && t.endsWith("}")) || (t.startsWith("[") && t.endsWith("]"))){
-      try { return JSON.parse(t); } catch { return t; }
-    }
-    const n = Number(t);
-    if(!Number.isNaN(n) && t === String(n)) return n;
-    return t;
-  }
-
-  function applySearch(rows){
-    const q = searchBox.value.trim().toLowerCase();
-    if(!q) return rows;
-    return rows.filter(r=>{
-      const blob = Object.values(r).map(v=>stringifyCell(v).toLowerCase()).join(" | ");
-      return blob.includes(q);
-    });
-  }
-
-  function updateDashboard(rows){
-    let today=0, week=0, revenue=0;
-    const now = new Date();
-
-    rows.forEach(r=>{
-      const d = safeDate(r.createdAt);
-      if(d){
-        const diffDays = (now - d) / 86400000;
-        if(diffDays < 1) today++;
-        if(diffDays < 7) week++;
-      }
-
-      // revenue: prefer total; else price*qty
-      const total = parseFloat(r.total);
-      if(!isNaN(total)) revenue += total;
-      else {
-        const price = parseFloat(r.price);
-        const qty = parseFloat(r.qty);
-        if(!isNaN(price) && !isNaN(qty)) revenue += price * qty;
-      }
-    });
-
-    todayCountEl.textContent = today;
-    weekCountEl.textContent = week;
-    revenueEl.textContent = "$" + revenue.toFixed(2);
-  }
-
-  function getColumns(rows){
-    const cfg = COLLECTION_CONFIG[currentCollection];
-    if(cfg?.columns?.length) return cfg.columns;
-
-    const keys = new Set(["id"]);
-    rows.forEach(r=>Object.keys(r).forEach(k=>keys.add(k)));
-    return [...keys];
-  }
-
-  function setTitleAndDashboard(){
-    const cfg = COLLECTION_CONFIG[currentCollection] || {};
-    tableTitle.textContent = cfg.title || currentCollection;
-    dashboardEl.style.display = cfg.showDashboard ? "grid" : "none";
-  }
-
-  function buildTable(rows){
-    table.innerHTML = "";
-
-    if(!rows.length){
-      table.innerHTML = "<tr><td style='padding:14px;'>No Data</td></tr>";
-      return;
-    }
-
-    const cols = getColumns(rows);
-
-    const header = table.insertRow();
-    cols.forEach(c=>{
-      const th = document.createElement("th");
-      th.textContent = c;
-      header.appendChild(th);
-    });
-
-    rows.forEach(r=>{
-      const row = table.insertRow();
-
-      cols.forEach(col=>{
-        const cell = row.insertCell();
-
-        if(col === "status"){
-          const cfg = COLLECTION_CONFIG[currentCollection] || {};
-          const allowed = cfg.statusValues || ["new","pending","done","unpaid"];
-
-          const sel = document.createElement("select");
-          sel.className = "statusSelect";
-
-          const current = r.status ?? "";
-          const normalized = normalizeStatus(current);
-
-          // include current even if weird
-          const options = [...new Set([normalized, ...allowed.map(normalizeStatus)])].filter(Boolean);
-
-          options.forEach(v=>{
-            const o = new Option(v, v);
-            if(normalizeStatus(current) === v) o.selected = true;
-            sel.add(o);
-          });
-
-          sel.onchange = async () => {
-            const old = r.status ?? null;
-            r.status = sel.value;
-
-            await setDoc(doc(db, currentCollection, r.id), r);
-
-            await addDoc(collection(db, "auditLog"), {
-              type: "status_change",
-              collection: currentCollection,
-              id: r.id,
-              from: old,
-              to: r.status,
-              at: new Date()
-            });
-
-            colorRow(row, r.status);
-          };
-
-          cell.appendChild(sel);
-        }
-        else if(col === "createdAt" || col === "at"){
-          cell.textContent = formatDate(r[col]);
-        }
-        else {
-          cell.textContent = stringifyCell(r[col]);
-
-          // don't allow editing doc id column
-          if(col !== "id"){
-            cell.contentEditable = true;
-
-            cell.onfocus = () => {
-              cell.dataset.before = cell.textContent;
-            };
-
-            cell.onblur = async () => {
-              const before = cell.dataset.before ?? "";
-              const after = cell.textContent;
-
-              if(before === after) return;
-
-              const oldVal = r[col] ?? null;
-              const newVal = parseMaybeJSON(after);
-
-              r[col] = newVal;
-
-              await setDoc(doc(db, currentCollection, r.id), r);
-
-              await addDoc(collection(db, "auditLog"), {
-                type: "edit",
-                collection: currentCollection,
-                id: r.id,
-                field: col,
-                from: oldVal,
-                to: newVal ?? null,
-                at: new Date()
-              });
-            };
-          }
-        }
-      });
-
-      colorRow(row, r.status);
-    });
-  }
-
-  function subscribe(){
-    if(unsub) unsub();
-
-    setTitleAndDashboard();
-    table.innerHTML = "<tr><td style='padding:14px;'>Loading...</td></tr>";
-
-    const wantsOrder = currentCollection.includes("Orders") || currentCollection === "auditLog";
-
-    const colRef = collection(db, currentCollection);
-
-    // If orderBy fails because some docs don't have the field,
-    // you can remove orderBy and it will still work.
-    let qRef = colRef;
-    if(wantsOrder){
-      const field = (currentCollection === "auditLog") ? "at" : "createdAt";
-      qRef = query(colRef, orderBy(field, "desc"));
-    }
-
-    unsub = onSnapshot(qRef, snap=>{
-      lastRows = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-
-      const filtered = applySearch(lastRows);
-
-      if(currentCollection.includes("Orders")){
-        updateDashboard(filtered);
-      }
-
-      buildTable(filtered);
-    }, err=>{
-      console.error(err);
-      table.innerHTML = "<tr><td style='padding:14px;'>Error loading data (check console).</td></tr>";
-    });
-  }
-
-  // Tabs
-  document.querySelectorAll(".tab").forEach(tab=>{
-    tab.addEventListener("click", e=>{
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      e.currentTarget.classList.add("active");
-      currentCollection = e.currentTarget.dataset.col;
-      subscribe();
-    });
+// LIVE COOKIE LIST
+onSnapshot(collection(db, "products_cookies"), snapshot => {
+  cookieSelect.innerHTML = '<option value="">Select Cookie</option>';
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const opt = document.createElement("option");
+    opt.value = docSnap.id;
+    opt.textContent = `${data.name} - $${data.price.toFixed(2)}`;
+    opt.disabled = !data.stock || data.stock === 0;
+    cookieSelect.appendChild(opt);
   });
+});
 
-  // Search
-  searchBox.addEventListener("input", ()=>{
-    const filtered = applySearch(lastRows);
-    if(currentCollection.includes("Orders")) updateDashboard(filtered);
-    buildTable(filtered);
-  });
+// COOKIE CHANGE
+cookieSelect.addEventListener("change", async () => {
+  const id = cookieSelect.value;
+  if (!id) return;
 
-  refreshBtn.addEventListener("click", subscribe);
+  const docSnap = await getDoc(doc(db, "products_cookies", id));
+  if (!docSnap.exists()) return;
 
-  // Start
-  subscribe();
+  currentCookieData = docSnap.data();
+
+  if (currentCookieData.stock >= 10) {
+    stockStatus.textContent = "In Stock";
+    stockStatus.className = "low-stock";
+  } else if (currentCookieData.stock > 0) {
+    stockStatus.textContent = "Low Stock!";
+    stockStatus.className = "low-stock";
+  } else {
+    stockStatus.textContent = "Out of Stock";
+    stockStatus.className = "out-of-stock";
+  }
+});
+
+// SUBMIT ORDER
+async function submitCookieOrder() {
+  const name = document.getElementById("cookieName").value.trim();
+  const phone = document.getElementById("cookiePhone").value.trim();
+  const email = document.getElementById("cookieEmail").value.trim();
+  const cookieId = cookieSelect.value;
+  const qty = parseInt(document.getElementById("cookieQty").value) || 1;
+
+  if (!name || (!phone && !email) || !cookieId)
+    return alert("⚠️ Fill all required fields.");
+
+  const cookieRef = doc(db, "products_cookies", cookieId);
+  const cookieSnap = await getDoc(cookieRef);
+  if (!cookieSnap.exists()) return alert("❌ Cookie not found.");
+
+  const data = cookieSnap.data();
+  const total = data.price * qty;
+
+  try {
+    await addDoc(collection(db, "cookieOrders"), {
+      name, phone: phone || null, email: email || null,
+      product: data.name, qty, total,
+      createdAt: new Date(), status: "Pending"
+    });
+
+    orderMsg.textContent = `✅ Order submitted! Total: $${total.toFixed(2)}`;
+    document.getElementById("cookieForm").reset();
+    stockStatus.textContent = "";
+    currentCookieData = null;
+
+  } catch (err) {
+    alert("❌ Failed to submit order.");
+  }
+}
+
+document.getElementById("submitBtn").addEventListener("click", submitCookieOrder);
+
+// DONATE UI
+document.getElementById("donateBtn").addEventListener("click", () => {
+  document.getElementById("donateBox").style.display = "block";
+  orderMsg.textContent = "";
+});
+document.getElementById("cancelDonateBtn").addEventListener("click", () => {
+  document.getElementById("donateBox").style.display = "none";
+});
+
+document.getElementById("confirmDonateBtn").addEventListener("click", async () => {
+  const name = document.getElementById("donateName").value.trim();
+  const email = document.getElementById("donateEmail").value.trim();
+  const amount = parseFloat(document.getElementById("donateAmount").value);
+
+  if (!name || !amount || amount <= 0) {
+    alert("⚠️ Enter name + donation amount.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "cookieOrders"), {
+      name,
+      email: email || null,
+      type: "Donate",
+      total: amount,
+      createdAt: new Date(),
+      status: "Pending"
+    });
+
+    orderMsg.textContent = `💖 Thank you, ${name}! Your $${amount.toFixed(2)} donation was received.`;
+    document.getElementById("donateBox").style.display = "none";
+
+    document.getElementById("donateName").value = "";
+    document.getElementById("donateEmail").value = "";
+    document.getElementById("donateAmount").value = "";
+
+  } catch (err) {
+    alert("❌ Failed to submit donation.");
+  }
+});
 </script>
 </body>
 </html>
